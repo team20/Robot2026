@@ -5,14 +5,29 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.subsystems.DriveSubsystem;
 
 public class Robot extends TimedRobot {
 	private Command m_autonomousCommand;
 
+	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+	private final SendableChooser<Command> m_autoChooser = new SendableChooser<Command>();
+	private final CommandPS5Controller m_joystick = new CommandPS5Controller(
+			Constants.ControllerConstants.kDriverControllerPort);
+
 	public Robot() {
 
+	}
+
+	private void BindDriveControls() {
+		m_driveSubsystem.setDefaultCommand(
+				m_driveSubsystem.driveCommand(
+						() -> -m_joystick.getLeftY(), () -> -m_joystick.getLeftX(),
+						() -> m_joystick.getL2Axis() - m_joystick.getR2Axis(), m_joystick.getHID()::getCreateButton));
 	}
 
 	@Override
@@ -34,7 +49,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		;
+		m_autonomousCommand = m_autoChooser.getSelected();
 
 		if (m_autonomousCommand != null) {
 			m_autonomousCommand.schedule();
@@ -58,6 +73,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
+
 	}
 
 	@Override
