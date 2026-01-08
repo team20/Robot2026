@@ -16,7 +16,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
-import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -32,7 +31,7 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
+import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -50,7 +49,7 @@ public class DriveSubsystem extends SubsystemBase {
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
 	private final SwerveDriveOdometry m_odometry;
 	private final AHRS m_gyro = new AHRS(NavXComType.kUSB1);
-	private final SimDouble m_gyroSim;
+	private final AnalogGyroSim m_gyroSim;
 	// https://docs.wpilib.org/en/latest/docs/software/advanced-controls/system-identification/index.html
 	private final SysIdRoutine m_sysidRoutine;
 
@@ -104,7 +103,7 @@ public class DriveSubsystem extends SubsystemBase {
 		}
 		m_odometry = new SwerveDriveOdometry(m_kinematics, getHeading(), getModulePositions());
 		if (RobotBase.isSimulation()) {
-			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
+			m_gyroSim = new AnalogGyroSim(m_gyro.getPort());
 		} else {
 			m_gyroSim = null;
 		}
@@ -241,7 +240,8 @@ public class DriveSubsystem extends SubsystemBase {
 		var speeds = m_kinematics.toChassisSpeeds(states);
 		m_currentChassisSpeedsPublisher.set(speeds);
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
-			m_gyroSim.set(-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod) + m_gyro.getYaw());
+			m_gyroSim.setAngle(
+					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod) + m_gyro.getYaw());
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
 	}
 
