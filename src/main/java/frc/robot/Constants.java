@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.Map;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -103,14 +105,25 @@ public class Constants {
 		public static final double kRotationV = 1.9;
 		public static final double kRotationA = 0.009;
 
-		public static final double kTeleopMaxVoltage = 12;
-		public static final double kTeleopMaxTurnVoltage = 7.2;
-		public static final double kDriveGearRatio = 6.75;
-		public static final double kSteerGearRatio = 150.0 / 7; // TODO: Change value for 5i's
-		public static final double kWheelDiameter = Units.inchesToMeters(4);
-		public static final double kWheelCircumference = Math.PI * kWheelDiameter;
-
-		public static final double kMetersPerMotorRotation = kWheelCircumference / kDriveGearRatio;
+		public static final Map<PhysicalBot, BotConstants> kBots = Map.ofEntries(
+				new BotConstants(PhysicalBot.COMP_BOT)
+						.setTeleopMaxVoltage(12)
+						.setTeleopMaxTurnVoltage(7.2)
+						.setDriveGearRatio(6.75)
+						.setSteerGearRatio(150. / 7)
+						.setWheelDiameter(4),
+				new BotConstants(PhysicalBot.PRAC_BOT)
+						.setTeleopMaxVoltage(12)
+						.setTeleopMaxTurnVoltage(7.2)
+						.setDriveGearRatio(6.75)
+						.setSteerGearRatio(150. / 7)
+						.setWheelDiameter(4),
+				new BotConstants(PhysicalBot.DENNIS)
+						.setTeleopMaxVoltage(12)
+						.setTeleopMaxTurnVoltage(7.2)
+						.setDriveGearRatio(6.75)
+						.setSteerGearRatio(150. / 7)
+						.setWheelDiameter(4));
 
 		// https://docs.wpilib.org/en/latest/docs/software/basic-programming/coordinate-system.html
 		public static final double kModuleDistFromCenter = Units.inchesToMeters(14.5); // Width/2
