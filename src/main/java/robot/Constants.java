@@ -1,4 +1,4 @@
-package frc.robot;
+package robot;
 
 import java.util.Map;
 
@@ -7,7 +7,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Compliance.FixMe;
+import robot.utilities.BotConstants;
+import robot.utilities.Compliance.FixMe;
 
 public class Constants {
 	public static final class Subsystems {

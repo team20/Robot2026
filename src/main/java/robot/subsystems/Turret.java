@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
@@ -10,8 +10,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Compliance;
-import frc.robot.Constants.Subsystems.TurretConstants;
+import robot.Constants.Subsystems.TurretConstants;
+import robot.utilities.Compliance;
 
 /**
  * A subsystem which has the ability to change both yaw and pitch in order to

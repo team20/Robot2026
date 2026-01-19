@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package robot.subsystems;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -6,8 +6,8 @@ import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Compliance;
-import frc.robot.Constants.Subsystems.IntakeConstants;
+import robot.Constants.Subsystems.IntakeConstants;
+import robot.utilities.Compliance;
 
 /**
  * A subsystem which has both rollers and a deployment mechanism in order to

@@ -2,11 +2,10 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
@@ -36,9 +35,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.ControllerConstants;
-import frc.robot.PhysicalBot;
-import frc.robot.SwerveModule;
+import robot.Constants.ControllerConstants;
+import robot.Constants.DriveConstants;
+import robot.PhysicalBot;
+import robot.SwerveModule;
 
 public class Drive extends SubsystemBase {
 	private final SwerveModule m_frontLeft;
@@ -47,7 +47,8 @@ public class Drive extends SubsystemBase {
 	private final SwerveModule m_backRight;
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
-			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
+			DriveConstants.kFrontLeftLocation, DriveConstants.kFrontRightLocation, DriveConstants.kBackLeftLocation,
+			DriveConstants.kBackRightLocation);
 	private final SwerveDriveOdometry m_odometry;
 	private final AHRS m_gyro = new AHRS(NavXComType.kUSB1);
 	private final AnalogGyroSim m_gyroSim;
@@ -60,7 +61,8 @@ public class Drive extends SubsystemBase {
 	private final StructArrayPublisher<SwerveModuleState> m_currentModuleStatePublisher;
 	private final StructPublisher<Rotation2d> m_targetHeadingPublisher;
 
-	private final PIDController m_orientationController = new PIDController(kRotationP, kRotationI, kRotationD);
+	private final PIDController m_orientationController = new PIDController(DriveConstants.kRotationP,
+			DriveConstants.kRotationI, DriveConstants.kRotationD);
 	private AtomicBoolean shouldBeCoast = new AtomicBoolean(true);
 
 	/** Creates a new DriveSubsystem. */
@@ -80,10 +82,26 @@ public class Drive extends SubsystemBase {
 		m_targetHeadingPublisher = NetworkTableInstance.getDefault()
 				.getStructTopic("/SmartDashboard/Target Heading", Rotation2d.struct)
 				.publish();
-		m_frontLeft = new SwerveModule(bot, kFrontLeftCANCoderPort, kFrontLeftDrivePort, kFrontLeftSteerPort);
-		m_frontRight = new SwerveModule(bot, kFrontRightCANCoderPort, kFrontRightDrivePort, kFrontRightSteerPort);
-		m_backLeft = new SwerveModule(bot, kBackLeftCANCoderPort, kBackLeftDrivePort, kBackLeftSteerPort);
-		m_backRight = new SwerveModule(bot, kBackRightCANCoderPort, kBackRightDrivePort, kBackRightSteerPort);
+		m_frontLeft = new SwerveModule(
+				bot,
+				DriveConstants.kFrontLeftCANCoderPort,
+				DriveConstants.kFrontLeftDrivePort,
+				DriveConstants.kFrontLeftSteerPort);
+		m_frontRight = new SwerveModule(
+				bot,
+				DriveConstants.kFrontRightCANCoderPort,
+				DriveConstants.kFrontRightDrivePort,
+				DriveConstants.kFrontRightSteerPort);
+		m_backLeft = new SwerveModule(
+				bot,
+				DriveConstants.kBackLeftCANCoderPort,
+				DriveConstants.kBackLeftDrivePort,
+				DriveConstants.kBackLeftSteerPort);
+		m_backRight = new SwerveModule(
+				bot,
+				DriveConstants.kBackRightCANCoderPort,
+				DriveConstants.kBackRightDrivePort,
+				DriveConstants.kBackRightSteerPort);
 		// Adjust ramp rate, step voltage, and timeout to make sure robot doesn't
 		// collide with anything
 		var config = new SysIdRoutine.Config(Volts.of(2.5).div(Seconds.of(1)), null, Seconds.of(3));
@@ -170,7 +188,7 @@ public class Drive extends SubsystemBase {
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
 		speeds = ChassisSpeeds.discretize(speeds, 0.03);
 		SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(speeds);
-		SwerveDriveKinematics.desaturateWheelSpeeds(states, kTeleopDriveMaxSpeed);
+		SwerveDriveKinematics.desaturateWheelSpeeds(states, DriveConstants.kTeleopDriveMaxSpeed);
 		double[] moduleAngles = { m_frontLeft.getModuleAngle(), m_frontRight.getModuleAngle(),
 				m_backLeft.getModuleAngle(), m_backRight.getModuleAngle() };
 		for (int i = 0; i < states.length; i++) // Optimize target module states
@@ -348,7 +366,7 @@ public class Drive extends SubsystemBase {
 		var orientation = new Translation2d(forwardOrientation.getAsDouble(), strafeOrientation.getAsDouble());
 		double omegaRadiansPerSecond = MathUtil.applyDeadband(rotation.getAsDouble(), ControllerConstants.kDeadzone);
 		omegaRadiansPerSecond = Math.signum(omegaRadiansPerSecond) * Math.pow(omegaRadiansPerSecond, 2)
-				* kTeleopTurnMaxAngularSpeed;
+				* DriveConstants.kTeleopTurnMaxAngularSpeed;
 		if (orientation.getNorm() > 0.05) {
 			var angle = orientation.getAngle();
 			omegaRadiansPerSecond += m_orientationController
@@ -403,7 +421,7 @@ public class Drive extends SubsystemBase {
 			DoubleSupplier rotation) {
 		double omegaRadiansPerSecond = MathUtil.applyDeadband(rotation.getAsDouble(), ControllerConstants.kDeadzone);
 		omegaRadiansPerSecond = Math.signum(omegaRadiansPerSecond) * Math.pow(omegaRadiansPerSecond, 2)
-				* kTeleopTurnMaxAngularSpeed;
+				* DriveConstants.kTeleopTurnMaxAngularSpeed;
 		return chassisSpeeds(forwardSpeed, strafeSpeed, omegaRadiansPerSecond);
 	}
 
@@ -422,10 +440,12 @@ public class Drive extends SubsystemBase {
 	static ChassisSpeeds chassisSpeeds(DoubleSupplier forwardSpeed, DoubleSupplier strafeSpeed,
 			double omegaRadiansPerSecond) {
 		double vxMetersPerSecond = MathUtil.applyDeadband(forwardSpeed.getAsDouble(), ControllerConstants.kDeadzone);
-		vxMetersPerSecond = Math.signum(vxMetersPerSecond) * Math.pow(vxMetersPerSecond, 2) * kTeleopDriveMaxSpeed;
+		vxMetersPerSecond = Math.signum(vxMetersPerSecond) * Math.pow(vxMetersPerSecond, 2)
+				* DriveConstants.kTeleopDriveMaxSpeed;
 
 		double vyMetersPerSecond = MathUtil.applyDeadband(strafeSpeed.getAsDouble(), ControllerConstants.kDeadzone);
-		vyMetersPerSecond = Math.signum(vyMetersPerSecond) * Math.pow(vyMetersPerSecond, 2) * kTeleopDriveMaxSpeed;
+		vyMetersPerSecond = Math.signum(vyMetersPerSecond) * Math.pow(vyMetersPerSecond, 2)
+				* DriveConstants.kTeleopDriveMaxSpeed;
 
 		return chassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omegaRadiansPerSecond);
 	}
@@ -439,10 +459,14 @@ public class Drive extends SubsystemBase {
 	 */
 	public static ChassisSpeeds chassisSpeeds(double vxMetersPerSecond, double vyMetersPerSecond,
 			double omegaRadiansPerSecond) {
-		vxMetersPerSecond = MathUtil.clamp(vxMetersPerSecond, -kTeleopDriveMaxSpeed, kTeleopDriveMaxSpeed);
-		vyMetersPerSecond = MathUtil.clamp(vyMetersPerSecond, -kTeleopDriveMaxSpeed, kTeleopDriveMaxSpeed);
+		vxMetersPerSecond = MathUtil
+				.clamp(vxMetersPerSecond, -DriveConstants.kTeleopDriveMaxSpeed, DriveConstants.kTeleopDriveMaxSpeed);
+		vyMetersPerSecond = MathUtil
+				.clamp(vyMetersPerSecond, -DriveConstants.kTeleopDriveMaxSpeed, DriveConstants.kTeleopDriveMaxSpeed);
 		omegaRadiansPerSecond = MathUtil
-				.clamp(omegaRadiansPerSecond, -kTeleopTurnMaxAngularSpeed, kTeleopTurnMaxAngularSpeed);
+				.clamp(
+						omegaRadiansPerSecond, -DriveConstants.kTeleopTurnMaxAngularSpeed,
+						DriveConstants.kTeleopTurnMaxAngularSpeed);
 		return new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omegaRadiansPerSecond);
 	}
 

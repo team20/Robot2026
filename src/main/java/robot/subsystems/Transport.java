@@ -1,7 +1,7 @@
-package frc.robot.subsystems;
+package robot.subsystems;
 
-import frc.robot.Compliance;
-import frc.robot.Constants.Subsystems.TransportConstants;
+import robot.Constants.Subsystems.TransportConstants;
+import robot.utilities.Compliance;
 
 /**
  * A subsystem which moves in two directions to allow the robot to move fuel

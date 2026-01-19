@@ -2,9 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
-
-import static frc.robot.Constants.DriveConstants.*;
+package robot;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -16,13 +14,16 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.Constants.DriveConstants;
+import robot.Constants.DriveConstants;
+import robot.utilities.BotConstants;
+import robot.utilities.SwerveMotors;
 
 /**
  * Contains all the hardware and controllers for a swerve module.
  */
 public class SwerveModule {
-	private final PIDController m_steerController = new PIDController(kP, kI, kD);
+	private final PIDController m_steerController = new PIDController(DriveConstants.kP, DriveConstants.kI,
+			DriveConstants.kD);
 	private final CANcoder m_CANCoder;
 	private final SwerveMotors m_motors;
 
@@ -39,10 +40,12 @@ public class SwerveModule {
 		m_steerController.enableContinuousInput(0, 360);
 		if (RobotBase.isSimulation()) {
 			m_driveMotorModel = new DCMotorSim(
-					LinearSystemId.createDCMotorSystem(kV / (2 * Math.PI), kA / (2 * Math.PI)),
+					LinearSystemId
+							.createDCMotorSystem(DriveConstants.kV / (2 * Math.PI), DriveConstants.kA / (2 * Math.PI)),
 					m_motors.getDriveGearbox().withReduction(m_constants.kDriveGearRatio));
 			m_steerMotorModel = new DCMotorSim(
-					LinearSystemId.createDCMotorSystem(kV / (2 * Math.PI), kA / (2 * Math.PI)),
+					LinearSystemId
+							.createDCMotorSystem(DriveConstants.kV / (2 * Math.PI), DriveConstants.kA / (2 * Math.PI)),
 					m_motors.getSteerGearbox());
 		} else {
 			m_driveMotorModel = null;

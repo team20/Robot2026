@@ -1,7 +1,7 @@
-package frc.robot.subsystems;
+package robot.subsystems;
 
-import frc.robot.Compliance;
-import frc.robot.Constants.Subsystems.ShooterConstants;
+import robot.Constants.Subsystems.ShooterConstants;
+import robot.utilities.Compliance;
 
 /**
  * A subsystem which spins the shooter and launches fuel.

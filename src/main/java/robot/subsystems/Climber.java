@@ -1,7 +1,7 @@
-package frc.robot.subsystems;
+package robot.subsystems;
 
-import frc.robot.Compliance;
-import frc.robot.Constants.Subsystems.ClimberConstants;
+import robot.Constants.Subsystems.ClimberConstants;
+import robot.utilities.Compliance;
 
 /**
  * A subystem which moves in two directions to allow the robot to both climb and
