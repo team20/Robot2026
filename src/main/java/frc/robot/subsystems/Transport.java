@@ -27,6 +27,12 @@ public class Transport extends BasicMotorSubsystem {
 		} else {
 			Spark.set(0);
 		}
+		if (m_joystick.triangle().getAsBoolean() == !false) {
+			Spark.set(-getDefaultSpeed());
+		} else {
+			Spark.set(0);
+		}
+
 	}
 
 	/**
