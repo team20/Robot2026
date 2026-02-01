@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Translation2d;
@@ -31,9 +32,13 @@ public class Constants {
 		public static final int kBackLeftCANCoderPort = 32;
 
 		// TODO: Make sure these are tuned (can do with SysId)
-		public static final double kP = 0.09;
-		public static final double kI = 0.0;
-		public static final double kD = 0.001;
+		public static final double kDriveP = 0.01;
+		public static final double kDriveI = 0.0;
+		public static final double kDriveD = 0.001;
+
+		public static final double kSteerP = 0.09;
+		public static final double kSteerI = 0.0;
+		public static final double kSteerD = 0.001;
 		public static final double kS = 0;
 		public static final double kV = 0.12;
 		public static final double kA = 0.009;
@@ -45,8 +50,8 @@ public class Constants {
 		public static final double kRotationV = 1.9;
 		public static final double kRotationA = 0.009;
 
-		public static final double kTeleopMaxVoltage = 12;
-		public static final double kTeleopMaxTurnVoltage = 7.2;
+		public static final double kTeleopMaxVoltage = 2;
+		public static final double kTeleopMaxTurnVoltage = 4;
 		public static final double kDriveGearRatio = 6.75;
 		public static final double kSteerGearRatio = 150.0 / 7; // TODO: Change value for 5i's
 		public static final double kWheelDiameter = Units.inchesToMeters(4);
@@ -79,6 +84,7 @@ public class Constants {
 			kDriveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 			kDriveConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = kRampRate;
 			kDriveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = kRampRate;
+			kDriveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		}
 
 		public static final TalonFXConfiguration kSteerConfig = new TalonFXConfiguration();
@@ -101,14 +107,17 @@ public class Constants {
 		public static final double kTurnMinAngularSpeed = Math.toRadians(0); // 0 degree per second
 
 		// DriveCommand.java Constants
-		public static final double kDriveP = 7;
-		public static final double kDriveI = 0;
-		public static final double kDriveD = 0;
-		public static final double kDriveMaxAcceleration = 2 * kDriveMaxSpeed; // kDriveMaxSpeed in 1.5 sec
-
-		public static final double kTurnP = 5;
-		public static final double kTurnI = 0;
-		public static final double kTurnD = 0.1;
-		public static final double kTurnMaxAcceleration = 2 * kTurnMaxAngularSpeed; // kTurnMaxAngularSpeed in 0.5
+		/*
+		 * public static final double kDriveP = 7;
+		 * public static final double kDriveI = 0;
+		 * public static final double kDriveD = 0;
+		 * public static final double kDriveMaxAcceleration = 2 * kDriveMaxSpeed; //
+		 * kDriveMaxSpeed in 1.5 sec
+		 * public static final double kTurnP = 5;
+		 * public static final double kTurnI = 0;
+		 * public static final double kTurnD = 0.1;
+		 * public static final double kTurnMaxAcceleration = 2 * kTurnMaxAngularSpeed;
+		 * // kTurnMaxAngularSpeed in 0.5
+		 */
 	}
 }

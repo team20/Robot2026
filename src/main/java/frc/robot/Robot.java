@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,7 +25,7 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 
 	public Robot() {
-		BindDriveControls();
+
 	}
 
 	private void BindDriveControls() {
@@ -30,6 +33,7 @@ public class Robot extends TimedRobot {
 				m_driveSubsystem.driveCommand(
 						() -> -m_joystick.getLeftY(), () -> -m_joystick.getLeftX(),
 						() -> m_joystick.getL2Axis() - m_joystick.getR2Axis(), m_joystick.getHID()::getCreateButton));
+		m_joystick.options().onTrue(m_driveSubsystem.resetHeading());
 	}
 
 	@Override
@@ -55,7 +59,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		m_autonomousCommand = m_autoChooser.getSelected();
+		m_autonomousCommand = new frc.robot.commands.DriveDistance(1).withTimeout(Time.ofBaseUnits(1, Seconds));// m_autoChooser.getSelected();
 
 		if (m_autonomousCommand != null) {
 			m_scheduler.schedule(m_autonomousCommand);
@@ -76,6 +80,8 @@ public class Robot extends TimedRobot {
 		if (m_autonomousCommand != null) {
 			m_autonomousCommand.cancel();
 		}
+
+		BindDriveControls();
 	}
 
 	@Override
@@ -85,6 +91,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopExit() {
+		m_driveSubsystem.removeDefaultCommand();
 	}
 
 	@Override

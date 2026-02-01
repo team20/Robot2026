@@ -43,18 +43,18 @@ import frc.robot.SwerveModule;
 
 public class DriveSubsystem extends SubsystemBase {
 	private final SwerveModule m_frontLeft = new SwerveModule(0, kFrontLeftCANCoderPort, kFrontLeftDrivePort,
-			kFrontLeftSteerPort);
+			kFrontLeftSteerPort, true);
 	private final SwerveModule m_frontRight = new SwerveModule(1, kFrontRightCANCoderPort, kFrontRightDrivePort,
-			kFrontRightSteerPort);
+			kFrontRightSteerPort, false);
 	private final SwerveModule m_backLeft = new SwerveModule(2, kBackLeftCANCoderPort, kBackLeftDrivePort,
-			kBackLeftSteerPort);
+			kBackLeftSteerPort, true);
 	private final SwerveModule m_backRight = new SwerveModule(3, kBackRightCANCoderPort, kBackRightDrivePort,
-			kBackRightSteerPort);
+			kBackRightSteerPort, false);
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
 	private final SwerveDriveOdometry m_odometry;
-	private final AHRS m_gyro = new AHRS(NavXComType.kUSB1);
+	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 	private final SimDouble m_gyroSim;
 	private final SysIdRoutine m_sysidRoutine;
 
@@ -186,7 +186,7 @@ public class DriveSubsystem extends SubsystemBase {
 		doModuleX(module -> module.setModuleState(states[module.getIndex()]), SwerveModuleState[]::new);
 	}
 
-	private void stopAllModules() {
+	public void stopAllModules() {
 		setModuleStates(calculateModuleStates(new ChassisSpeeds(), false));
 	}
 
@@ -225,6 +225,20 @@ public class DriveSubsystem extends SubsystemBase {
 	}
 
 	/**
+	 * Method for making the robot drive using speeds
+	 * 
+	 * @param forwardSpeed
+	 * @param strafeSpeed
+	 * @param rotation
+	 * @param isRobotRelative
+	 */
+	public void drive(double forwardSpeed, double strafeSpeed, double rotation, boolean isRobotRelative) {
+		setModuleStates(
+				calculateModuleStates(
+						chassisSpeeds(() -> forwardSpeed, () -> strafeSpeed, () -> rotation), !isRobotRelative));
+	}
+
+	/**
 	 * Creates a {@code Command} to drive the robot with joystick input.
 	 *
 	 * @param forwardSpeed Forward speed supplier. Positive values make the robot
@@ -239,9 +253,9 @@ public class DriveSubsystem extends SubsystemBase {
 	public Command driveCommand(DoubleSupplier forwardSpeed, DoubleSupplier strafeSpeed,
 			DoubleSupplier rotation, BooleanSupplier isRobotRelative) {
 		return runEnd(
-				() -> setModuleStates(
-						calculateModuleStates(
-								chassisSpeeds(forwardSpeed, strafeSpeed, rotation), !isRobotRelative.getAsBoolean())),
+				() -> drive(
+						forwardSpeed.getAsDouble(), strafeSpeed.getAsDouble(), rotation.getAsDouble(),
+						isRobotRelative.getAsBoolean()),
 				this::stopAllModules)
 						.withName("DefaultDriveCommand");
 	}
