@@ -12,10 +12,7 @@ permissions:
   pages: write
   id-token: write
 
-jobs:
-    permissions:
-        contents: write
-
+jobs:    
   build:
     runs-on: ubuntu-slim
 
