@@ -31,12 +31,12 @@ jobs:
       - name: Copy output to dist folder
         run: |
           mkdir -p dist/${GITHUB_REF_NAME}
-          cp docs/index.html dist/${GITHUB_REF_NAME}/index.html
+          cp docs/index.html dist/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/${GITHUB_REF_NAME}
+          path: dist
 
   deploy:
     needs: build
