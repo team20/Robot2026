@@ -13,6 +13,9 @@ permissions:
   id-token: write
 
 jobs:
+    permissions:
+        contents: write
+
   build:
     runs-on: ubuntu-slim
 
