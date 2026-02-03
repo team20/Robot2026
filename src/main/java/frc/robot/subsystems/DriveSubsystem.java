@@ -163,8 +163,10 @@ public class DriveSubsystem extends SubsystemBase {
 	 * @param isFieldRelative Whether or not the chassis speeds is field relative.
 	 * @return The module states, in order of FL, FR, BL, BR
 	 */
-	private SwerveModuleState[] calculateModuleStates(ChassisSpeeds speeds, boolean isFieldRelative) {
-		if (isFieldRelative)
+	private SwerveModuleState[] calculateModuleStates(ChassisSpeeds speeds, boolean isRobotRelative) {
+		SmartDashboard.putNumber("Heading", getHeading().getDegrees());
+		SmartDashboard.putBoolean("Robot Relative", isRobotRelative);
+		if (!isRobotRelative)
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
 		speeds = ChassisSpeeds.discretize(speeds, 0.03);
 		SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(speeds);
