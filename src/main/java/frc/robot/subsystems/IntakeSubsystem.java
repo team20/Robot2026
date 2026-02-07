@@ -1,31 +1,41 @@
 package frc.robot.subsystems;
 
-// import motor stuff
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-
-// import more stuff
-import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.Constants.IntakeConstants.*;
 
-public class IntakeSubsystem
-{
-  private SparkMax m_motor;
-  // initialize stuff
-  public IntakeSubsystem()
-  {
-	// can id is a placeholder; replace later.
-    m_motor = new SparkMax(10, MotorType.kBrushless);
-    // set current limits
-    m_motor.setSmartCurrentLimit(IntakeConstants.kSmartCurrentLimit);
-	m_motor.setInverted(IntakeConstants.kInvert);
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
-    }
-  
-  //set speed for motor
-  public setSpeed(double speed)
-  {
-    m_motor.set(speed);
-  }
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class IntakeSubsystem extends SubsystemBase {
+	private final SparkMax m_intakeWheels;
+	private final SparkMaxConfig m_wheelConfig;
+
+	// Set up motor & initialize other subsystem aspects
+	public IntakeSubsystem() {
+		// Instantiate motor & motor configurations
+		m_intakeWheels = new SparkMax(kIntakeWheelsPort, MotorType.kBrushless);
+		m_wheelConfig = new SparkMaxConfig();
+
+		// TODO: Check configuration of motors
+		m_wheelConfig.smartCurrentLimit(kWheelSmartCurrentLimit);
+		m_wheelConfig.secondaryCurrentLimit(kWheelSecondaryCurrentLimit);
+		m_wheelConfig.idleMode(IdleMode.kBrake);
+		m_wheelConfig.inverted(kWheelInvert);
+
+		m_intakeWheels.configure(m_wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+	}
+
+	/**
+	 * Set power of motor driving intake roller wheels.
+	 * 
+	 * @param speed
+	 */
+	public void setWheelPower(double power) {
+		m_intakeWheels.set(power);
+	}
 }
