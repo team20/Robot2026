@@ -39,6 +39,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		m_intakeArm.set(power);
 	}
 
+	// We are NOT using an absolute encoder! We are using a limit switch!! Change
+	// this method!!!
 	public double getArmAngle() {
 		return m_intakeArm.getAbsoluteEncoder().getPosition() * 360;
 	}
