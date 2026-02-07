@@ -8,6 +8,8 @@ public class IntakeCommand
   public void IntakeCommand()
   {
   }
+  
+
   public void initialize()
   {
   }
@@ -18,7 +20,9 @@ public class IntakeCommand
 
   public boolean isFinished()
   {
+    return true;
   }
+  
   public void end()
   {
   }
