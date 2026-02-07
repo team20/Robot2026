@@ -1,8 +1,8 @@
 package frc.robot.subsystems;
 
-public class IntakeSubsystem
+public class IntakeArmSubsystem
 {
-  public IntakeSubsystem()
+  public IntakeArmSubsystem()
   {
   }
 }
