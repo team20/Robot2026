@@ -38,4 +38,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	public void setArmPower(double power) {
 		m_intakeArm.set(power);
 	}
+
+	public double getArmAngle() {
+		return m_intakeArm.getAbsoluteEncoder().getPosition() * 360;
+	}
 }
