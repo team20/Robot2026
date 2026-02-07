@@ -12,19 +12,19 @@ import static frc.robot.Constants.DriveConstants.*;
 public class IntakeSubsystem
 {
   private SparkMax m_motor;
-  
+  // initialize stuff
   public IntakeSubsystem()
   {
     
   }
-  
+  //motro
   public motor(int id)
   {
     m_motor = new SparkMax(id, MotorType.kBrushless);
   }
+  //set speed for motor
   public setSpeed(double speed)
   {
     m_motor.set(speed);
   }
-  public setSpeed(0.1);
 }
