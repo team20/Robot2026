@@ -5,6 +5,9 @@ import frc.robot.subsystems.IntakeSubsystem;
 
 public class IntakeCommand
 {
+  public void Intakecommand()
+  {
+  }
   public void initialize()
   {
   }
