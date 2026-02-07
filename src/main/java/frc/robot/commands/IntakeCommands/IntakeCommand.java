@@ -8,7 +8,6 @@ public class IntakeCommand
   public void IntakeCommand()
   {
   }
-  
 
   public void initialize()
   {
