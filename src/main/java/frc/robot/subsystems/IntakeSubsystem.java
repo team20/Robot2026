@@ -13,12 +13,13 @@ public class IntakeSubsystem
 {
   private SparkMax m_motor;
   // initialize stuff
-  public IntakeSubsystem(int id)
+  public IntakeSubsystem()
   {
-    m_motor = new SparkMax(/* intakeConstant for motor id*/, MotorType.kBrushless);
+	// can id is a placeholder; replace later.
+    m_motor = new SparkMax(10, MotorType.kBrushless);
     // set current limits
     m_motor.setSmartCurrentLimit(IntakeConstants.kSmartCurrentLimit);
-		m_motor.setInverted(IntakeConstants.kInvert);
+	m_motor.setInverted(IntakeConstants.kInvert);
 
     }
   
