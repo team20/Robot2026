@@ -7,21 +7,21 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 // import more stuff
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.Constants.DriveConstants.*;
+import static frc.robot.Constants.IntakeConstants.*;
 
 public class IntakeSubsystem
 {
   private SparkMax m_motor;
   // initialize stuff
-  public IntakeSubsystem()
+  public IntakeSubsystem(int id)
   {
-    
-  }
-  //motro
-  public motor(int id)
-  {
-    m_motor = new SparkMax(id, MotorType.kBrushless);
-  }
+    m_motor = new SparkMax(/* intakeConstant for motor id*/, MotorType.kBrushless);
+    // set current limits
+    m_motor.setSmartCurrentLimit(IntakeConstants.kSmartCurrentLimit);
+		m_motor.setInverted(IntakeConstants.kInvert);
+
+    }
+  
   //set speed for motor
   public setSpeed(double speed)
   {
