@@ -22,6 +22,7 @@ public class RetractArmCommand extends Command {
 
 	}
 
+	// Update this to use limit switch instead of getArmAngle method.
 	public boolean isFinished() {
 		// Check if arm is at 0 degrees plus or minus 0.5
 		if (m_subsystem.getArmAngle() >= 0 - 0.5) {

@@ -22,6 +22,7 @@ public class ExtendArmCommand extends Command {
 
 	}
 
+	// Update this to use limit switch instead of getArmAngle method.
 	public boolean isFinished() {
 		// Check if arm is at 77 degrees plus or minus 0.5
 		if (m_subsystem.getArmAngle() >= 77 - 0.5) {
