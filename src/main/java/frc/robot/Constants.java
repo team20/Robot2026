@@ -110,4 +110,10 @@ public class Constants {
 		public static final double kTurnD = 0.1;
 		public static final double kTurnMaxAcceleration = 2 * kTurnMaxAngularSpeed; // kTurnMaxAngularSpeed in 0.5
 	}
+
+	public static final class IntakeConstants {
+		// IntakeConstants are not set yet.
+		public static final boolean kInvert;
+		public static final int kSmartCurrentLimit;
+	}
 }
