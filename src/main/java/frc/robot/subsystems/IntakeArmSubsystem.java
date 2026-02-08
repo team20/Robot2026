@@ -40,8 +40,9 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	}
 
 	// The intake will not be using an absolute encoder! We are using a limit
-	// switch!! This
-	// method does not work and should not be used.
+	// switch!! This method does not work and should not be used.
+	// UPDATE: (Potentially) using limit switch for retract
+	// and hard stops for extend
 	public double getArmAngle() {
 		return m_intakeArm.getAbsoluteEncoder().getPosition() * 360;
 	}
