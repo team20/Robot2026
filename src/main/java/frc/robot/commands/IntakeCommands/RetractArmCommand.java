@@ -1,15 +1,15 @@
 package frc.robot.commands.IntakeCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeArm;
 
 public class RetractArmCommand extends Command {
 	/**
 	 * Retract the arm of the intake system.
 	 */
-	private IntakeArmSubsystem m_subsystem;
+	private IntakeArm m_subsystem;
 
-	public RetractArmCommand(IntakeArmSubsystem subsystem) {
+	public RetractArmCommand(IntakeArm subsystem) {
 		addRequirements(m_subsystem);
 		m_subsystem = subsystem;
 	}
