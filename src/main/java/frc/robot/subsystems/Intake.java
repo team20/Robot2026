@@ -28,6 +28,7 @@ public class Intake extends SubsystemBase {
 		m_wheelConfig.inverted(kWheelInvert);
 
 		m_intakeWheels.configure(m_wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+		m_intakeWheels.set(0.5);
 	}
 
 	/**

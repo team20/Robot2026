@@ -10,13 +10,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.subsystems.DriveSubsystem;
 
 public class Robot extends TimedRobot {
 	private Command m_autonomousCommand;
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
-	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+	// private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
 	private final SendableChooser<Command> m_autoChooser = new SendableChooser<Command>();
 	private final CommandPS5Controller m_joystick = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
@@ -26,10 +25,13 @@ public class Robot extends TimedRobot {
 	}
 
 	private void BindDriveControls() {
-		m_driveSubsystem.setDefaultCommand(
-				m_driveSubsystem.driveCommand(
-						() -> -m_joystick.getLeftY(), () -> -m_joystick.getLeftX(),
-						() -> m_joystick.getL2Axis() - m_joystick.getR2Axis(), m_joystick.getHID()::getCreateButton));
+		/*
+		 * m_driveSubsystem.setDefaultCommand(
+		 * m_driveSubsystem.driveCommand(
+		 * () -> -m_joystick.getLeftY(), () -> -m_joystick.getLeftX(),
+		 * () -> m_joystick.getL2Axis() - m_joystick.getR2Axis(),
+		 * m_joystick.getHID()::getCreateButton));
+		 */
 	}
 
 	@Override
