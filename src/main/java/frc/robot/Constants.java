@@ -23,7 +23,7 @@ public class Constants {
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
 			public static final int kDefaultRPM = 2400; // TODO: Test and find actual default RPM
-			public static final int kHallwayTestingRPM = 2200; // Solely for programmers (stay safe!)
+			public static final double kRampRate = 500;
 		}
 	}
 

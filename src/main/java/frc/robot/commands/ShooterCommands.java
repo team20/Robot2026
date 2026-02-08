@@ -4,44 +4,46 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.wpilibj2.command.Commands.*;
-
+import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Subsystems.ShooterConstants;
-import frc.robot.subsystems.Shooter;
 
-public class ShooterCommands {
-	/*
-	 * You should consider using the more terse Command factories API instead
-	 * https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-
-	 * command-based.html#defining-commands
-	 */
-	public static class RunAtStaticRPM extends Command {
+public abstract class ShooterCommands extends SubsystemBase {
+	public abstract void stop();
 
-		private Shooter m_shooter;
+	public abstract void setPower(double power);
+
+	public abstract void setVoltage(double voltage);
+
+	public abstract void setRPM(double rpm);
+
+	public abstract double getRPM();
+
+	public abstract double getRPMperVolt();
+
+	public class RunAtStaticRPM extends Command {
 		private double m_rpm;
 
 		/** Creates a new runShooter. */
-		public RunAtStaticRPM(Shooter shooter, double rpm) {
-			m_shooter = shooter;
+		public RunAtStaticRPM(double rpm) {
 			m_rpm = rpm;
 			setName("Run Shooter At RPM");
-			addRequirements(shooter);
+			addRequirements(ShooterCommands.this);
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			double kv = m_shooter.getRPMperVolt();
-			double voltage = m_rpm / kv;
-			m_shooter.setVoltage(voltage);
+			setVoltage(m_rpm / getRPMperVolt());
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			stop();
 		}
 
 		// Returns true when the command should end.
@@ -51,32 +53,24 @@ public class ShooterCommands {
 		}
 	}
 
-	public static class RunAtPower extends Command {
-
-		private final Shooter m_shooter;
+	public class RunAtPower extends Command {
 		private final double m_power;
 		private final double m_time;
 		private final Timer m_timer = new Timer();
 
 		/** Creates a new RunShooterAtPower. */
-		public RunAtPower(Shooter shooter, double power, double time) {
-			m_shooter = shooter;
+		public RunAtPower(double power, double time) {
 			m_power = power;
 			m_time = time;
 			setName("Run Shooter At Power");
-			addRequirements(shooter);
+			addRequirements(ShooterCommands.this);
 		}
 
 		// Called when the command is initially scheduled.
 		@Override
 		public void initialize() {
 			m_timer.start();
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			m_shooter.setPower(m_power);
+			setPower(m_power);
 		}
 
 		// Returns true when the command should end.
@@ -88,34 +82,30 @@ public class ShooterCommands {
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			stop();
 		}
 	}
 
-	public static class RunAtDynamicRPM extends Command {
-
-		private Shooter m_shooter;
+	public class RunAtDynamicRPM extends Command {
 		private double m_rpm;
 
 		/** Creates a new runShooter. */
-		public RunAtDynamicRPM(Shooter shooter, double rpm) {
-			m_shooter = shooter;
+		public RunAtDynamicRPM(double rpm) {
 			m_rpm = rpm;
-
 			setName("Run Shooter At RPM");
-			addRequirements(shooter);
+			addRequirements(ShooterCommands.this);
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			m_shooter.setRPMSetpoint(m_rpm);
+			setRPM(m_rpm);
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			stop();
 		}
 
 		// Returns true when the command should end.
@@ -125,37 +115,41 @@ public class ShooterCommands {
 		}
 	}
 
-	public static class Toggle extends Command {
-		private final Shooter m_subsystem;
+	public class RunAtDPadRPM extends Command {
+		private final Trigger m_up;
+		private final Trigger m_down;
+		private final IterativeRobotBase m_robot;
+		private double m_rpm;
 
-		public Toggle(Shooter subsystem) {
-			m_subsystem = subsystem;
+		public RunAtDPadRPM(IterativeRobotBase robot, Trigger up, Trigger down) {
+			this(robot, ShooterConstants.kDefaultRPM, up, down);
+		}
+
+		public RunAtDPadRPM(IterativeRobotBase robot, double rpm, Trigger up, Trigger down) {
+			m_robot = robot;
+			m_rpm = rpm;
+			m_up = up;
+			m_down = down;
+			setName("Run Shooter At RPM");
+			addRequirements(ShooterCommands.this);
 		}
 
 		@Override
-		public void initialize() {
-			if (m_subsystem.getRPMSetpoint() != 0) {
-				m_subsystem.stop();
+		public void execute() {
+			double change = 0;
+			if (m_up.getAsBoolean()) {
+				change += ShooterConstants.kRampRate;
 			}
-
-			else {
-				m_subsystem.setRPMSetpoint(ShooterConstants.kHallwayTestingRPM);
+			if (m_down.getAsBoolean()) {
+				change -= ShooterConstants.kRampRate;
 			}
+			m_rpm += change * m_robot.getPeriod();
+			setRPM(m_rpm);
 		}
 
 		@Override
 		public boolean isFinished() {
 			return true;
 		}
-	}
-
-	/**
-	 * Stops the shooter motor.
-	 * 
-	 * @param subsystem
-	 * @return stop command
-	 */
-	public static Command stop(Shooter subsystem) {
-		return runOnce(() -> subsystem.stop(), subsystem);
 	}
 }
