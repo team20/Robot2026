@@ -9,6 +9,7 @@ import static frc.robot.Constants.DriveConstants.*;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -25,21 +26,27 @@ import frc.robot.Constants.DriveConstants;
  * Contains all the hardware and controllers for a swerve module.
  */
 public class SwerveModule {
-	private final PIDController m_steerController = new PIDController(kP, kI, kD);
+	private final PIDController m_steerController = new PIDController(kSteerP, kSteerI, kSteerD);
+	private final PIDController m_driveController = new PIDController(kDriveP, kDriveI, kDriveD);
 	private final CANcoder m_CANCoder;
 	private final TalonFX m_driveMotor;
 	private final TalonFX m_steerMotor;
+	private final int m_index;
 
 	// private final SparkFlexSim m_steerMotorSim;
 	private final DCMotorSim m_driveMotorModel;
 	private final DCMotorSim m_steerMotorModel;
 
-	public SwerveModule(int canId, int drivePort, int steerPort) {
+	public SwerveModule(int index, int canId, int drivePort, int steerPort, boolean Inverted) {
+		m_index = index;
 		m_CANCoder = new CANcoder(canId);
 		m_driveMotor = new TalonFX(drivePort);
 		m_steerMotor = new TalonFX(steerPort);
 		// m_steerMotorSim = new SparkFlexSim(m_steerMotor, DCMotor.getNEO(1));
-		m_driveMotor.getConfigurator().apply(DriveConstants.kDriveConfig);
+		TalonFXConfiguration config = DriveConstants.kDriveConfig.clone();
+		config.MotorOutput.Inverted = Inverted ? InvertedValue.Clockwise_Positive
+				: InvertedValue.CounterClockwise_Positive;
+		m_driveMotor.getConfigurator().apply(config);
 		// Helps with encoder precision (not set in stone)
 		// config.encoder.uvwAverageDepth(kEncoderDepth).uvwMeasurementPeriod(kEncoderMeasurementPeriod);
 		m_steerMotor.getConfigurator().apply(DriveConstants.kSteerConfig);
@@ -57,10 +64,15 @@ public class SwerveModule {
 		}
 	}
 
-	public void setNeutralMode(NeutralModeValue neutralMode) {
+	public int getIndex() {
+		return m_index;
+	}
+
+	public NeutralModeValue setNeutralMode(NeutralModeValue neutralMode) {
 		var config = new TalonFXConfiguration();
 		config.MotorOutput.NeutralMode = neutralMode;
 		m_driveMotor.getConfigurator().apply(config);
+		return neutralMode;
 	}
 
 	/**
@@ -93,8 +105,9 @@ public class SwerveModule {
 	/**
 	 * Resets drive encoder to zero.
 	 */
-	public void resetDriveEncoder() {
+	public boolean resetDriveEncoder() {
 		m_driveMotor.setPosition(0);
+		return getDriveEncoderPosition() == 0;
 	}
 
 	/**
@@ -148,11 +161,22 @@ public class SwerveModule {
 	 * @param state The module state. Note that the speedMetersPerSecond field has
 	 *        been repurposed to contain volts, not velocity.
 	 */
-	public void setModuleState(SwerveModuleState state) {
-		m_driveMotor.setVoltage(state.speedMetersPerSecond);
+	public SwerveModuleState setModuleState(SwerveModuleState state) {
+		// double drivePower = m_driveController
+		// .calculate(m_driveMotor.getMotorVoltage().getValueAsDouble(),
+		// state.speedMetersPerSecond);
+		double drivePower = state.speedMetersPerSecond;
+		double sign = Math.signum(drivePower);
+		drivePower = Math.min(ABBA.getMaxVoltage(), Math.abs(state.speedMetersPerSecond));
+		drivePower = Math.min(kTeleopMaxVoltage, drivePower);
+		m_driveMotor.setVoltage(drivePower * sign);
 		double turnPower = m_steerController.calculate(getModuleAngle(), state.angle.getDegrees());
-		m_steerMotor.setVoltage(turnPower);
+		sign = Math.signum(turnPower);
+		turnPower = Math.min(ABBA.getMaxVoltage(), Math.abs(turnPower));
+		turnPower = Math.min(kTeleopMaxTurnVoltage, turnPower);
+		m_steerMotor.setVoltage(turnPower * sign);
 		updateSim();
+		return state;
 	}
 
 	private void updateSim() {
