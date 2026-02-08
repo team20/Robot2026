@@ -4,15 +4,14 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.*;
-
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Shooter;
 
-public class ShooterCommand {
+public class ShooterCommands {
 	/*
 	 * You should consider using the more terse Command factories API instead
 	 * https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-
@@ -96,13 +95,12 @@ public class ShooterCommand {
 	public static class RunAtDynamicRPM extends Command {
 
 		private Shooter m_shooter;
-		private VelocityVoltage m_request;
+		private double m_rpm;
 
 		/** Creates a new runShooter. */
 		public RunAtDynamicRPM(Shooter shooter, double rpm) {
 			m_shooter = shooter;
-			m_request = new VelocityVoltage(RPM.of(rpm))
-					.withFeedForward(rpm / m_shooter.getRPMperVolt());
+			m_rpm = rpm;
 
 			setName("Run Shooter At RPM");
 			addRequirements(shooter);
@@ -111,7 +109,7 @@ public class ShooterCommand {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			m_shooter.velocityVoltage(m_request);
+			m_shooter.setRPMSetpoint(m_rpm);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -125,5 +123,39 @@ public class ShooterCommand {
 		public boolean isFinished() {
 			return false;
 		}
+	}
+
+	public static class Toggle extends Command {
+		private final Shooter m_subsystem;
+
+		public Toggle(Shooter subsystem) {
+			m_subsystem = subsystem;
+		}
+
+		@Override
+		public void initialize() {
+			if (m_subsystem.getRPMSetpoint() != 0) {
+				m_subsystem.stop();
+			}
+
+			else {
+				m_subsystem.setRPMSetpoint(ShooterConstants.kHallwayTestingRPM);
+			}
+		}
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
+
+	/**
+	 * Stops the shooter motor.
+	 * 
+	 * @param subsystem
+	 * @return stop command
+	 */
+	public static Command stop(Shooter subsystem) {
+		return runOnce(() -> subsystem.stop(), subsystem);
 	}
 }

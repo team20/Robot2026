@@ -5,7 +5,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Compliance.FixMe;
 
 public class Constants {
 	public static final class Subsystems {
@@ -20,9 +19,11 @@ public class Constants {
 		}
 
 		public static final class ShooterConstants {
-			public static final int kMotorPort = 56;
+			public static final int kMotorPort = 23;
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
+			public static final int kDefaultRPM = 2400; // TODO: Test and find actual default RPM
+			public static final int kHallwayTestingRPM = 2200; // Solely for programmers (stay safe!)
 		}
 	}
 
