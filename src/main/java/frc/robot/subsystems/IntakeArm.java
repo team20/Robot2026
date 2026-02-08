@@ -11,12 +11,12 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class IntakeArmSubsystem extends SubsystemBase {
+public class IntakeArm extends SubsystemBase {
 	private final SparkMax m_intakeArm;
 	private final SparkMaxConfig m_armConfig;
 
 	// Set up motor & initialize other subsystem aspects
-	public IntakeArmSubsystem() {
+	public IntakeArm() {
 		// Instantiate motor & motor configuration
 		m_intakeArm = new SparkMax(kIntakeArmPort, MotorType.kBrushless);
 		m_armConfig = new SparkMaxConfig();
