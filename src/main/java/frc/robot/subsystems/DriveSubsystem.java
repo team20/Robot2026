@@ -7,7 +7,6 @@ package frc.robot.subsystems;
 import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.List;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -40,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ControllerConstants;
 import frc.robot.SwerveModule;
+import frc.robot.commands.DriveCommand;
 
 public class DriveSubsystem extends SubsystemBase {
 	private final SwerveModule m_frontLeft = new SwerveModule(0, kFrontLeftCANCoderPort, kFrontLeftDrivePort,
@@ -114,6 +114,10 @@ public class DriveSubsystem extends SubsystemBase {
 		} else {
 			m_gyroSim = null;
 		}
+	}
+
+	public DriveCommand getCommand() {
+		return new DriveCommand(this);
 	}
 
 	/**
@@ -192,7 +196,7 @@ public class DriveSubsystem extends SubsystemBase {
 		setModuleStates(calculateModuleStates(new ChassisSpeeds(), false));
 	}
 
-	public void setDriveMotorNeutralMode(NeutralModeValue mode) {
+	public void setNeutralMode(NeutralModeValue mode) {
 		// If we just set the motors to brake, when toggling, it should then switch to
 		// coast
 		coastState.shouldBeCoast(mode == NeutralModeValue.Brake);
@@ -215,15 +219,9 @@ public class DriveSubsystem extends SubsystemBase {
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
 	}
 
-	public Command toggleCoastMode() {
-		return runOnce(
-				() -> setDriveMotorNeutralMode(
-						coastState.shouldBeCoast() ? NeutralModeValue.Coast : NeutralModeValue.Brake))
-								.withName("Drive Toggle Coast Mode");
-	}
-
-	public Command setNeutralMode(NeutralModeValue mode) {
-		return runOnce(() -> setDriveMotorNeutralMode(mode)).withName("Drive Enable Coast Mode");
+	public void toggleCoastMode() {
+		setNeutralMode(
+				coastState.shouldBeCoast() ? NeutralModeValue.Coast : NeutralModeValue.Brake);
 	}
 
 	/**
@@ -238,28 +236,6 @@ public class DriveSubsystem extends SubsystemBase {
 		setModuleStates(
 				calculateModuleStates(
 						chassisSpeeds(() -> forwardSpeed, () -> strafeSpeed, () -> rotation), !isRobotRelative));
-	}
-
-	/**
-	 * Creates a {@code Command} to drive the robot with joystick input.
-	 *
-	 * @param forwardSpeed Forward speed supplier. Positive values make the robot
-	 *        go forward (+X direction).
-	 * @param strafeSpeed Strafe speed supplier. Positive values make the robot
-	 *        go to the left (+Y direction).
-	 * @param rotation Rotation supplier. Positive values make
-	 *        the robot rotate left (CCW direction).
-	 * @return a {@code ChassisSpeeds} instance to drive the robot with joystick
-	 *         input
-	 */
-	public Command driveCommand(DoubleSupplier forwardSpeed, DoubleSupplier strafeSpeed,
-			DoubleSupplier rotation, BooleanSupplier isRobotRelative) {
-		return runEnd(
-				() -> drive(
-						forwardSpeed.getAsDouble(), strafeSpeed.getAsDouble(), rotation.getAsDouble(),
-						isRobotRelative.getAsBoolean()),
-				this::stopAllModules)
-						.withName("DefaultDriveCommand");
 	}
 
 	/**
@@ -296,13 +272,12 @@ public class DriveSubsystem extends SubsystemBase {
 	 * 
 	 * @return A command to reset the gyro heading.
 	 */
-	public Command resetHeading() {
-		return runOnce(m_gyro::zeroYaw).withName("ResetHeadingCommand");
+	public void resetHeading() {
+		m_gyro.zeroYaw();
 	}
 
-	public Command resetOdometry(Pose2d pose) {
-		return runOnce(() -> m_odometry.resetPosition(getHeading(), getModulePositions(), pose))
-				.withName("ResetOdometryCommand");
+	public void resetOdometry(Pose2d pose) {
+		m_odometry.resetPosition(getHeading(), getModulePositions(), pose);
 	}
 
 	/**
