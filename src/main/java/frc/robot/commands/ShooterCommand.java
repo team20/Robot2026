@@ -93,13 +93,13 @@ public class ShooterCommand {
 		}
 	}
 
-	public static class RunAtDynamicRpm extends Command {
+	public static class RunAtDynamicRPM extends Command {
 
 		private Shooter m_shooter;
 		private VelocityVoltage m_request;
 
 		/** Creates a new runShooter. */
-		public RunAtDynamicRpm(Shooter shooter, double rpm) {
+		public RunAtDynamicRPM(Shooter shooter, double rpm) {
 			m_shooter = shooter;
 			m_request = new VelocityVoltage(RPM.of(rpm))
 					.withFeedForward(rpm / m_shooter.getRPMperVolt());

@@ -5,30 +5,22 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.commands.RunTurretToAngleHardware;
 import frc.robot.commands.ShooterCommand;
+import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Turret;
 
 public class Robot extends TimedRobot {
-	private Command m_autonomousCommand;
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
-	/*
-	 * private final Drive m_driveSubsystem = new Drive();
-	 * private final Transport m_transportSubsystem = new Transport();
-	 * private final Intake m_intakeSubsystem = new Intake();
-	 */
+	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
 	private final Shooter m_shooterSubsystem = new Shooter();
-	/*
-	 * private final Turret m_turretSubsystem = new Turret();
-	 * private final Climber m_climberSubsystem = new Climber();
-	 */
-	private final SendableChooser<Command> m_autoChooser = new SendableChooser<Command>();
+	private final Turret m_turretSubsystem = new Turret();
 	private final CommandPS5Controller m_joystick = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
 
@@ -95,57 +87,28 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		/*
-		 * m_autonomousCommand = m_autoChooser.getSelected();
-		 * if (m_autonomousCommand != null) {
-		 * m_scheduler.schedule(m_autonomousCommand);
-		 * }
-		 */
-		CommandScheduler.getInstance().schedule(
-				Commands.sequence(
-						new ShooterCommand.RunAtDynamicRpm(m_shooterSubsystem, 2400).withTimeout(40)));
-	}
-
-	@Override
-	public void autonomousPeriodic() {
-
-	}
-
-	@Override
-	public void autonomousExit() {
+		m_scheduler.cancelAll();
+		m_scheduler.schedule(
+				Commands.parallel(
+						Commands.sequence(
+								new RunTurretToAngleHardware(m_turretSubsystem, 45),
+								Commands.waitSeconds(1),
+								new RunTurretToAngleHardware(m_turretSubsystem, 225),
+								Commands.waitSeconds(1),
+								new RunTurretToAngleHardware(m_turretSubsystem, 45),
+								Commands.waitSeconds(1),
+								new RunTurretToAngleHardware(m_turretSubsystem, 225)),
+						new ShooterCommand.RunAtDynamicRPM(m_shooterSubsystem, 2400).withTimeout(40)));
 	}
 
 	@Override
 	public void teleopInit() {
-		if (m_autonomousCommand != null) {
-			m_autonomousCommand.cancel();
-		}
-	}
-
-	@Override
-	public void teleopPeriodic() {
-
-	}
-
-	@Override
-	public void teleopExit() {
+		m_scheduler.cancelAll();
 	}
 
 	@Override
 	public void testInit() {
-		CommandScheduler.getInstance().cancelAll();
-	}
-
-	@Override
-	public void testPeriodic() {
-	}
-
-	@Override
-	public void testExit() {
-	}
-
-	@Override
-	public void simulationPeriodic() {
-
+		m_scheduler.cancelAll();
+		m_scheduler.schedule(ClampedP.testCommand());
 	}
 }

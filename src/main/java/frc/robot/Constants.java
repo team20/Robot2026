@@ -10,68 +10,19 @@ import frc.robot.Compliance.FixMe;
 public class Constants {
 	public static final class Subsystems {
 		public static final class TurretConstants {
-			public static final double kDeadzone = .05;
-
-			public static final class Yaw {
-				@FixMe(reason = "Talk to electrical")
-				public static final int kMotorPort = -1;
-				@FixMe(reason = "Tune value")
-				public static final double kP = 0;
-			}
-
-			public static final class Pitch {
-				@FixMe(reason = "Talk to electrical")
-				public static final int kMotorPort = -1;
-				@FixMe(reason = "Tune value")
-				public static final double kP = 0;
-			}
-		}
-
-		public static final class TransportConstants {
-			@FixMe(reason = "Talk to electrical")
-			public static final int kMotorPort = -1;
-			@FixMe(reason = "Determine speed")
-			public static final double kDefaultSpeed = 0;
+			public static final double kMaxDutyCycle = 0.5;
+			public final static double kGearRatio = 1;
+			public final static double kMinPower = 0.025;
+			public final static double kMaxPower = 0.25;
+			public final static double kMaxErr = 25;
+			public final static double kTolerance = 1;
+			public final static double kP = 0.01;
 		}
 
 		public static final class ShooterConstants {
-			// @FixMe(reason = "Talk to electrical")
-
-			/*
-			 * public static final double kMAX_RPS = 5500.0 / 60.0;
-			 * public static final double kMIN_RPS = 0.0;
-			 * public static final double kMAX_POWER = 1.0;
-			 * public static final double kMIN_POWER = -1.0;
-			 */
-
 			public static final int kMotorPort = 56;
 			public static final double kCurrentLimit = 30;
-			// @FixMe(reason = "Determine speed")
-			// public static final double kDefaultSpeed = 0;
-		}
-
-		public static final class ClimberConstants {
-			@FixMe(reason = "Talk to electrical")
-			public static final int kMotorPort = -1;
-			@FixMe(reason = "Determine speed")
-			public static final double kDefaultSpeed = 0;
-		}
-
-		public static final class IntakeConstants {
-			@FixMe(reason = "Talk to electrical")
-			public static final int kRollerPort = -1;
-			@FixMe(reason = "Talk to electrical")
-			public static final int kDeployPort = -1;
-			@FixMe(reason = "Determine speed")
-			public static final double kDefaultSpeed = 0;
-			@FixMe(reason = "Determine angle")
-			public static final double kRetractAngle = 0;
-			@FixMe(reason = "Determine angle")
-			public static final double kDeployAngle = 0;
-			@FixMe(reason = "Tune value")
-			public static final double kP = 0;
-			@FixMe(reason = "Determine velocity")
-			public static final double kStationaryVelocity = 0;
+			public static final double kV = 480;
 		}
 	}
 

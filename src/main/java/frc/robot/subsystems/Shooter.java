@@ -47,6 +47,6 @@ public class Shooter extends SubsystemBase {
 	}
 
 	public double getRPMperVolt() {
-		return 480;
+		return ShooterConstants.kV;
 	}
 }
