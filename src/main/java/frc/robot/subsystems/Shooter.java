@@ -7,10 +7,11 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.commands.ShooterCommands;
 
-public class Shooter extends ShooterCommands {
+public class Shooter extends SubsystemBase {
 
 	private final TalonFX m_motor = new TalonFX(ShooterConstants.kMotorPort);
 	private final VelocityVoltage m_request = new VelocityVoltage(0);
@@ -53,5 +54,9 @@ public class Shooter extends ShooterCommands {
 
 	public double getRPMperVolt() {
 		return ShooterConstants.kV;
+	}
+
+	public ShooterCommands getCommands() {
+		return new ShooterCommands(this);
 	}
 }

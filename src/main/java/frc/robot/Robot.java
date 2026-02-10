@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
 
 	private void bindControls() {
 		m_operatorController.triangle().toggleOnTrue(
-				m_shooterSubsystem.new RunAtDPadRPM(this, m_operatorController.povUp(),
+				m_shooterSubsystem.getCommands().new RunAtDPadRPM(this, m_operatorController.povUp(),
 						m_operatorController.povDown()));
 	}
 
@@ -54,7 +54,7 @@ public class Robot extends TimedRobot {
 								new RunTurretToAngleHardware(m_turretSubsystem, 45),
 								Commands.waitSeconds(1),
 								new RunTurretToAngleHardware(m_turretSubsystem, 225)),
-						m_shooterSubsystem.new RunAtDynamicRPM(2400).withTimeout(40)));
+						m_shooterSubsystem.getCommands().new RunAtDynamicRPM(2400).withTimeout(40)));
 	}
 
 	@Override
