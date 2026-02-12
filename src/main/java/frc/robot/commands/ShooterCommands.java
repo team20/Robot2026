@@ -12,32 +12,26 @@ import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Shooter;
 
 public class ShooterCommands {
-	private final Shooter m_shooter;
-
-	public ShooterCommands(Shooter shooter) {
-		m_shooter = shooter;
-	}
-
-	public class RunAtStaticRPM extends Command {
+	public static class RunAtStaticRPM extends Command {
 		private double m_rpm;
 
 		/** Creates a new runShooter. */
 		public RunAtStaticRPM(double rpm) {
 			m_rpm = rpm;
 			setName("Run Shooter At RPM");
-			addRequirements(m_shooter);
+			addRequirements(Shooter.getShooter());
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			m_shooter.setVoltage(m_rpm / m_shooter.getRPMperVolt());
+			Shooter.setVoltage(m_rpm / Shooter.getRPMperVolt());
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			Shooter.stop();
 		}
 
 		// Returns true when the command should end.
@@ -47,7 +41,7 @@ public class ShooterCommands {
 		}
 	}
 
-	public class RunAtPower extends Command {
+	public static class RunAtPower extends Command {
 		private final double m_power;
 		private final double m_time;
 		private final Timer m_timer = new Timer();
@@ -57,14 +51,14 @@ public class ShooterCommands {
 			m_power = power;
 			m_time = time;
 			setName("Run Shooter At Power");
-			addRequirements(m_shooter);
+			addRequirements(Shooter.getShooter());
 		}
 
 		// Called when the command is initially scheduled.
 		@Override
 		public void initialize() {
 			m_timer.start();
-			m_shooter.setPower(m_power);
+			Shooter.setPower(m_power);
 		}
 
 		// Returns true when the command should end.
@@ -76,30 +70,30 @@ public class ShooterCommands {
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			Shooter.stop();
 		}
 	}
 
-	public class RunAtDynamicRPM extends Command {
+	public static class RunAtDynamicRPM extends Command {
 		private double m_rpm;
 
 		/** Creates a new runShooter. */
 		public RunAtDynamicRPM(double rpm) {
 			m_rpm = rpm;
 			setName("Run Shooter At RPM");
-			addRequirements(m_shooter);
+			addRequirements(Shooter.getShooter());
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			m_shooter.setRPM(m_rpm);
+			Shooter.setRPM(m_rpm);
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			Shooter.stop();
 		}
 
 		// Returns true when the command should end.
@@ -109,7 +103,7 @@ public class ShooterCommands {
 		}
 	}
 
-	public class RunAtDPadRPM extends Command {
+	public static class RunAtDPadRPM extends Command {
 		private final Trigger m_up;
 		private final Trigger m_down;
 		private final IterativeRobotBase m_robot;
@@ -125,7 +119,7 @@ public class ShooterCommands {
 			m_up = up;
 			m_down = down;
 			setName("Run Shooter At RPM");
-			addRequirements(m_shooter);
+			addRequirements(Shooter.getShooter());
 		}
 
 		@Override
@@ -138,12 +132,12 @@ public class ShooterCommands {
 				change -= ShooterConstants.kRampRate;
 			}
 			m_rpm += change * m_robot.getPeriod();
-			m_shooter.setRPM(m_rpm);
+			Shooter.setRPM(m_rpm);
 		}
 
 		@Override
 		public void end(boolean interrupted) {
-			m_shooter.stop();
+			Shooter.stop();
 		}
 
 		@Override

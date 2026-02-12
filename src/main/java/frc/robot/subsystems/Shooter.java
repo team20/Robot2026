@@ -9,9 +9,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.ShooterConstants;
-import frc.robot.commands.ShooterCommands;
 
 public class Shooter extends SubsystemBase {
+	private static Shooter s_theShooter;
 
 	private final TalonFX m_motor = new TalonFX(ShooterConstants.kMotorPort);
 	private final VelocityVoltage m_request = new VelocityVoltage(0);
@@ -26,37 +26,42 @@ public class Shooter extends SubsystemBase {
 		config.Slot0.kD = 0;
 
 		m_motor.getConfigurator().apply(config);
+		if (s_theShooter == null) {
+			s_theShooter = this;
+		} else {
+			throw new Error("Shooter already instantiated");
+		}
+	}
+
+	public static Shooter getShooter() {
+		return s_theShooter;
 	}
 
 	/**
 	 * Sets setpoint to 0 and stops the motor.
 	 */
-	public void stop() {
-		m_motor.stopMotor();
+	public static void stop() {
+		s_theShooter.m_motor.stopMotor();
 	}
 
-	public void setPower(double power) {
-		m_motor.set(power);
+	public static void setPower(double power) {
+		s_theShooter.m_motor.set(power);
 	}
 
-	public void setVoltage(double voltage) {
-		m_motor.setVoltage(voltage);
+	public static void setVoltage(double voltage) {
+		s_theShooter.m_motor.setVoltage(voltage);
 	}
 
-	public void setRPM(double rpm) {
-		double voltage = rpm / this.getRPMperVolt();
-		m_motor.setControl(m_request.withVelocity(RPM.of(rpm)).withFeedForward(voltage));
+	public static void setRPM(double rpm) {
+		double voltage = rpm / getRPMperVolt();
+		s_theShooter.m_motor.setControl(s_theShooter.m_request.withVelocity(RPM.of(rpm)).withFeedForward(voltage));
 	}
 
-	public double getRPM() {
-		return m_motor.getVelocity().getValue().in(RPM);
+	public static double getRPM() {
+		return s_theShooter.m_motor.getVelocity().getValue().in(RPM);
 	}
 
-	public double getRPMperVolt() {
+	public static double getRPMperVolt() {
 		return ShooterConstants.kV;
-	}
-
-	public ShooterCommands getCommands() {
-		return new ShooterCommands(this);
 	}
 }
