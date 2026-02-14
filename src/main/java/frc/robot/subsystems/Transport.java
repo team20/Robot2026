@@ -1,23 +1,41 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.TransportConstants;
 
 /**
  * The Transport subsystem is responsible for moving game pieces from the intake
  * to the shooter. It uses a motor controller to achieve this functionality.
  */
-public class Transport extends BasicMotorSubsystem {
-
-	private final PWMSparkMax motor;
+public class Transport extends SubsystemBase {
+	private static Transport s_theTransport;
+	private final SparkMax motor;
 
 	/**
 	 * Constructs a new Transport subsystem.
+	 * This initializes the motor controller and ensures only one instance of the
+	 * subsystem exists.
 	 */
 	public Transport() {
-		motor = new PWMSparkMax(TransportConstants.kMotorPort);
+		motor = new SparkMax(TransportConstants.kMotorPort, MotorType.kBrushless);
+
+		if (s_theTransport == null) {
+			s_theTransport = this;
+		} else {
+			throw new Error("The Transport subsystem has already been created");
+		}
+	}
+
+	/**
+	 * Retrieves the singleton instance of the Transport subsystem.
+	 *
+	 * @return The singleton instance of the Transport subsystem.
+	 */
+	public static Transport getTransport() {
+		return s_theTransport;
 	}
 
 	/**
@@ -25,43 +43,14 @@ public class Transport extends BasicMotorSubsystem {
 	 *
 	 * @param speed The speed to set, between -1.0 and 1.0.
 	 */
-	public void setSpeed(double speed) {
-		motor.set(speed);
+	public static void setPower(double speed) {
+		s_theTransport.motor.set(speed);
 	}
 
 	/**
-	 * Stops the transport motor.
+	 * Stops the transport motor by setting its speed to zero.
 	 */
-	public void stop() {
-		motor.set(0);
-	}
-
-	/**
-	 * Creates a command to move the transport motor based on trigger inputs.
-	 *
-	 * @param triangle Trigger to move forward.
-	 * @param cross Trigger to move backward.
-	 * @return A command to control the motor.
-	 */
-	public Command moveWithTrigger(Trigger triangle, Trigger cross) {
-		return run(() -> {
-			if (triangle.getAsBoolean()) {
-				motor.set(getDefaultSpeed());
-			} else if (cross.getAsBoolean()) {
-				motor.set(-getDefaultSpeed());
-			} else {
-				motor.set(0); // Default case to stop the motor
-			}
-		});
-	}
-
-	@Override
-	protected int getMotorId() {
-		return TransportConstants.kMotorPort;
-	}
-
-	@Override
-	protected double getDefaultSpeed() {
-		return TransportConstants.kDefaultSpeed;
+	public static void stop() {
+		s_theTransport.motor.set(0);
 	}
 }
