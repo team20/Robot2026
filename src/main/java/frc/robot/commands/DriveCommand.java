@@ -48,9 +48,12 @@ public class DriveCommand {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
+
 			m_driveSubsystem.drive(
-					m_forwardSpeed.getAsDouble(), m_strafeSpeed.getAsDouble(), m_rotation.getAsDouble(),
+					m_forwardSpeed.getAsDouble(), m_strafeSpeed.getAsDouble(),
+					m_rotation.getAsDouble(),
 					m_isRobotRelative.getAsBoolean());
+
 		}
 
 		// Called once the command ends or is interrupted.
@@ -160,8 +163,8 @@ public class DriveCommand {
 			Transform2d error = m_driveSubsystem.getPose().minus(m_pose);
 			double speedX = ClampedP.clampedP(error.getX(), 0.05, m_translationSpeed, 1, 0.01);
 			double speedY = ClampedP.clampedP(error.getY(), 0.05, m_translationSpeed, 1, 0.01);
-			double speedθ = ClampedP.clampedP(error.getRotation().getDegrees(), 0.05, m_rotationSpeed, 45, 5);
-			m_driveSubsystem.drive(speedX, speedY, speedθ, false);
+			double speedTheta = ClampedP.clampedP(error.getRotation().getDegrees(), 0.05, m_rotationSpeed, 45, 5);
+			m_driveSubsystem.drive(speedX, speedY, speedTheta, false);
 		}
 
 		// Called once the command ends or is interrupted.

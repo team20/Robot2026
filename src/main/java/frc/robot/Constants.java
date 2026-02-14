@@ -29,7 +29,7 @@ public class Constants {
 	public static final class ControllerConstants {
 		public static final int kDriverControllerPort = 0;
 		public static final int kOperatorControllerPort = 1;
-		public static final double kDeadzone = 0.05;
+		public static final double kDeadzone = 0.1;
 		public static final double kTriggerDeadzone = .05;
 	}
 
@@ -107,6 +107,7 @@ public class Constants {
 		public static final TalonFXConfiguration kSteerConfig = new TalonFXConfiguration();
 		static {
 			kSteerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+			kSteerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 			kSteerConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = kRampRate;
 			kSteerConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = kRampRate;
 			kSteerConfig.CurrentLimits.StatorCurrentLimit = 60;
