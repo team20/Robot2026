@@ -28,11 +28,15 @@ public class Turret extends SubsystemBase {
 		m_motor = new SparkMax(2, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.idleMode(IdleMode.kBrake);
-		config.absoluteEncoder.positionConversionFactor(360 / TurretConstants.kGearRatio);
-		config.closedLoop.pid(TurretConstants.kP, 0, 0);
+		config.absoluteEncoder.positionConversionFactor(360);
+		config.closedLoop.pid(TurretConstants.kP, TurretConstants.kI, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
-		config.closedLoop.positionWrappingEnabled(true);
+		config.closedLoop.positionWrappingEnabled(false);
+		config.inverted(true);
+		// config.closedLoop.
 		config.closedLoop.positionWrappingInputRange(0, 360);
+		config.smartCurrentLimit(20);
+		config.secondaryCurrentLimit(25);
 		m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		m_encoder = m_motor.getAbsoluteEncoder();
 		m_controller = m_motor.getClosedLoopController();

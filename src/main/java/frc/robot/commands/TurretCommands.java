@@ -37,7 +37,8 @@ public class TurretCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return Math.abs(Turret.getPosition() - m_angle) < TurretConstants.kTolerance;
+			return false;
+			// return Math.abs(Turret.getPosition() - m_angle) < TurretConstants.kTolerance;
 		}
 	}
 
@@ -130,7 +131,17 @@ public class TurretCommands {
 		public void initialize() {
 			m_timer.reset();
 			m_timer.start();
-			Turret.runAtDutyCycle(m_speed);
+		}
+
+		@Override
+		public void execute() {
+			double speed = m_speed;
+			if (speed > 0) {
+				speed *= Math.min((360 - Turret.getPosition()) / 25, 1);
+			} else {
+				speed *= Math.min(Turret.getPosition() / 25, 1);
+			}
+			Turret.runAtDutyCycle(speed);
 		}
 
 		// Called once the command ends or is interrupted.
