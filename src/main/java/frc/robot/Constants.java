@@ -13,19 +13,18 @@ public class Constants {
 	public static final class Subsystems {
 		public static final class TurretConstants {
 			public static final double kMaxDutyCycle = 0.5;
-			public static final double kGearRatio = 1;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
 			public static final double kTolerance = 1;
-			public static final double kP = 0.01;
+			public static final double kP = 0.006;
+			public static final double kI = 0.0000;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
 			public static final double kSmallDeadzone = 0.05;
 		}
 
 		public static final class HoodConstants {
 			public static final double kMaxDutyCycle = 0.5;
-			public static final double kGearRatio = 1;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
