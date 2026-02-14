@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 
@@ -32,6 +33,7 @@ public class Intake extends SubsystemBase {
 		m_intakeWheels.configure(m_wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 		m_intakeWheels.set(0.5);
 		m_intakeArm = new SparkMax(IntakeConstants.kIntakeArmPort, MotorType.kBrushless);
+		m_intakeArm.getEncoder().setPosition(0);
 		m_armConfig = new SparkMaxConfig();
 
 		// TODO: Check configuration of motors
@@ -39,6 +41,7 @@ public class Intake extends SubsystemBase {
 		m_armConfig.secondaryCurrentLimit(IntakeConstants.kArmSecondaryCurrentLimit);
 		m_armConfig.idleMode(IdleMode.kBrake);
 		m_armConfig.inverted(IntakeConstants.kArmInvert);
+		m_armConfig.encoder.positionConversionFactor(IntakeConstants.kArmConversionFactor);
 
 		m_intakeArm.configure(m_armConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
@@ -53,6 +56,11 @@ public class Intake extends SubsystemBase {
 		return s_theIntake;
 	}
 
+	@Override
+	public void periodic() {
+		SmartDashboard.putNumber("Intake/Arm Position", getArmRotations());
+	}
+
 	/**
 	 * Set power of motor driving intake roller wheels.
 	 * 
@@ -64,6 +72,10 @@ public class Intake extends SubsystemBase {
 
 	public static void setArmPower(double power) {
 		s_theIntake.m_intakeArm.set(power);
+	}
+
+	public static double getArmRotations() {
+		return s_theIntake.m_intakeArm.getEncoder().getPosition();
 	}
 
 	public static void stopWheel() {

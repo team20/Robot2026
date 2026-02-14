@@ -44,7 +44,9 @@ public class Constants {
 
 		public static final class IntakeConstants {
 			public static final int kIntakeWheelsPort = 2; // TODO: Update CAN IDs, these are placeholder values
-			public static final int kIntakeArmPort = 1;
+			public static final int kIntakeArmPort = 56;
+			public static final double kArmConversionFactor = 0.01;
+			public static final double kArmDeployRotations = 3;
 			public static final int kWheelSmartCurrentLimit = 10;
 			public static final int kWheelSecondaryCurrentLimit = 20;
 			public static final boolean kWheelInvert = false;
@@ -156,18 +158,5 @@ public class Constants {
 		public static final double kTurnI = 0;
 		public static final double kTurnD = 0.1;
 		public static final double kTurnMaxAcceleration = 2 * kTurnMaxAngularSpeed; // kTurnMaxAngularSpeed in 0.5
-	}
-
-	public static final class IntakeConstants {
-		public static final int kIntakeWheelsPort = 1; // TODO: Update CAN IDs, these are placeholder values
-		public static final int kIntakeArmPort = 2;
-
-		public static final int kWheelSmartCurrentLimit = 10;
-		public static final int kWheelSecondaryCurrentLimit = 20;
-		public static final boolean kWheelInvert = false;
-
-		public static final int kArmSmartCurrentLimit = 10;
-		public static final int kArmSecondaryCurrentLimit = 20;
-		public static final boolean kArmInvert = false;
 	}
 }

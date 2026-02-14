@@ -2,16 +2,17 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.ClampedP;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.Intake;
 
 public class IntakeCommands {
-	public static class SpinPowerForTime extends Command {
+	public static class SpinArmPowerForTime extends Command {
 		private double m_speed;
 		private double m_time;
 		private Timer m_timer = new Timer();
 
-		public SpinPowerForTime(double speed, double time) {
+		public SpinArmPowerForTime(double speed, double time) {
 			setName("Spine at Power for Time");
 			addRequirements(Intake.getIntake());
 			m_speed = speed;
@@ -22,16 +23,66 @@ public class IntakeCommands {
 		public void initialize() {
 			Intake.setArmPower(m_speed);
 			m_timer.reset();
+			m_timer.start();
 		}
 
 		@Override
 		public void end(boolean interrupted) {
-			Intake.setArmPower(0);
+			Intake.stopArm();
 		}
 
 		@Override
 		public boolean isFinished() {
 			return m_timer.hasElapsed(m_time);
+		}
+	}
+
+	public static class SpinArmPower extends Command {
+		private double m_speed;
+		private double m_time;
+
+		public SpinArmPower(double speed) {
+			setName("Spine at Power for Time");
+			addRequirements(Intake.getIntake());
+			m_speed = speed;
+		}
+
+		@Override
+		public void initialize() {
+			Intake.setArmPower(m_speed);
+		}
+
+		@Override
+		public void end(boolean interrupted) {
+			Intake.stopArm();
+		}
+
+		@Override
+		public boolean isFinished() {
+			return false;
+		}
+	}
+
+	public static class MoveArmToPosition extends Command {
+		double m_position;
+
+		public MoveArmToPosition(double position) {
+			m_position = position;
+		}
+
+		@Override
+		public void execute() {
+			Intake.setArmPower(ClampedP.clampedP(Intake.getArmRotations() - m_position, 0.1, 1, 0.5, 0.01));
+		}
+
+		@Override
+		public void end(boolean interrupted) {
+			Intake.stopArm();
+		}
+
+		@Override
+		public boolean isFinished() {
+			return Math.abs(m_position - Intake.getArmRotations()) <= 0.01;
 		}
 	}
 
