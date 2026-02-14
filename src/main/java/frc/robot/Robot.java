@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.Intake;
 
@@ -53,9 +52,9 @@ public class Robot extends TimedRobot {
 		 */
 		m_operatorController.L2().whileTrue(new IntakeCommands.SpinArmPower(0.1));
 		m_operatorController.R2().whileTrue(new IntakeCommands.SpinArmPower(-0.1));
-		m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
-		m_operatorController.circle().onTrue(new IntakeCommands.MoveArmToPosition(IntakeConstants.kArmDeployRotations));
-		m_operatorController.cross().onTrue(new IntakeCommands.MoveArmToPosition(0));
+		m_operatorController.square().onTrue(new IntakeCommands.SpinIntake(.1));
+		m_operatorController.circle().onTrue(Intake.getExtendCommand());
+		m_operatorController.cross().onTrue(Intake.getRetractCommand());
 	}
 
 	@Override
@@ -69,7 +68,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(new IntakeCommands.MoveArmToPosition(3));
+		m_scheduler.schedule(Intake.getResetCommand());
 	}
 
 	@Override
