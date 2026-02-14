@@ -131,11 +131,17 @@ public class TurretCommands {
 		public void initialize() {
 			m_timer.reset();
 			m_timer.start();
-			if ((Turret.getPosition() > 340 && m_speed > 0) || (Turret.getPosition() < 20 && m_speed < 0)) {
-				Turret.stop();
+		}
+
+		@Override
+		public void execute() {
+			double speed = m_speed;
+			if (speed > 0) {
+				speed *= Math.min((360 - Turret.getPosition()) / 25, 1);
 			} else {
-				Turret.runAtDutyCycle(m_speed);
+				speed *= Math.min(Turret.getPosition() / 25, 1);
 			}
+			Turret.runAtDutyCycle(speed);
 		}
 
 		// Called once the command ends or is interrupted.
