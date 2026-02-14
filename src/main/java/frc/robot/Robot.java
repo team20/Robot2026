@@ -64,15 +64,15 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		// m_scheduler.schedule(
-		// Commands.parallel(
-		// Commands.sequence(
-		// new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-		// new TurretCommands.RunToAngleHardware(225), Commands.waitSeconds(1),
-		// new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-		// new TurretCommands.RunToAngleHardware(225))));
+		m_scheduler.schedule(
+				Commands.parallel(
+						Commands.sequence(
+								new TurretCommands.RunToAngleHardware(45), // Commands.waitSeconds(1),
+								new TurretCommands.RunToAngleHardware(225), // Commands.waitSeconds(1),
+								new TurretCommands.RunToAngleHardware(45), // Commands.waitSeconds(1),
+								new TurretCommands.RunToAngleHardware(225))));
 		// new ShooterCommands.RunAtDynamicRPM(2400).withTimeout(40)));
-		m_scheduler.schedule(new TurretCommands.RunToAngleSoftware(45));
+		// m_scheduler.schedule(new TurretCommands.RunToAngleSoftware(45));
 	}
 
 	@Override

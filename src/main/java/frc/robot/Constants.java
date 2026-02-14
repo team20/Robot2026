@@ -16,7 +16,7 @@ public class Constants {
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
-			public static final double kTolerance = 1;
+			public static final double kTolerance = 3;
 			public static final double kP = 0.006;
 			public static final double kI = 0.0000;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control

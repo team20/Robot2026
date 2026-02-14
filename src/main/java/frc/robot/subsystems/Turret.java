@@ -61,9 +61,13 @@ public class Turret extends SubsystemBase {
 	}
 
 	public static void runAtDutyCycle(double dutyCycle) {
+		if (dutyCycle > 0) {
+			dutyCycle *= Math.min((220 - Turret.getPosition()) / 25, 1);
+		} else {
+			dutyCycle *= Math.min(Turret.getPosition() / 25, 1);
+		}
 		double sign = Math.signum(dutyCycle);
 		dutyCycle = Math.min(TurretConstants.kMaxDutyCycle, Math.abs(dutyCycle));
-
 		s_theTurret.m_motor.set(dutyCycle * sign);
 	}
 
