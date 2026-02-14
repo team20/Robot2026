@@ -56,9 +56,9 @@ public class Robot extends TimedRobot {
 						m_operatorController.povLeft()));
 		m_operatorController.povDown().onTrue(new HoodCommands.RunAtPower(-.1, 0));
 		m_operatorController.povUp().onTrue(new HoodCommands.RunAtPower(.1, 0));
-		m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
-		m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
-		m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
+		// m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
+		// m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
+		// m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
 	}
 
 	@Override
@@ -72,14 +72,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(
-				Commands.parallel(
-						Commands.sequence(
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225)),
-						new ShooterCommands.RunAtDynamicRPM(2400).withTimeout(40)));
+		m_scheduler.schedule(new IntakeCommands.SpinPowerForTime(0.1, 5));
 	}
 
 	@Override

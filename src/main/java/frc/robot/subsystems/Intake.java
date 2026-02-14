@@ -74,9 +74,11 @@ public class Intake extends SubsystemBase {
 		s_theIntake.m_intakeArm.stopMotor();
 	}
 
-	public static boolean isForwardLimitActive() {
-		return s_theIntake.m_intakeArm.getForwardLimitSwitch().isPressed();
-	}
+	/*
+	 * public static boolean isForwardLimitActive() {
+	 * return s_theIntake.m_intakeArm.getForwardLimitSwitch().isPressed();
+	 * }
+	 */
 
 	public static boolean isReverseLimitActive() {
 		return s_theIntake.m_intakeArm.getReverseLimitSwitch().isPressed();
