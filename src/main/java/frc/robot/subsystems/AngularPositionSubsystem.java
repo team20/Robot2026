@@ -74,20 +74,24 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		double sign = Math.signum(dutyCycle);
 		dutyCycle = Math.min(m_maxDutyCycle, Math.abs(dutyCycle));
 		m_dutyCycle = dutyCycle * sign;
-		m_motor.set(m_dutyCycle);
+		m_motor.set(limited() ? m_dutyCycle : 0);
 	}
 
 	public void stop() {
 		m_motor.stopMotor();
 	}
 
+	private boolean limited() {
+		double position = getPosition();
+		return (m_dutyCycle > 0 && position == m_maxAngle) ||
+				(m_dutyCycle < 0 && position == m_minAngle); // Ensure that you cannot overshoot even more after
+																// overshooting has already ocurred.
+	}
+
 	@Override
 	public void periodic() {
-		double position = getPosition();
-		if ((m_dutyCycle > 0 && position == m_maxAngle)
-				|| (m_dutyCycle < 0 && position == m_minAngle)) {
-			stop(); // Ensure that you cannot overshoot even more after overshooting has already
-					// ocurred.
+		if (limited()) {
+			stop();
 		}
 		if (Constants.kLogging) {
 			SmartDashboard.putNumber(String.format("%s/Position", m_name), getPosition());
