@@ -9,16 +9,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
-import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TurretCommands;
-import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.Turret;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
@@ -29,10 +23,10 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kOperatorControllerPort);
 
 	{
-		new Drive();
-		new Shooter();
-		new Intake();
-		Turret.create();
+		// new Drive();
+		// new Shooter();
+		// new Intake();
+		// Turret.create();
 		Hood.create();
 	}
 
@@ -41,24 +35,24 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindControls() {
-		Drive.getDrive().setDefaultCommand(
-				new DriveCommands.JoystickDrive(
-						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
-						m_driverController.getHID()::getCreateButton));
-		Turret.getTurret().setDefaultCommand(
-				new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
-						m_operatorController::getLeftY));
-		m_operatorController.L1().whileTrue(new TurretCommands.RunAtPower(-.1, 0));
-		m_operatorController.R1().whileTrue(new TurretCommands.RunAtPower(.1, 0));
-		m_operatorController.triangle().toggleOnTrue(
-				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
-						m_operatorController.povLeft()));
-		m_operatorController.povDown().onTrue(new HoodCommands.RunAtPower(-.1, 0));
-		m_operatorController.povUp().onTrue(new HoodCommands.RunAtPower(.1, 0));
-		m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
-		m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
-		m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
+		// Drive.getDrive().setDefaultCommand(
+		// new DriveCommands.JoystickDrive(
+		// () -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
+		// () -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
+		// m_driverController.getHID()::getCreateButton));
+		// Turret.getTurret().setDefaultCommand(
+		// new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
+		// m_operatorController::getLeftY));
+		// m_operatorController.L1().whileTrue(new TurretCommands.RunAtPower(-.1, 0));
+		// m_operatorController.R1().whileTrue(new TurretCommands.RunAtPower(.1, 0));
+		// m_operatorController.triangle().toggleOnTrue(
+		// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
+		// m_operatorController.povLeft()));
+		m_operatorController.povDown().whileTrue(new HoodCommands.RunAtPower(-.1, 0));
+		m_operatorController.povUp().whileTrue(new HoodCommands.RunAtPower(.1, 0));
+		// m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
+		// m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
+		// m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
 	}
 
 	@Override

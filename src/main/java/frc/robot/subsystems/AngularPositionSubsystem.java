@@ -42,7 +42,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		config.absoluteEncoder.positionConversionFactor(360);
 		config.closedLoop.pid(kP, kI, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
-		config.closedLoop.positionWrappingEnabled(false);
+		config.closedLoop.positionWrappingEnabled(wrapping);
 		config.closedLoop.positionWrappingInputRange(0, 360);
 		config.smartCurrentLimit(smartCurrent);
 		config.secondaryCurrentLimit(current);
@@ -58,14 +58,23 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	}
 
 	public double getPosition() {
-		return m_encoder.getPosition();
+		double position = m_encoder.getPosition();
+		double midpoint = ((m_minAngle + m_maxAngle - 360) / 2 % 360 + 360) % 360;
+		SmartDashboard.putNumber("midpt", midpoint);
+		SmartDashboard.putNumber("ang", position);
+		if (position < m_minAngle || position > midpoint) {
+			return m_minAngle;
+		} else if (position > m_maxAngle && position < midpoint) {
+			return m_maxAngle;
+		}
+		return position;
 	}
 
 	public void runAtDutyCycle(double dutyCycle) {
 		double sign = Math.signum(dutyCycle);
 		dutyCycle = Math.min(m_maxDutyCycle, Math.abs(dutyCycle));
 		m_dutyCycle = dutyCycle * sign;
-		m_motor.set(dutyCycle * sign);
+		m_motor.set(m_dutyCycle);
 	}
 
 	public void stop() {
@@ -74,8 +83,9 @@ public class AngularPositionSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		if ((m_dutyCycle > 0 && getPosition() > m_maxAngle)
-				|| (m_dutyCycle < 0 && getPosition() < m_minAngle)) {
+		double position = getPosition();
+		if ((m_dutyCycle > 0 && position == m_maxAngle)
+				|| (m_dutyCycle < 0 && position == m_minAngle)) {
 			stop(); // Ensure that you cannot overshoot even more after overshooting has already
 					// ocurred.
 		}
