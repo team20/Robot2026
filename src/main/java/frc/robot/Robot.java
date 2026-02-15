@@ -86,6 +86,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), ABBA.testBrownoutPreventionCommand()));
+		m_scheduler.schedule(
+				Commands.sequence(
+						ClampedP.testCommand(), ABBA.testBrownoutPreventionCommand(), Aim.Interpolation.testCommand()));
 	}
 }

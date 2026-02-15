@@ -1,5 +1,8 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 public abstract class Aim {
 	public record ShooterState(double turretAngle, double hoodAngle, double shooterVelocity) {
 	}
@@ -86,6 +89,35 @@ public abstract class Aim {
 				double t = (distance - s_distances[index]) / delta;
 				return interpolate(a, b, da, db, t);
 			}
+		}
+
+		public static Command testCommand() {
+			return Commands.runOnce(() -> {
+				Aim aimer = new Interpolation();
+				for (int i = 0; i < s_distances.length - 1; i++) {
+					double middle = (s_distances[i] + s_distances[i + 1]) / 2;
+					double velocity = aimer.getShooterVelocity(middle);
+					double angle = aimer.getHoodAngle(middle);
+					double maxV = Math.max(s_velocities[i], s_velocities[i + 1]);
+					double maxErr = 0.01;
+					if (velocity > maxV && (velocity - maxV) / maxV > maxErr) {
+						throw new Error(String.format("Velocity interpolation was too high (%f > %f)", velocity, maxV));
+					}
+					double minV = Math.min(s_velocities[i], s_velocities[i + 1]);
+					if (velocity < minV && (minV - velocity) / minV > maxErr) {
+						throw new Error(String.format("Velocity interpolation was too low (%f < %f)", velocity, minV));
+					}
+					double maxA = Math.max(s_angles[i], s_angles[i + 1]);
+					if (angle > maxA && (angle - maxA) / maxA > maxErr) {
+						throw new Error(String.format("Angle interpolation was too high (%f > %f)", angle, maxA));
+					}
+					double minA = Math.min(s_angles[i], s_angles[i + 1]);
+					if (angle < minA && (minA - angle) / minA > maxErr) {
+						throw new Error(String.format("Angle interpolation was too low (%f < %f)", angle, minA));
+					}
+				}
+				System.out.println("All interpolation tests passing!!!!!!!");
+			});
 		}
 
 		@Override
