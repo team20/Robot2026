@@ -74,7 +74,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		double sign = Math.signum(dutyCycle);
 		dutyCycle = Math.min(m_maxDutyCycle, Math.abs(dutyCycle));
 		m_dutyCycle = dutyCycle * sign;
-		m_motor.set(limited() ? m_dutyCycle : 0);
+		m_motor.set(limited() ? 0 : m_dutyCycle);
 	}
 
 	public void stop() {
