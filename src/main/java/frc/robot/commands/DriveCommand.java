@@ -6,7 +6,11 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.DriveSubsystem;
@@ -69,41 +73,81 @@ public class DriveCommand {
 		}
 	}
 
-	public class DriveDistance extends Command {
-		private final double m_distance;
+	public class DriveDistanceForTime extends Command {
+		private final double m_time;
 		private final double m_speed;
+		private Rotation2d m_rot;
+		private Timer m_timer = new Timer();
 		private Pose2d m_initialPose;
 
-		public DriveDistance(double distance, double speed) {
-			m_distance = distance;
+		public DriveDistanceForTime(double distance, double speed) {
+			m_time = (distance * 3.07) / (speed * 12);
 			m_speed = speed;
 			addRequirements(m_driveSubsystem);
 		}
 
 		@Override
 		public void initialize() {
+			m_timer.reset();
+			m_timer.start();
 			m_initialPose = m_driveSubsystem.getPose();
+			m_rot = m_driveSubsystem.getModulePositions()[0].angle;
 		}
 
 		@Override
 		public void execute() {
-			double distance = m_driveSubsystem.getPose().minus(m_initialPose).getTranslation().getNorm();
-			double error = distance - m_distance;
-			double speed = ClampedP.clampedP(error, 0.05, m_speed, 1, 0.01) * Math.signum(distance);
-			m_driveSubsystem.drive(speed, 0, 0, true);
+			double s_x = m_speed * m_rot.getCos();
+			double s_y = m_speed * m_rot.getSin();
+			m_driveSubsystem.drive(s_y, s_x, 0, true);
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
+			m_timer.stop();
+			m_driveSubsystem.stopAllModules();
+			SmartDashboard.putNumber("distance traveled", m_driveSubsystem.getPose().minus(m_initialPose).getX());
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return m_timer.get() >= m_time;
+		}
+	}
+
+	public class DriveDistance extends Command {
+		private final double m_distance;
+		private final Pose2d m_initialPose;
+
+		public DriveDistance(double distance) {
+			m_initialPose = m_driveSubsystem.getPose();
+			m_distance = distance;
+			addRequirements(m_driveSubsystem);
+		}
+
+		@Override
+		public void execute() {
+			double error = m_distance - m_driveSubsystem.getPose().getX();
+			double speed = ClampedP.clampedP(error, 0.5, 2.0, m_distance, 0.05) * -1;
+			m_driveSubsystem.drive(speed, 0, 0, false);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			SmartDashboard.putNumber(
+					"distance traveled", m_driveSubsystem.getPose().minus(m_initialPose).getX());
+			SmartDashboard.putNumber(
+					"initial pose", m_initialPose.getX());
 			m_driveSubsystem.stopAllModules();
 		}
 
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			double distance = m_driveSubsystem.getPose().minus(m_initialPose).getTranslation().getNorm();
-			return Math.abs(distance - m_distance) < 0.01;
+			double distance = m_driveSubsystem.getPose().minus(m_initialPose).getX();
+			return Math.abs(distance - m_distance) < 0.05;
 		}
 
 	}
@@ -251,15 +295,46 @@ public class DriveCommand {
 	}
 
 	public class Stop extends Command {
-		@Override
-		public void execute() {
-			m_driveSubsystem.stopAllModules();
+		public Stop() {
 			addRequirements(m_driveSubsystem);
+		}
+
+		@Override
+		public void initialize() {
+			m_driveSubsystem.stopAllModules();
 		}
 
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
+			return true;
+		}
+	}
+
+	public class TurnSteerToAngle extends Command {
+		private final double m_angle;
+		private final double m_tolerance;
+
+		public TurnSteerToAngle(double angle) {
+			m_angle = angle;
+			m_tolerance = 3; // Can be constant from command to command
+			addRequirements(m_driveSubsystem);
+		}
+
+		@Override
+		public void execute() {
+			m_driveSubsystem.turnSteerToAngle(m_angle);
+		}
+
+		// Finishes when all four modules are within angle tolerance
+		@Override
+		public boolean isFinished() {
+			SwerveModulePosition[] poses = m_driveSubsystem.getModulePositions();
+			for (int i = 0; i < 4; i++) {
+				if (Math.abs(poses[i].angle.getDegrees() - m_angle) > m_tolerance) {
+					return false;
+				}
+			}
 			return true;
 		}
 	}

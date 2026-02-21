@@ -5,14 +5,17 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
+	private SendableChooser<Boolean> m_botChooser = new SendableChooser<>();
+	public static boolean isCompBot;
 
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
 	/*
@@ -24,6 +27,14 @@ public class Robot extends TimedRobot {
 
 	public Robot() {
 		BindDriveControls();
+		SmartDashboard.putData("Robot Chooser", m_botChooser);
+		addBotOptions();
+	}
+
+	private void addBotOptions() {
+		m_botChooser.setDefaultOption("Comp Bot", isCompBot = true);
+		m_botChooser.addOption("Comp Bot", isCompBot = true);
+		m_botChooser.addOption("Practice Bot", isCompBot = false);
 	}
 
 	private void BindDriveControls() {
@@ -71,12 +82,29 @@ public class Robot extends TimedRobot {
 		 * new ShooterCommand.RunAtDynamicRPM(m_shooterSubsystem,
 		 * 2400).withTimeout(40)));
 		 */
+
+		/*
+		 * m_scheduler.schedule(
+		 * new SequentialCommandGroup(
+		 * m_driveSubsystem.getCommand().new DriveDistance(3),
+		 * m_driveSubsystem.getCommand().new DriveDistance(3)));
+		 */
+
 		m_scheduler.schedule(
-				Commands.sequence(
-						m_driveSubsystem.getCommand().new DriveDistance(1, .2),
-						// m_driveSubsystem.getCommand().new ResetHeading(),
-						// m_driveSubsystem.getCommand().new SpinToAngle(45, .2),
-						m_driveSubsystem.getCommand().new DriveDistance(-1, .2)));
+				new SequentialCommandGroup(
+						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+						m_driveSubsystem.getCommand().new TurnSteerToAngle(45),
+						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+						m_driveSubsystem.getCommand().new TurnSteerToAngle(90),
+						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+						m_driveSubsystem.getCommand().new TurnSteerToAngle(135)));
+
+		// Commands.sequence(
+		// // m_driveSubsystem.getCommand().new ResetHeading(),
+		// m_driveSubsystem.getCommand().new DriveDistance(1, 2.5),
+		// m_driveSubsystem.getCommand().new SpinToAngle(45, 2.5),
+		// m_driveSubsystem.getCommand().new DriveDistance(-1, 2.5),
+		// m_driveSubsystem.getCommand().new TurnSteerToAngle(45)));
 	}
 
 	@Override

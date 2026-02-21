@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static frc.robot.Robot.*;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -107,13 +109,14 @@ public class Constants {
 		public static final TalonFXConfiguration kSteerConfig = new TalonFXConfiguration();
 		static {
 			kSteerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-			kSteerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 			kSteerConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = kRampRate;
 			kSteerConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = kRampRate;
 			kSteerConfig.CurrentLimits.StatorCurrentLimit = 60;
 			kSteerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 			kSteerConfig.CurrentLimits.SupplyCurrentLimit = 75;
 			kSteerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+			kSteerConfig.MotorOutput.Inverted = (isCompBot) ? InvertedValue.CounterClockwise_Positive
+					: InvertedValue.Clockwise_Positive;
 		}
 
 		public static final double kTeleopDriveMaxSpeed = 12.0; // 5 meters per second

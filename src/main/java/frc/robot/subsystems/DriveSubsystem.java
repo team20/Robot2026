@@ -168,7 +168,7 @@ public class DriveSubsystem extends SubsystemBase {
 	 * @return The module states, in order of FL, FR, BL, BR
 	 */
 	private SwerveModuleState[] calculateModuleStates(ChassisSpeeds speeds, boolean isRobotRelative) {
-		SmartDashboard.putNumber("Heading", getHeading().getDegrees());
+		SmartDashboard.putNumber("Current Angle", getModulePositions()[0].angle.getDegrees());
 		SmartDashboard.putBoolean("Robot Relative", isRobotRelative);
 		if (!isRobotRelative)
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
@@ -192,6 +192,16 @@ public class DriveSubsystem extends SubsystemBase {
 		doModuleX(module -> module.setModuleState(states[module.getIndex()]), SwerveModuleState[]::new);
 	}
 
+	/**
+	 * Turns all steer motors to a specified angle.
+	 * 
+	 * @param angle The desired angle (in degrees).
+	 */
+	public void turnSteerToAngle(double angle) {
+		SwerveModuleState state = new SwerveModuleState(0, Rotation2d.fromDegrees(angle));
+		setModuleStates(new SwerveModuleState[] { state, state, state, state });
+	}
+
 	public void stopAllModules() {
 		setModuleStates(calculateModuleStates(new ChassisSpeeds(), false));
 	}
@@ -209,6 +219,7 @@ public class DriveSubsystem extends SubsystemBase {
 	 */
 	@Override
 	public void periodic() {
+		SmartDashboard.putNumber("Heading", getHeading().getDegrees());
 		SwerveModuleState[] states = doModuleX(SwerveModule::getModuleState, SwerveModuleState[]::new);
 		m_currentModuleStatePublisher.set(states);
 		var speeds = m_kinematics.toChassisSpeeds(states);
@@ -217,6 +228,7 @@ public class DriveSubsystem extends SubsystemBase {
 			m_gyroSim.set(
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod) + m_gyro.getYaw());
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
+		SmartDashboard.putNumber("voltage", m_frontLeft.getDriveVoltage());
 	}
 
 	public void toggleCoastMode() {
@@ -225,7 +237,7 @@ public class DriveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Method for making the robot drive using speeds
+	 * Method for making the robot drive using speeds.
 	 * 
 	 * @param forwardSpeed
 	 * @param strafeSpeed
