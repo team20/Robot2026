@@ -12,7 +12,7 @@ public class Constants {
 
 	public static final class Subsystems {
 		public static final class TurretConstants {
-			public static final int kMotor = 2;
+			public static final int kMotor = 21;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
@@ -29,7 +29,7 @@ public class Constants {
 		}
 
 		public static final class HoodConstants {
-			public static final int kMotor = 56;
+			public static final int kMotor = 1;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
@@ -41,11 +41,11 @@ public class Constants {
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
 			public static final double kMinAngle = 0;
-			public static final double kMaxAngle = 30;
+			public static final double kMaxAngle = 38;
 		}
 
 		public static final class ShooterConstants {
-			public static final int kMotorPort = 23;
+			public static final int kMotorPort = 51;
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
 			public static final int kDefaultRPM = 2400; // TODO: Test and find actual default RPM

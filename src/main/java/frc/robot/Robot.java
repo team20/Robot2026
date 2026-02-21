@@ -11,8 +11,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.ShooterCommands;
-import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Hood;
+import frc.robot.subsystems.Shooter;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
@@ -21,10 +21,11 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
 			Constants.ControllerConstants.kOperatorControllerPort);
+	private final Aim m_aim = new Aim.Linear();
 
 	{
 		// new Drive();
-		// new Shooter();
+		new Shooter();
 		// new Intake();
 		// Turret.create();
 		Hood.create();
@@ -45,9 +46,9 @@ public class Robot extends TimedRobot {
 		// m_operatorController::getLeftY));
 		// m_operatorController.L1().whileTrue(new TurretCommands.RunAtPower(-.1, 0));
 		// m_operatorController.R1().whileTrue(new TurretCommands.RunAtPower(.1, 0));
-		// m_operatorController.triangle().toggleOnTrue(
-		// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
-		// m_operatorController.povLeft()));
+		m_operatorController.triangle().toggleOnTrue(
+				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
+						m_operatorController.povLeft()));
 		m_operatorController.povDown().whileTrue(new HoodCommands.RunAtPower(-.1, 0));
 		m_operatorController.povUp().whileTrue(new HoodCommands.RunAtPower(.1, 0));
 		// m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
@@ -66,14 +67,17 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(
-				Commands.parallel(
-						Commands.sequence(
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225)),
-						new ShooterCommands.RunAtDynamicRPM(2400).withTimeout(40)));
+		/*
+		 * m_scheduler.schedule(
+		 * Commands.parallel(
+		 * Commands.sequence(
+		 * new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
+		 * new TurretCommands.RunToAngleHardware(225), Commands.waitSeconds(1),
+		 * new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
+		 * new TurretCommands.RunToAngleHardware(225)),
+		 * new ShooterCommands.RunAtDynamicRPM(2400).withTimeout(40)));
+		 */
+		m_scheduler.schedule(m_aim.getAimCommand(13.5));
 	}
 
 	@Override
