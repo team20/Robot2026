@@ -9,9 +9,9 @@ public class Hood extends AngularPositionSubsystem {
 	 * Call create() instead
 	 */
 	private Hood() {
-		super(HoodConstants.kMotor, HoodConstants.kP, HoodConstants.kI,
-				false, HoodConstants.kCurrent, HoodConstants.kSmartCurrent, "Hood", HoodConstants.kMinAngle,
-				HoodConstants.kMaxAngle, HoodConstants.kMaxDutyCycle, true);
+		super(HoodConstants.kMotor, "Hood", HoodConstants.kP, HoodConstants.kI, HoodConstants.kCurrent,
+				HoodConstants.kSmartCurrent, HoodConstants.kMinAngle, HoodConstants.kMaxAngle,
+				HoodConstants.kMaxDutyCycle, true);
 	}
 
 	public static void create() {
