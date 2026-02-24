@@ -50,12 +50,7 @@ public class Constants {
 		public static final int kBackRightCANCoderPort = 22;
 		public static final int kBackLeftCANCoderPort = 32;
 
-		// TODO: Make sure these are tuned (can do with SysId)
-		public static final double kDriveP = 0.01;
-		public static final double kDriveI = 0.0;
-		public static final double kDriveD = 0.001;
-
-		public static final double kSteerP = 0.09;
+		public static final double kSteerP = 0.15;
 		public static final double kSteerI = 0.0;
 		public static final double kSteerD = 0.001;
 		public static final double kS = 0;

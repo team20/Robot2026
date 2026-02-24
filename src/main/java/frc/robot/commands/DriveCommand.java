@@ -118,19 +118,25 @@ public class DriveCommand {
 
 	public class DriveDistance extends Command {
 		private final double m_distance;
-		private final Pose2d m_initialPose;
+		private Pose2d m_initialPose;
+		private final double m_tolerance;
 
 		public DriveDistance(double distance) {
-			m_initialPose = m_driveSubsystem.getPose();
 			m_distance = distance;
+			m_tolerance = 0.01; // Does not require user to pass in
 			addRequirements(m_driveSubsystem);
 		}
 
 		@Override
+		public void initialize() {
+			m_initialPose = m_driveSubsystem.getPose();
+		}
+
+		@Override
 		public void execute() {
-			double error = m_distance - m_driveSubsystem.getPose().getX();
-			double speed = ClampedP.clampedP(error, 0.5, 2.0, m_distance, 0.05) * -1;
-			m_driveSubsystem.drive(speed, 0, 0, false);
+			double error = m_distance - m_driveSubsystem.getPose().minus(m_initialPose).getX();
+			double speed = ClampedP.clampedP(error, 0.5, 2.0, m_distance, m_tolerance) * -1;
+			m_driveSubsystem.drive(speed, 0, 0, true);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -147,7 +153,7 @@ public class DriveCommand {
 		@Override
 		public boolean isFinished() {
 			double distance = m_driveSubsystem.getPose().minus(m_initialPose).getX();
-			return Math.abs(distance - m_distance) < 0.05;
+			return Math.abs(distance - m_distance) < m_tolerance;
 		}
 
 	}

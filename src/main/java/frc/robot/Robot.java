@@ -26,7 +26,6 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 
 	public Robot() {
-		BindDriveControls();
 		SmartDashboard.putData("Robot Chooser", m_botChooser);
 		addBotOptions();
 	}
@@ -68,48 +67,28 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		/*
-		 * m_scheduler.schedule(
-		 * Commands.parallel(
-		 * Commands.sequence(
-		 * new RunTurretToAngleHardware(m_turretSubsystem, 45),
-		 * Commands.waitSeconds(1),
-		 * new RunTurretToAngleHardware(m_turretSubsystem, 225),
-		 * Commands.waitSeconds(1),
-		 * new RunTurretToAngleHardware(m_turretSubsystem, 45),
-		 * Commands.waitSeconds(1),
-		 * new RunTurretToAngleHardware(m_turretSubsystem, 225)),
-		 * new ShooterCommand.RunAtDynamicRPM(m_shooterSubsystem,
-		 * 2400).withTimeout(40)));
-		 */
+
+		m_scheduler.schedule(
+				new SequentialCommandGroup(
+						m_driveSubsystem.getCommand().new DriveDistance(1.5)));
 
 		/*
 		 * m_scheduler.schedule(
 		 * new SequentialCommandGroup(
-		 * m_driveSubsystem.getCommand().new DriveDistance(3),
-		 * m_driveSubsystem.getCommand().new DriveDistance(3)));
+		 * m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+		 * m_driveSubsystem.getCommand().new TurnSteerToAngle(45),
+		 * m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+		 * m_driveSubsystem.getCommand().new TurnSteerToAngle(90),
+		 * m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
+		 * m_driveSubsystem.getCommand().new TurnSteerToAngle(135)));
 		 */
-
-		m_scheduler.schedule(
-				new SequentialCommandGroup(
-						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
-						m_driveSubsystem.getCommand().new TurnSteerToAngle(45),
-						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
-						m_driveSubsystem.getCommand().new TurnSteerToAngle(90),
-						m_driveSubsystem.getCommand().new DriveDistanceForTime(10, 2),
-						m_driveSubsystem.getCommand().new TurnSteerToAngle(135)));
-
-		// Commands.sequence(
-		// // m_driveSubsystem.getCommand().new ResetHeading(),
-		// m_driveSubsystem.getCommand().new DriveDistance(1, 2.5),
-		// m_driveSubsystem.getCommand().new SpinToAngle(45, 2.5),
-		// m_driveSubsystem.getCommand().new DriveDistance(-1, 2.5),
-		// m_driveSubsystem.getCommand().new TurnSteerToAngle(45)));
 	}
 
 	@Override
 	public void teleopInit() {
+		// System.out.println("Ah-ha!");
 		m_scheduler.cancelAll();
+		BindDriveControls();
 	}
 
 	@Override

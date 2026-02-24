@@ -203,6 +203,7 @@ public class DriveSubsystem extends SubsystemBase {
 	}
 
 	public void stopAllModules() {
+		// System.out.println("Sniped");
 		setModuleStates(calculateModuleStates(new ChassisSpeeds(), false));
 	}
 
@@ -247,7 +248,7 @@ public class DriveSubsystem extends SubsystemBase {
 	public void drive(double forwardSpeed, double strafeSpeed, double rotation, boolean isRobotRelative) {
 		setModuleStates(
 				calculateModuleStates(
-						chassisSpeeds(() -> forwardSpeed, () -> strafeSpeed, () -> rotation), !isRobotRelative));
+						chassisSpeeds(() -> forwardSpeed, () -> strafeSpeed, () -> rotation), isRobotRelative));
 	}
 
 	/**

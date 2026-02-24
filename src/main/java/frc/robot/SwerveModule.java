@@ -27,7 +27,6 @@ import frc.robot.Constants.DriveConstants;
  */
 public class SwerveModule {
 	private final PIDController m_steerController = new PIDController(kSteerP, kSteerI, kSteerD);
-	private final PIDController m_driveController = new PIDController(kDriveP, kDriveI, kDriveD);
 	private final CANcoder m_CANCoder;
 	private final TalonFX m_driveMotor;
 	private final TalonFX m_steerMotor;
@@ -165,6 +164,7 @@ public class SwerveModule {
 		// double drivePower = m_driveController
 		// .calculate(m_driveMotor.getMotorVoltage().getValueAsDouble(),
 		// state.speedMetersPerSecond);
+		// System.out.printf("Module %d! I am %f\n", m_index, state.angle.getDegrees());
 		double drivePower = state.speedMetersPerSecond;
 		double sign = Math.signum(drivePower);
 		drivePower = Math.min(ABBA.getMaxVoltage(), Math.abs(state.speedMetersPerSecond));
