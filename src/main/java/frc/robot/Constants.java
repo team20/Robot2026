@@ -85,6 +85,14 @@ public class Constants {
 			// public static final double kHeightPerRevolution = 1 / x; // 1 revolution of
 			// the gear -> how much height
 		}
+
+		public static final class ClimberConstants {
+			// TODO: Update CAN ID and motor configuration constants
+			public static final int kClimberPort = 70;
+			public static final int kSmartCurrentLimit = 30;
+			public static final int kSecondaryCurrentLimit = 40;
+			public static final boolean kInvert = false;
+		}
 	}
 
 	public static final class ControllerConstants {
