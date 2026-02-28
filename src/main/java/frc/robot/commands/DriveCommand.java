@@ -134,8 +134,15 @@ public class DriveCommand {
 
 		@Override
 		public void execute() {
-			double error = m_distance - m_driveSubsystem.getPose().minus(m_initialPose).getX();
-			double speed = ClampedP.clampedP(error, 0.5, 2.0, m_distance, m_tolerance) * -1;
+			Transform2d pose = m_driveSubsystem.getPose().minus(m_initialPose);
+			double error = pose.getX() - m_distance;
+			SmartDashboard.putNumber(
+					"error", error);
+			double speed = ClampedP.clampedP(error, 0.2, .8, 1, m_tolerance);
+			// double rotation = ClampedP.clampedP(-pose.getRotation().getDegrees(), 0.2, 3,
+			// 10, 1);
+			SmartDashboard.putNumber(
+					"DriveDistance speed", speed);
 			m_driveSubsystem.drive(speed, 0, 0, true);
 		}
 

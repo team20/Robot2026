@@ -27,7 +27,8 @@ public class Robot extends TimedRobot {
 
 	public Robot() {
 		SmartDashboard.putData("Robot Chooser", m_botChooser);
-		addBotOptions();
+		// addBotOptions();
+		isCompBot = true;
 	}
 
 	private void addBotOptions() {
@@ -39,7 +40,7 @@ public class Robot extends TimedRobot {
 		m_driveSubsystem.setDefaultCommand(
 				m_driveSubsystem.getCommand().new JoystickDrive(
 						() -> -m_joystick.getLeftY(), () -> -m_joystick.getLeftX(),
-						() -> m_joystick.getL2Axis() - m_joystick.getR2Axis(), m_joystick.getHID()::getCreateButton));
+						() -> m_joystick.getR2Axis() - m_joystick.getL2Axis(), m_joystick.getHID()::getCreateButton));
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void disabledInit() {
-		isCompBot = m_botChooser.getSelected(); // TODO: should this stay here?
+		// isCompBot = m_botChooser.getSelected(); // TODO: should this stay here?
 	}
 
 	@Override
@@ -70,6 +71,15 @@ public class Robot extends TimedRobot {
 
 		m_scheduler.schedule(
 				new SequentialCommandGroup(
+						m_driveSubsystem.getCommand().new DriveDistance(-1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(-1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(-1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(-1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(1.5),
+						m_driveSubsystem.getCommand().new DriveDistance(-1.5),
 						m_driveSubsystem.getCommand().new DriveDistance(1.5)));
 
 		/*
