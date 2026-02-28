@@ -14,7 +14,7 @@ import frc.robot.subsystems.DriveSubsystem;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
-	private SendableChooser<Boolean> m_botChooser = new SendableChooser<>();
+	SendableChooser<Boolean> m_botChooser = new SendableChooser<>();
 	public static boolean isCompBot;
 
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
@@ -31,9 +31,8 @@ public class Robot extends TimedRobot {
 	}
 
 	private void addBotOptions() {
-		m_botChooser.setDefaultOption("Comp Bot", isCompBot = true);
-		m_botChooser.addOption("Comp Bot", isCompBot = true);
-		m_botChooser.addOption("Practice Bot", isCompBot = false);
+		m_botChooser.addOption("Comp Bot", true);
+		m_botChooser.addOption("Practice Bot", false);
 	}
 
 	private void BindDriveControls() {
@@ -52,6 +51,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void disabledInit() {
+		isCompBot = m_botChooser.getSelected(); // TODO: should this stay here?
 	}
 
 	@Override
