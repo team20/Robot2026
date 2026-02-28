@@ -110,7 +110,7 @@ public class ShooterCommands {
 		private double m_rpm;
 
 		public RunAtDPadRPM(IterativeRobotBase robot, Trigger up, Trigger down) {
-			this(robot, ShooterConstants.kDefaultRPM, up, down);
+			this(robot, ShooterConstants.kDefaultDistance, up, down);
 		}
 
 		public RunAtDPadRPM(IterativeRobotBase robot, double rpm, Trigger up, Trigger down) {

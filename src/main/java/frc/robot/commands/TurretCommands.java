@@ -149,9 +149,39 @@ public class TurretCommands {
 	}
 
 	public static class RunAtPowerSignal extends Command {
+		private double m_speed;
+
+		// Separate command for running turret at power with L2 and R2.
+		public RunAtPowerSignal(double speed) {
+			setName("Run Turret At Power");
+			addRequirements(Turret.getTurret());
+			m_speed = speed;
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void execute() {
+			Turret.getTurret()
+					.runAtDutyCycle(m_speed);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			Turret.getTurret().stop();
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return false;
+		}
+	}
+
+	public static class RunAtPowerSignalTrigger extends Command {
 		private DoubleSupplier m_speed;
 
-		public RunAtPowerSignal(DoubleSupplier speed) {
+		public RunAtPowerSignalTrigger(DoubleSupplier speed) {
 			setName("Run Turret At Power From Trigger");
 			addRequirements(Turret.getTurret());
 			m_speed = speed;

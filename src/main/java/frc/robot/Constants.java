@@ -48,8 +48,8 @@ public class Constants {
 			public static final int kMotorPort = 51;
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
-			public static final int kDefaultRPM = 2400; // TODO: Test and find actual default RPM
-			public static final double kRampRate = 500;
+			public static final int kDefaultDistance = 10;
+			public static final double kRampRate = 10;
 		}
 
 		public static final class IntakeConstants {
