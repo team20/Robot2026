@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -11,23 +13,25 @@ import frc.robot.Constants.Subsystems.TransportConstants;
  * The Transport subsystem is responsible for moving game pieces from the intake
  * to the shooter. It uses a motor controller to achieve this functionality.
  */
-public class Transport extends SubsystemBase {
-	private static Transport s_theTransport;
-	private final SparkMax m_motor;
+public class Agitator extends SubsystemBase {
+	private static Agitator s_theAgitator;
+	private final SparkMax m_agitator;
 
 	/**
 	 * Constructs a new Transport subsystem.
 	 * This initializes the motor controller and ensures only one instance of the
 	 * subsystem exists.
 	 */
-	public Transport() {
-		m_motor = new SparkMax(TransportConstants.kMotorPort, MotorType.kBrushless);
+	public Agitator() {
+		m_agitator = new SparkMax(TransportConstants.kAgitatorMotorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.smartCurrentLimit(TransportConstants.kCurrentLimit);
-		if (s_theTransport == null) {
-			s_theTransport = this;
+		m_agitator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+		if (s_theAgitator == null) {
+			s_theAgitator = this;
 		} else {
-			throw new Error("The Transport subsystem has already been created");
+			throw new Error("The Agitator subsystem has already been created");
 		}
 	}
 
@@ -36,8 +40,8 @@ public class Transport extends SubsystemBase {
 	 *
 	 * @return The singleton instance of the Transport subsystem.
 	 */
-	public static Transport getTransport() {
-		return s_theTransport;
+	public static Agitator getAgitator() {
+		return s_theAgitator;
 	}
 
 	/**
@@ -46,13 +50,13 @@ public class Transport extends SubsystemBase {
 	 * @param speed The speed to set, between -1.0 and 1.0.
 	 */
 	public static void setPower(double speed) {
-		s_theTransport.m_motor.set(speed);
+		s_theAgitator.m_agitator.set(speed);
 	}
 
 	/**
 	 * Stops the transport motor by setting its speed to zero.
 	 */
 	public static void stop() {
-		s_theTransport.m_motor.set(0);
+		s_theAgitator.m_agitator.set(0);
 	}
 }

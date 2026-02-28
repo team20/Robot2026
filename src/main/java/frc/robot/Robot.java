@@ -8,11 +8,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
+import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
@@ -57,9 +59,15 @@ public class Robot extends TimedRobot {
 						m_operatorController.povLeft()));
 		m_operatorController.povDown().whileTrue(new HoodCommands.RunAtPower(-.1, 0));
 		m_operatorController.povUp().whileTrue(new HoodCommands.RunAtPower(.1, 0));
-		m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
-		m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
-		m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
+
+		m_operatorController.square().onTrue(new IntakeCommands.SpinIntake(.1));
+		m_operatorController.circle().onTrue(
+				new ParallelCommandGroup(
+						new IntakeCommands.MoveArmToPosition(1), new TransportCommands.RunAgitatorAtPower(0.2, 5)));
+		m_operatorController.cross().onTrue(
+				new ParallelCommandGroup(new IntakeCommands.MoveArmToPosition(0),
+						new TransportCommands.StopAgitator()));
+
 	}
 
 	@Override
