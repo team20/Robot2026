@@ -75,6 +75,8 @@ public class Robot extends TimedRobot {
 		m_driverController.L1().onTrue(
 				new SequentialCommandGroup(new IntakeCommands.MoveArmToPosition(0),
 						new IntakeCommands.StopIntake()));// Retracts arm and stops power TODO: tune position
+		m_driverController.povUp().whileTrue(new IntakeCommands.SpinArmPower(-.05)); // TODO: tune speed
+		m_driverController.povDown().whileTrue(new IntakeCommands.SpinArmPower(.05));
 		// TODO: Intake move up/down? Talk to drive team about bindings for these
 
 		m_driverController.povUp().whileTrue(null); // TODO: add climber commands
