@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
-import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Drive;
@@ -57,9 +56,6 @@ public class Robot extends TimedRobot {
 						m_operatorController.povLeft()));
 		m_operatorController.povDown().whileTrue(new HoodCommands.RunAtPower(-.1, 0));
 		m_operatorController.povUp().whileTrue(new HoodCommands.RunAtPower(.1, 0));
-		m_operatorController.square().onTrue(new IntakeCommands.Spin(.1));
-		m_operatorController.circle().onTrue(new IntakeCommands.ExtendArmCommand());
-		m_operatorController.cross().onTrue(new IntakeCommands.RetractArmCommand());
 	}
 
 	@Override

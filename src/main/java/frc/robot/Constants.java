@@ -81,6 +81,9 @@ public class Constants {
 			public static final int kSmartCurrentLimit = 30;
 			public static final int kSecondaryCurrentLimit = 40;
 			public static final boolean kInvert = false;
+			public static final double kGearRatio = 81.0 / 1.0;
+			// public static final double kHeightPerRevolution = 1 / x; // 1 revolution of
+			// the gear -> how much height
 		}
 	}
 

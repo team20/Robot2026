@@ -11,11 +11,15 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Climber extends SubsystemBase {
-	public final SparkMax m_climber;
+
+	private static Climber s_climber;
+
+	public final SparkMax m_motor;
 	public final SparkMaxConfig m_config;
 
 	public Climber() {
-		m_climber = new SparkMax(kClimberPort, MotorType.kBrushless);
+		m_motor = new SparkMax(kClimberPort, MotorType.kBrushless);
+
 		m_config = new SparkMaxConfig();
 
 		// TODO: Update motor configuration
@@ -23,7 +27,12 @@ public class Climber extends SubsystemBase {
 		m_config.secondaryCurrentLimit(kSecondaryCurrentLimit);
 		m_config.inverted(kInvert);
 
-		m_climber.configure(m_config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+		m_motor.configure(m_config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+
+		if (s_climber == null)
+			s_climber = this;
+		else
+			throw new Error("Climber already instantiated");
 	}
 
 	/**
@@ -31,7 +40,20 @@ public class Climber extends SubsystemBase {
 	 * 
 	 * @param power (0.0 to 1.0)
 	 */
-	public void run(double power) {
-		m_climber.set(power);
+	public static void setPower(double power) {
+		s_climber.m_motor.set(power);
 	}
+
+	public static Climber getClimber() {
+		return s_climber;
+	}
+
+	public static void stop() {
+		s_climber.m_motor.set(0);
+	}
+
+	public static void setVoltage(double voltage) {
+		s_climber.m_motor.setVoltage(voltage);
+	}
+
 }
