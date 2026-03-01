@@ -12,7 +12,7 @@ public class Constants {
 
 	public static final class Subsystems {
 		public static final class TurretConstants {
-			public static final int kMotor = 21;
+			public static final int kTurretPort = 50;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
@@ -29,7 +29,7 @@ public class Constants {
 		}
 
 		public static final class HoodConstants {
-			public static final int kMotor = 1;
+			public static final int kHoodPort = 52;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = 0.25;
@@ -45,7 +45,7 @@ public class Constants {
 		}
 
 		public static final class ShooterConstants {
-			public static final int kMotorPort = 51;
+			public static final int kFlywheelPort = 51;
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
 			public static final int kDefaultDistance = 10;
@@ -53,8 +53,8 @@ public class Constants {
 		}
 
 		public static final class IntakeConstants {
-			public static final int kIntakeWheelsPort = 56; // TODO: Update CAN IDs, these are placeholder values
-			public static final int kIntakeArmPort = 1;
+			public static final int kIntakeWheelsPort = 54;
+			public static final int kIntakeArmPort = 53;
 			public static final double kArmConversionFactor = 0.01;
 
 			public static final int kWheelSmartCurrentLimit = 10;
@@ -71,8 +71,8 @@ public class Constants {
 		}
 
 		public static final class TransportConstants {
-			public static final int kKickerMotorPort = 56;
-			public static final int kAgitatorMotorPort = 57;
+			public static final int kKickerPort = 56;
+			public static final int kAgitatorPort = 57;
 			public static final int kCurrentLimit = 15;
 		}
 	}

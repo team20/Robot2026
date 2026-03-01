@@ -15,7 +15,7 @@ import frc.robot.Constants.Subsystems.ShooterConstants;
 public class Shooter extends SubsystemBase {
 	private static Shooter s_theShooter;
 
-	private final TalonFX m_motor = new TalonFX(ShooterConstants.kMotorPort);
+	private final TalonFX m_motor = new TalonFX(ShooterConstants.kFlywheelPort);
 	private final VelocityVoltage m_request = new VelocityVoltage(0);
 
 	public Shooter() {

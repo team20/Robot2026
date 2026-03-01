@@ -23,7 +23,7 @@ public class Kicker extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Kicker() {
-		m_kicker = new SparkMax(TransportConstants.kKickerMotorPort, MotorType.kBrushless);
+		m_kicker = new SparkMax(TransportConstants.kKickerPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.smartCurrentLimit(TransportConstants.kCurrentLimit);
 		m_kicker.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
