@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="description" content="{{ blurb }}">
+		<meta name="keywords" content="{{ tags | join(" , ") }}">
+		<meta name="author" content="{{ author }}">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{{ title }}</title>
+		<style>{{ style }}</style>
+	</head>
+	<body>
+		<div id="app">
+			<header>
+				<h1>{{ title }}</h1>
+				<p>{{ blurb }}</p>
+				<nav>
+					<button @click="tab = 'subsystems'" :class="{'active': tab == 'subsystems'}">Subsystems</button>
+					<button @click="tab = 'commands'" :class="{'active': tab == 'commands'}">Commands</button>
+				</nav>
+			</header>
+			{% raw %}
+			<main>
+				<section class="grid" v-show="tab == 'subsystems'">
+					<details v-for="subsystem in progress.Subsystems">
+						<summary>
+							<h1>{{ subsystem.Name }}</h1>
+							<div class="progress" :data-label="subsystem.Progress" :style="{'--angle': subsystem.Progress.slice(0, -1) / 100}"></div>
+							<p class="tag" :class="subsystem['Implementation Level']">
+								{{ subsystem["Implementation Level"] }}
+							</p>
+						</summary>
+						<h1>Description</h1>
+						<p>{{ subsystem.Description }}</p>
+						<h1>Commands</h1>
+						<ul>
+							<li v-for="command in subsystem.Commands">
+								<code>{{ command.Name }}</code>
+							</li>
+						</ul>
+						<h1>Algorithms</h1>
+						<ul>
+							<template v-for="algorithm in subsystem.Algorithms">
+								<li v-for="(name, purpose) in algorithm">
+									{{ purpose }}: {{ name }}
+								</li>
+							</template>
+						</ul>
+						<p v-if="!subsystem.Algorithms">N/A</p>
+						<h1>Sensors</h1>
+						<ul>
+							<template v-for="sensor in subsystem.Sensors">
+								<li v-for="(connection, sensor) in sensor">
+									{{ sensor }}: {{ connection }}
+								</li>
+							</template>
+						</ul>
+						<p v-if="!subsystem.Sensors">N/A</p>
+						<h1>Motors</h1>
+						<ul>
+							<template v-for="motor in subsystem.Motors">
+								<li v-for="(connection, motor) in motor">
+									{{ motor }}: {{ connection }}
+								</li>
+							</template>
+						</ul>
+						<h1>Button Bindings</h1>
+						<ul>
+							<template v-for="binding in subsystem['Button Bindings']">
+								<li v-for="(action, button) in binding">
+									<span class="align">
+										<span class="button">{{ button }}</span>
+										{{ action }}
+									</span>
+								</li>
+							</template>
+						</ul>
+					</details>
+				</section>
+				<section class="grid" v-show="tab == 'commands'">
+					<details v-for="command in progress.Commands">
+						<summary>
+							<h1>{{ command.Name }}</h1>
+							<div class="progress" :data-label="command.Progress" :style="{'--angle': command.Progress.slice(0, -1) / 100}"></div>
+							<p class="tag" :class="command['Implementation Level']">
+								{{ command["Implementation Level"] }}
+							</p>
+						</summary>
+						<h1>Description</h1>
+						<p>{{ command.Description }}</p>
+						<h1>Subsystem</h1>
+						<p>{{ command.Subsystem }}</p>
+					</details>
+				</section>
+			</main>
+			{% endraw %}
+			<footer>
+				Copyright © {{ date }} {{ author }}
+			</footer>
+		</div>
+		<script>{{ js }}</script>
+	</body>
+</html>

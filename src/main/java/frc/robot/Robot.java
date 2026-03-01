@@ -106,24 +106,50 @@ public class Robot extends TimedRobot {
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
 						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
 						m_driverController.getHID()::getCreateButton));
+
+		m_driverController.cross().whileTrue(
+				new TransportCommands.RunAgitatorAtPower(
+						0.2, /* POWER */
+						1)); /* TIME */
+		m_driverController.square().whileTrue(
+				new TransportCommands.RunKickerAtPower(
+						0.2, /* POWER */
+						1)); /* TIME */
+
 		Turret.getTurret().setDefaultCommand(
 				new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
 						m_operatorController::getLeftY));
-		m_operatorController.L1().whileTrue(new TurretCommands.RunAtPower(-.1, 0));
-		m_operatorController.R1().whileTrue(new TurretCommands.RunAtPower(.1, 0));
+		m_operatorController.L1().whileTrue(
+				new TurretCommands.RunAtPower(
+						-.1, /* POWER */
+						0)); /* TIME */
+		m_operatorController.R1().whileTrue(
+				new TurretCommands.RunAtPower(
+						.1, /* POWER */
+						0)); /* TIME */
+
 		m_operatorController.triangle().toggleOnTrue(
 				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 						m_operatorController.povLeft()));
-		m_operatorController.povDown().whileTrue(new HoodCommands.RunAtPower(-.1, 0));
-		m_operatorController.povUp().whileTrue(new HoodCommands.RunAtPower(.1, 0));
 
-		m_operatorController.square().onTrue(new IntakeCommands.SpinIntake(.1));
+		m_operatorController.povDown().whileTrue(
+				new HoodCommands.RunAtPower(
+						-.1, /* POWER */
+						0)); /* TIME */
+		m_operatorController.povUp().whileTrue(
+				new HoodCommands.RunAtPower(
+						.1, /* POWER */
+						0)); /* TIME */
+
+		m_operatorController.square().onTrue(
+				new IntakeCommands.SpinIntake(
+						.1)); /* POWER */
 		m_operatorController.circle().onTrue(
-				new ParallelCommandGroup(
-						new IntakeCommands.MoveArmToPosition(1), new TransportCommands.RunAgitatorAtPower(0.2, 5)));
+				new IntakeCommands.MoveArmToPosition( // TODO: Turn this into an enum and tune position value
+						1)); /* POSITION */
 		m_operatorController.cross().onTrue(
-				new ParallelCommandGroup(new IntakeCommands.MoveArmToPosition(0),
-						new TransportCommands.StopAgitator()));
+				new IntakeCommands.MoveArmToPosition(
+						0)); /* POSITION */
 
 	}
 
