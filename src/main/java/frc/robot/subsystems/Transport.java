@@ -21,7 +21,7 @@ public class Transport extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Transport() {
-		m_motor = new SparkMax(TransportConstants.kMotorPort, MotorType.kBrushless);
+		m_motor = new SparkMax(TransportConstants.kKickerMotorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.smartCurrentLimit(TransportConstants.kCurrentLimit);
 		if (s_theTransport == null) {

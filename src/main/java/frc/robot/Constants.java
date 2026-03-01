@@ -71,12 +71,13 @@ public class Constants {
 		}
 
 		public static final class TransportConstants {
-			public static final int kMotorPort = 55;
+			public static final int kKickerMotorPort = 56;
+			public static final int kAgitatorMotorPort = 57;
 			public static final int kCurrentLimit = 15;
 		}
 
 		public static final class ClimberConstants {
-			public static final int kMotorPort = 56;
+			public static final int kMotorPort = 55;
 		}
 	}
 
