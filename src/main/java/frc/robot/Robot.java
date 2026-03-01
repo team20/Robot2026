@@ -16,9 +16,11 @@ import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
+import frc.robot.subsystems.Agitator;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 
@@ -35,6 +37,8 @@ public class Robot extends TimedRobot {
 		new Drive();
 		new Shooter();
 		new Intake();
+		new Kicker();
+		new Agitator();
 		Turret.create();
 		Hood.create();
 	}
