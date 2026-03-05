@@ -168,7 +168,7 @@ public class SwerveModule {
 
 		// Update steer motor
 		m_currentAngle = new Rotation2d(m_CANCoder.getAbsolutePosition().getValue());
-		double power = m_steerController.calculate(getModuleAngle().getDegrees(), m_currentAngle.getDegrees());
+		double power = m_steerController.calculate(m_currentAngle.getDegrees(), m_goalAngle.getDegrees());
 		m_steerMotor.set(ABBA.preventBrownout(power));
 
 		if (RobotBase.isSimulation()) {

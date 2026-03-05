@@ -147,7 +147,7 @@ public class DriveCommands {
 
 		@Override
 		public boolean isFinished() {
-			return true;
+			return m_timer.hasElapsed(m_time);
 		}
 	}
 
