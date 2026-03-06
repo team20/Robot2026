@@ -24,8 +24,9 @@ public class Constants {
 			public static final double kSmallDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
-			public static final double kMinAngle = 50;
-			public static final double kMaxAngle = 270;
+			public static final double kPositionConversionFactor = 7 / 6;
+			public static final double kMinAngle = 10;
+			public static final double kMaxAngle = 160;
 		}
 
 		public static final class HoodConstants {

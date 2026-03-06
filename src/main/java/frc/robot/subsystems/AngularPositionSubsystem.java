@@ -34,7 +34,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 			double kP, double kI,
 			int currentLimit, int smartCurrentLimit,
 			double minAngle, double maxAngle,
-			double maxDutyCycle, boolean inverted) {
+			double conversionFactor, double maxDutyCycle, boolean inverted) {
 		m_name = name;
 		m_minAngle = minAngle;
 		m_maxAngle = maxAngle;
@@ -42,7 +42,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		m_motor = new SparkMax(id, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.idleMode(IdleMode.kBrake);
-		config.absoluteEncoder.positionConversionFactor(360);
+		config.absoluteEncoder.positionConversionFactor(360 * conversionFactor);
 		config.closedLoop.pid(kP, kI, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
 		config.closedLoop.positionWrappingEnabled(false);

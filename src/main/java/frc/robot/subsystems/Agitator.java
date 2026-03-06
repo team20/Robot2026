@@ -6,6 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.TransportConstants;
 
@@ -33,6 +34,12 @@ public class Agitator extends SubsystemBase {
 		} else {
 			throw new Error("The Agitator subsystem has already been created");
 		}
+	}
+
+	@Override
+	public void periodic() {
+		SmartDashboard.putNumber("Agitator/Current", s_theAgitator.m_agitator.getOutputCurrent());
+		SmartDashboard.putNumber("Agitator/Voltage", s_theAgitator.m_agitator.getAppliedOutput());
 	}
 
 	/**

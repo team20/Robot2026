@@ -131,7 +131,9 @@ public class TurretCommands {
 		public void initialize() {
 			m_timer.reset();
 			m_timer.start();
-			Turret.getTurret().runAtDutyCycle(m_speed);
+			if (Turret.getTurret().getPosition() >= TurretConstants.kMinAngle
+					|| Turret.getTurret().getPosition() <= TurretConstants.kMaxAngle)
+				Turret.getTurret().runAtDutyCycle(m_speed);
 		}
 
 		// Called once the command ends or is interrupted.
