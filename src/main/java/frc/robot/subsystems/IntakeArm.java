@@ -46,12 +46,12 @@ public class IntakeArm extends PositionControlSubsystem {
 				new PositionControlCommands.ResetEncoder());
 	}
 
-	public static Command getInCommand() {
+	public static Command getOutCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(s_theIntakeArm, IntakeConstants.kInPosition, 0.1, 0.7,
 				0.5, 0.125, false);
 	}
 
-	public static Command getOutCommand() {
+	public static Command getInCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(s_theIntakeArm, IntakeConstants.kOutPosition, 0.1, 0.7,
 				0.5, 0.125, false);
 	}

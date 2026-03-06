@@ -74,6 +74,11 @@ public class Drive extends SubsystemBase {
 
 	/** Creates a new DriveSubsystem. */
 	public Drive() {
+		if (s_theDrive == null) {
+			s_theDrive = this;
+		} else {
+			throw new Error("Drive already instantiated");
+		}
 		m_orientationController.enableContinuousInput(-Math.PI, Math.PI);
 		// Adjust ramp rate, step voltage, and timeout to make sure robot doesn't
 		// collide with anything
@@ -96,11 +101,6 @@ public class Drive extends SubsystemBase {
 			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
 		} else {
 			m_gyroSim = null;
-		}
-		if (s_theDrive == null) {
-			s_theDrive = this;
-		} else {
-			throw new Error("Drive already instantiated");
 		}
 	}
 

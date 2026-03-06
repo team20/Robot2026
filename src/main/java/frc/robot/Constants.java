@@ -54,7 +54,7 @@ public class Constants {
 
 		public static final class IntakeConstants {
 			public static final int kIntakeWheelsPort = 54;
-			public static final int kIntakeArmPort = 21;
+			public static final int kIntakeArmPort = 53;
 			public static final double kArmConversionFactor = 0.1;// 0.01;
 
 			public static final int kWheelSmartCurrentLimit = 1;
@@ -82,7 +82,7 @@ public class Constants {
 		}
 
 		public static final class ClimberConstants {
-			public static final int kClimberPort = 70;
+			public static final int kClimberPort = 55;
 			public static final int kSmartCurrentLimit = 30;
 			public static final int kSecondaryCurrentLimit = 40;
 			public static final boolean kInvert = false;
