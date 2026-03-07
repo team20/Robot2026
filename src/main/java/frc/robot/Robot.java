@@ -119,10 +119,10 @@ public class Robot extends TimedRobot {
 
 		m_driverController.cross().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
-						-0.6 /* POWER */));
+						0.6 /* POWER */));
 		m_driverController.square().whileTrue(
 				new TransportCommands.RunKickerAtPower(
-						0.6 /* POWER */));
+						0.4 /* POWER */));
 
 		Turret.getTurret().setDefaultCommand(
 				new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,

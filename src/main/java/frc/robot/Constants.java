@@ -82,6 +82,8 @@ public class Constants {
 			public static final int kAgitatorPort = 57;
 			public static final int kAgitatorSmartCurrentLimit = 20;
 			public static final int kAgitatorSecondaryCurrentLimit = 30;
+			public static final boolean kKickerInvert = true;
+			public static final boolean kAgitatorInvert = true;
 		}
 
 		public static final class ClimberConstants {

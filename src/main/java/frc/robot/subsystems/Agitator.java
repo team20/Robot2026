@@ -25,6 +25,7 @@ public class Agitator extends SubsystemBase {
 	public Agitator() {
 		m_agitator = new SparkMax(TransportConstants.kAgitatorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
+		config.inverted(TransportConstants.kAgitatorInvert);
 		config.smartCurrentLimit(TransportConstants.kAgitatorSmartCurrentLimit);
 		config.secondaryCurrentLimit(TransportConstants.kAgitatorSecondaryCurrentLimit);
 		m_agitator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

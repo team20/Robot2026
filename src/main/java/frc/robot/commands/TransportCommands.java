@@ -58,7 +58,7 @@ public class TransportCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return true;
+			return false;
 		}
 
 		// Called once the command ends or is interrupted.
@@ -141,7 +141,7 @@ public class TransportCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return true;
+			return false;
 		}
 
 		// Called once the command ends or is interrupted.
