@@ -145,4 +145,21 @@ public class ShooterCommands {
 			return false;
 		}
 	}
+
+	public static class Stop extends Command {
+		public Stop() {
+			setName("Stop shooter flywheel");
+			addRequirements(Shooter.getShooter());
+		}
+
+		@Override
+		public void initialize() {
+			Shooter.stop();
+		}
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
 }

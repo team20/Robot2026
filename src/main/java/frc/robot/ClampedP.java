@@ -4,6 +4,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class ClampedP {
+	public record ClampedPConstants(double minPower, double maxPower, double maxErr, double tolerance) {
+	};
+
 	/**
 	 * Calculates a clamped p controller output power. The power can be any range
 	 * you like, such as 0-1 or 0-12.

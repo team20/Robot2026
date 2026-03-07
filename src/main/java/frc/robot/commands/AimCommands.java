@@ -3,6 +3,8 @@ package frc.robot.commands;
 import java.util.Map;
 
 import edu.wpi.first.wpilibj.IterativeRobotBase;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -13,6 +15,52 @@ import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 
 public class AimCommands {
+	public static class AdjustAim extends Command {
+		private static double s_distance = ShooterConstants.kDefaultDistance;
+		private final boolean m_absolute;
+		private final double m_distance;
+		private final TimedRobot m_robot;
+		private final Aim m_aim = new Aim.Linear();
+
+		/**
+		 * A command to set the setpoints of the hood and shooter for aiming. In
+		 * absolute mode, it sets it to the specified distance. In relative mode, it
+		 * increases the distance by your specified value every second in a linear
+		 * fashion.
+		 * 
+		 * @param absolute if the distance parameter is absolute instead of relative
+		 * @param distance a specific distance in feet if in absolute or a rate in feet
+		 *        per second if in relative
+		 * @param robot your robot
+		 */
+		public AdjustAim(boolean absolute, double distance, TimedRobot robot) {
+			// addRequirements(Hood.getHood(), Shooter.getShooter());
+			setName("Adjust aim command");
+			m_absolute = absolute;
+			m_distance = distance;
+			m_robot = robot;
+		}
+
+		@Override
+		public void execute() {
+			if (m_absolute) {
+				s_distance = m_distance;
+			} else {
+				s_distance += m_distance * m_robot.getPeriod();
+			}
+			SmartDashboard.putNumber("Aim distance", s_distance);
+			ShooterState state = m_aim.getShooterState(s_distance, 0);
+			Hood.getHood().setAngle(state.hoodAngle());
+			Shooter.setRPM(state.shooterVelocity());
+			// Clearly doable
+		}
+
+		@Override
+		public boolean isFinished() {
+			return m_absolute;
+		}
+	}
+
 	public static class RiyaAiming extends Command {
 		private double m_distance;
 		private Aim m_aim = new Aim.Linear();
