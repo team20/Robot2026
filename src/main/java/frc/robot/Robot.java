@@ -63,8 +63,6 @@ public class Robot extends TimedRobot {
 				new DriveCommands.DriveDistance(1.5),
 				new DriveCommands.DriveDistance(-1.5),
 				new DriveCommands.DriveDistance(1.5));
-	public Robot() {
-		bindTestControls(); // Change to bindCompControls() for competition
 	}
 
 	// If code had comments then it is most likely
@@ -195,6 +193,6 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
+		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), ABBA.testBrownoutPreventionCommand()));
 	}
 }
