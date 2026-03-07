@@ -3,6 +3,7 @@ package frc.robot.commands;
 import static frc.robot.Constants.Subsystems.ClimberConstants.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.Subsystems.ClimberConstants;
 import frc.robot.subsystems.Climber;
 
 public class ClimberCommands {
@@ -12,34 +13,27 @@ public class ClimberCommands {
 	 * command-based.html#defining-commands
 	 */
 
-	public static class RunAtPower extends Command {
+	public static Command getZeroCommand() { // TODO: Find actual power and time needed
+		return PositionControlCommands.getZeroCommand(
+				Climber.getClimber(),
+				-.3 /* POWER */,
+				5 /* TIME */);
+	}
 
-		private double m_power;
+	public static Command getRunAtPowerCommand(double power) {
+		return new PositionControlCommands.SpinMotorPower(Climber.getClimber(), power);
+	}
 
-		/** Creates a new runShooter. */
-		public RunAtPower(double power) {
-			setName("Run Climber At Power");
-			m_power = power;
-			addRequirements(Climber.getClimber());
-		}
+	public static Command getClimbCommand() {
+		return new PositionControlCommands.MoveMotorToPosition(Climber.getClimber(), ClimberConstants.kClimbPosition,
+				0.1, 0.5,
+				0.5, 0.125, false);
+	}
 
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			Climber.getClimber().setMotorPower(m_power);
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			Climber.getClimber().stopMotor();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return false;
-		}
+	public static Command getRetractCommand() {
+		return new PositionControlCommands.MoveMotorToPosition(Climber.getClimber(), ClimberConstants.kRetractPosition,
+				0.1,
+				0.5, 0.5, 0.125, false);
 	}
 
 	public static class RunToHeightSoftware extends Command {

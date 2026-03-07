@@ -73,10 +73,10 @@ public class Robot extends TimedRobot {
 		// m_driverController.square().onTrue(new DriveCommands.SpinToAngle(270, 0.2));
 		//
 		m_driverController.R1().onTrue(
-				new SequentialCommandGroup(IntakeArm.getOutCommand()));
+				new SequentialCommandGroup(IntakeCommands.getOutCommand()));
 		// new IntakeCommands.SpinIntake(1)));// Deploys arm TODO: tune position
 		m_driverController.L1().onTrue(
-				new SequentialCommandGroup(IntakeArm.getInCommand()));
+				new SequentialCommandGroup(IntakeCommands.getInCommand()));
 		// new IntakeCommands.StopIntake()));// Retracts arm and stops power TODO: tune
 		// position
 		// m_driverController.povUp().whileTrue(new IntakeCommands.SpinArmPower(-.05));
@@ -123,8 +123,6 @@ public class Robot extends TimedRobot {
 				new TransportCommands.RunKickerAtPower(
 						0.5, /* POWER */
 						1)); /* TIME */
-		m_driverController.triangle().onTrue(new ClimberCommands.RunAtPower(0.2));
-		m_driverController.circle().onTrue(new ClimberCommands.RunAtPower(-0.2));
 
 		Turret.getTurret().setDefaultCommand(
 				new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
@@ -151,14 +149,18 @@ public class Robot extends TimedRobot {
 						.1, /* POWER */
 						0)); /* TIME */
 
-		m_operatorController.square().onTrue(
-				new IntakeCommands.SpinIntake(
-						.3)); /* POWER */
-		m_operatorController.circle().onTrue(
-				IntakeArm.getOutCommand());
-		m_operatorController.cross().onTrue(
-				IntakeArm.getInCommand()); /* POSITION */
+		{ // climber test bindings
+			m_driverController.triangle().onTrue(ClimberCommands.getRunAtPowerCommand(.2));
+			m_driverController.circle().onTrue(ClimberCommands.getRunAtPowerCommand(-0.2));
+		}
 
+		{ // intake test bindings
+			m_operatorController.circle().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
+			m_operatorController.cross().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
+			m_operatorController.square().toggleOnTrue(
+					new IntakeCommands.SpinIntake(
+							-1)); /* POWER */
+		}
 	}
 
 	@Override

@@ -2,9 +2,8 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.ClampedP;
-import frc.robot.subsystems.IntakeArm;
-import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.PositionControlSubsystem;
 
 public class PositionControlCommands {
@@ -110,32 +109,23 @@ public class PositionControlCommands {
 		}
 	}
 
-	public static class SpinIntake extends Command {
-		private final double m_speed;
+	public static class ResetEncoder extends Command {
+		private final PositionControlSubsystem m_subsystem;
 
-		public SpinIntake(double speed) {
-			m_speed = speed;
-			setName("Spin Intake");
+		public ResetEncoder(PositionControlSubsystem subsystem) {
+			m_subsystem = subsystem;
+			addRequirements(subsystem);
 		}
 
+		@Override
 		public void initialize() {
-			IntakeWheels.setWheelPower(m_speed);
-		}
-
-		// Update this to use limit switch instead of getArmAngle method.
-		public boolean isFinished() {
-			return false;
-		}
-
-		public void end() {
-			IntakeWheels.stopWheel();
+			m_subsystem.resetMotorEncoder();
 		}
 	}
 
-	public static class ResetEncoder extends Command {
-		@Override
-		public void initialize() {
-			IntakeArm.getIntakeArm().resetMotorEncoder();
-		}
+	public static Command getZeroCommand(PositionControlSubsystem subsystem, double power, double time) {
+		return new SequentialCommandGroup(
+				new PositionControlCommands.SpinMotorPowerForTime(subsystem, power, time),
+				new PositionControlCommands.ResetEncoder(subsystem));
 	}
 }
