@@ -63,8 +63,6 @@ public class Robot extends TimedRobot {
 				new DriveCommands.DriveDistance(1.5),
 				new DriveCommands.DriveDistance(-1.5),
 				new DriveCommands.DriveDistance(1.5));
-	public Robot() {
-		bindTestControls(); // Change to bindCompControls() for competition
 	}
 
 	// If code had comments then it is most likely
