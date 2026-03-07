@@ -158,14 +158,12 @@ public class SwerveModule {
 	 * Sets the drive motor speeds and module angle.
 	 * 
 	 * @param state The module state. Note that the speedMetersPerSecond field has
-	 *        been repurposed to contain volts, not velocity.
+	 *        been repurposed to contain power between -1 and 1, not velocity.
 	 */
 	public SwerveModuleState setModuleState(SwerveModuleState state) {
-		double driveVoltage = ABBA.preventBrownout(state.speedMetersPerSecond, kTeleopMaxVoltage);
-		m_driveMotor.setVoltage(driveVoltage);
+		m_driveMotor.set(ABBA.preventBrownout(state.speedMetersPerSecond));
 		double turnPower = m_steerController.calculate(getModuleAngle(), state.angle.getDegrees());
-		double turnVoltage = ABBA.preventBrownout(turnPower, kTeleopMaxTurnVoltage);
-		m_steerMotor.setVoltage(turnVoltage);
+		m_steerMotor.set(ABBA.preventBrownout(turnPower));
 		updateSim();
 		return state;
 	}

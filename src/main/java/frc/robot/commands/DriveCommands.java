@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
@@ -48,12 +49,11 @@ public class DriveCommands {
 		@Override
 		public void execute() {
 			double forwardStick = MathUtil.applyDeadband(m_forwardSpeed.getAsDouble(), kDeadzone);
-			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI * kTeleopDriveMaxSpeed;
+			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI;
 			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
-			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI * kTeleopDriveMaxSpeed;
+			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			double rotation = rotationStick * kTeleopTurnMaxAngularSpeed;
-			Drive.drive(forwardSpeed, strafeSpeed, rotation, m_isRobotRelative.getAsBoolean());
+			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 
 		// Called once the command ends or is interrupted.
@@ -71,12 +71,11 @@ public class DriveCommands {
 
 	public static class DriveDistance extends Command {
 		private final double m_distance;
-		private final double m_speed;
 		private Pose2d m_initialPose;
+		private static final double m_tolerance = .05; // When to stop trying!!
 
-		public DriveDistance(double distance, double speed) {
+		public DriveDistance(double distance) {
 			m_distance = distance;
-			m_speed = speed;
 			setName("Drive For A Distance");
 			addRequirements(Drive.getDrive());
 		}
@@ -88,10 +87,26 @@ public class DriveCommands {
 
 		@Override
 		public void execute() {
-			double distance = Drive.getPose().minus(m_initialPose).getTranslation().getNorm();
-			double error = distance - m_distance;
-			double speed = ClampedP.clampedP(error, 0.05, m_speed, 1, 0.01) * Math.signum(distance);
-			Drive.drive(speed, 0, 0, true);
+			Transform2d transform = Drive.getPose().minus(m_initialPose);
+			double speed, rotation;
+			{
+				double distance = transform.getTranslation().getNorm();
+				double error = (distance - Math.abs(m_distance)) * Math.signum(m_distance);
+				double minPower = .05;
+				double maxPower = .1;
+				double maxErr = .5; // When to start slowing down!!
+				speed = ClampedP.clampedP(error, minPower, maxPower, maxErr, m_tolerance);
+			}
+			{
+				double angle = transform.getTranslation().getAngle().getDegrees();
+				double error = 0 - angle;
+				double minPower = .01;
+				double maxPower = .05;
+				double maxErr = 2; // When to start slowing down!!
+				rotation = ClampedP.clampedP(error, minPower, maxPower, maxErr, m_tolerance);
+			}
+			// rotation = .03;
+			Drive.drive(speed, 0, rotation, true);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -104,7 +119,7 @@ public class DriveCommands {
 		@Override
 		public boolean isFinished() {
 			double distance = Drive.getPose().minus(m_initialPose).getTranslation().getNorm();
-			return Math.abs(distance - m_distance) < 0.01;
+			return Math.abs(distance - Math.abs(m_distance)) < m_tolerance;
 		}
 
 	}
@@ -167,7 +182,7 @@ public class DriveCommands {
 			double speedX = ClampedP.clampedP(error.getX(), 0.05, m_translationSpeed, 1, 0.01);
 			double speedY = ClampedP.clampedP(error.getY(), 0.05, m_translationSpeed, 1, 0.01);
 			double speedTheta = ClampedP.clampedP(error.getRotation().getDegrees(), 0.05, m_rotationSpeed, 45, 5);
-			Drive.drive(speedX, speedY, speedTheta, false);
+			Drive.drive(speedX, speedY, speedTheta, true);
 		}
 
 		// Called once the command ends or is interrupted.

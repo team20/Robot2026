@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -34,13 +35,15 @@ import frc.robot.subsystems.Turret;
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
+	public static final boolean compControls = true;
 	private final CommandPS5Controller m_driverController = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
 			Constants.ControllerConstants.kOperatorControllerPort);
 	private final Aim m_aim = new Aim.Linear();
+	private final Command m_auto;
 
-	{
+	{ // Here are the individual subsystems
 		new Drive();
 		new Shooter();
 		new IntakeWheels();
@@ -52,6 +55,14 @@ public class Robot extends TimedRobot {
 		Hood.create();
 	}
 
+	{ // Here is the auto currently being run
+		m_auto = new SequentialCommandGroup(
+				new DriveCommands.DriveDistance(-1.5),
+				new DriveCommands.DriveDistance(1.5),
+				new DriveCommands.DriveDistance(-1.5),
+				new DriveCommands.DriveDistance(1.5),
+				new DriveCommands.DriveDistance(-1.5),
+				new DriveCommands.DriveDistance(1.5));
 	public Robot() {
 		bindTestControls(); // Change to bindCompControls() for competition
 	}
@@ -107,7 +118,7 @@ public class Robot extends TimedRobot {
 		Drive.getDrive().setDefaultCommand(
 				new DriveCommands.JoystickDrive(
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
+						() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
 						m_driverController.getHID()::getCreateButton));
 
 		m_driverController.cross().whileTrue(
@@ -168,25 +179,22 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(
-				Commands.parallel(
-						Commands.sequence(
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(45), Commands.waitSeconds(1),
-								new TurretCommands.RunToAngleHardware(225)),
-						new ShooterCommands.RunAtDynamicRPM(2400).withTimeout(40)));
-		// m_scheduler.schedule(m_aim.getAimCommand(13.5));
+		m_scheduler.schedule(m_auto);
 	}
 
 	@Override
 	public void teleopInit() {
 		m_scheduler.cancelAll();
+		if (compControls) {
+			bindCompControls();
+		} else {
+			bindTestControls();
+		}
 	}
 
 	@Override
 	public void testInit() {
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), ABBA.testBrownoutPreventionCommand()));
+		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
 	}
 }

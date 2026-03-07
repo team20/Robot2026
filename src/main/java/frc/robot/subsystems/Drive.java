@@ -68,7 +68,7 @@ public class Drive extends SubsystemBase {
 			.getDefault().getStructArrayTopic("/SmartDashboard/Current Swerve Modules States", SwerveModuleState.struct)
 			.publish();
 
-	private final PIDController m_orientationController = new PIDController(kRotationP, kRotationI, kRotationD);
+	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
 
 	private NeutralModeValue coastMode = NeutralModeValue.Coast;
 
@@ -79,7 +79,6 @@ public class Drive extends SubsystemBase {
 		} else {
 			throw new Error("Drive already instantiated");
 		}
-
 		m_orientationController.enableContinuousInput(-Math.PI, Math.PI);
 		// Adjust ramp rate, step voltage, and timeout to make sure robot doesn't
 		// collide with anything
@@ -164,7 +163,7 @@ public class Drive extends SubsystemBase {
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
 		speeds = ChassisSpeeds.discretize(speeds, 0.03);
 		SwerveModuleState[] states = s_theDrive.m_kinematics.toSwerveModuleStates(speeds);
-		SwerveDriveKinematics.desaturateWheelSpeeds(states, kTeleopDriveMaxSpeed);
+		SwerveDriveKinematics.desaturateWheelSpeeds(states, 1);
 		Double[] moduleAngles = doModuleX(SwerveModule::getModuleAngle, Double[]::new);
 		for (int i = 0; i < states.length; i++) // Optimize target module states
 			states[i].optimize(Rotation2d.fromDegrees(moduleAngles[i]));
