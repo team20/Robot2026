@@ -34,7 +34,8 @@ public class AngularPositionSubsystem extends SubsystemBase {
 			double kP, double kI,
 			int currentLimit, int smartCurrentLimit,
 			double minAngle, double maxAngle,
-			double maxDutyCycle, boolean inverted) {
+			double conversionFactor,
+			double maxDutyCycle, boolean motorInverted, boolean encoderInverted) {
 		m_name = name;
 		m_minAngle = minAngle;
 		m_maxAngle = maxAngle;
@@ -42,13 +43,14 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		m_motor = new SparkMax(id, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.idleMode(IdleMode.kBrake);
-		config.absoluteEncoder.positionConversionFactor(360);
+		config.absoluteEncoder.positionConversionFactor(360 * conversionFactor);
+		config.absoluteEncoder.inverted(encoderInverted);
 		config.closedLoop.pid(kP, kI, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
 		config.closedLoop.positionWrappingEnabled(false);
 		config.smartCurrentLimit(smartCurrentLimit);
 		config.secondaryCurrentLimit(currentLimit);
-		config.inverted(inverted);
+		config.inverted(motorInverted);
 		m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		m_encoder = m_motor.getAbsoluteEncoder();
 		m_controller = m_motor.getClosedLoopController();

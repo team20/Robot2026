@@ -13,6 +13,8 @@ public class Constants {
 
 	public static final class Subsystems {
 		public static final class TurretConstants {
+			public static final boolean kMotorInvert = true;
+			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
@@ -25,11 +27,15 @@ public class Constants {
 			public static final double kSmallDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
-			public static final double kMinAngle = 50;
-			public static final double kMaxAngle = 270;
+			public static final double kMinAngle = 0;
+			public static final double kMaxAngle = 220;
+			public static final double kPositionConversionFactor = 7.0 / 6;
+			public static final double kStraightAheadAngle = 105;
 		}
 
 		public static final class HoodConstants {
+			public static final boolean kMotorInvert = true;
+			public static final boolean kEncoderInvert = false;
 			public static final int kHoodPort = 52;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
@@ -42,7 +48,7 @@ public class Constants {
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
 			public static final double kMinAngle = 0;
-			public static final double kMaxAngle = 38;
+			public static final double kMaxAngle = 35;
 		}
 
 		public static final class ShooterConstants {

@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.*;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 
@@ -60,5 +63,13 @@ public class Agitator extends SubsystemBase {
 	 */
 	public static void stop() {
 		s_theAgitator.m_agitator.set(0);
+	}
+
+	@Override
+	public void periodic() {
+		if (kLogging) {
+			SmartDashboard.putNumber("Agitator/Current", s_theAgitator.m_agitator.getOutputCurrent());
+			SmartDashboard.putNumber("Agitator/Voltage", s_theAgitator.m_agitator.getAppliedOutput());
+		}
 	}
 }

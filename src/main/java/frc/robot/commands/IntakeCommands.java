@@ -52,7 +52,7 @@ public class IntakeCommands {
 	public static Command getInCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kOutPosition,
 				0.1, 0.7,
-				0.5, 0.125, false);
+				0.5, 0.125, false).withTimeout(1);
 	}
 
 	public static Command getRunArmAtPowerCommand(double power) {
