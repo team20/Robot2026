@@ -6,13 +6,13 @@ import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.IntakeWheels;
 
 public class IntakeCommands {
-	public static class SpinIntake extends Command {
+	public static class Spintake extends Command {
 		private double m_speed;
 
-		public SpinIntake(double speed) {
+		public Spintake(double speed) {
 			setName("Spin Intake");
 			m_speed = speed;
-			addRequirements(IntakeArm.getIntakeArm());
+			addRequirements(IntakeWheels.getIntakeWheels());
 		}
 
 		@Override

@@ -7,7 +7,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Subsystems.TransportConstants;
+import frc.robot.Constants.Subsystems.AgitatorConstants;
 
 /**
  * The Transport subsystem is responsible for moving game pieces from the intake
@@ -23,11 +23,11 @@ public class Agitator extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Agitator() {
-		m_agitator = new SparkMax(TransportConstants.kAgitatorPort, MotorType.kBrushless);
+		m_agitator = new SparkMax(AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
-		config.inverted(TransportConstants.kAgitatorInvert);
-		config.smartCurrentLimit(TransportConstants.kAgitatorSmartCurrentLimit);
-		config.secondaryCurrentLimit(TransportConstants.kAgitatorSecondaryCurrentLimit);
+		config.inverted(AgitatorConstants.kAgitatorInvert);
+		config.smartCurrentLimit(AgitatorConstants.kAgitatorSmartCurrentLimit);
+		config.secondaryCurrentLimit(AgitatorConstants.kAgitatorSecondaryCurrentLimit);
 		m_agitator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 		if (s_theAgitator == null) {

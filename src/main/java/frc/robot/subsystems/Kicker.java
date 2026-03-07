@@ -7,7 +7,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Subsystems.TransportConstants;
+import frc.robot.Constants.Subsystems.KickerConstants;
 
 /**
  * The Transport subsystem is responsible for moving game pieces from the intake
@@ -23,11 +23,11 @@ public class Kicker extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Kicker() {
-		m_kicker = new SparkMax(TransportConstants.kKickerPort, MotorType.kBrushless);
+		m_kicker = new SparkMax(KickerConstants.kKickerPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
-		config.inverted(TransportConstants.kKickerInvert);
-		config.smartCurrentLimit(TransportConstants.kKickerSmartCurrentLimit);
-		config.secondaryCurrentLimit(TransportConstants.kKickerSecondaryCurrentLimit);
+		config.inverted(KickerConstants.kKickerInvert);
+		config.smartCurrentLimit(KickerConstants.kKickerSmartCurrentLimit);
+		config.secondaryCurrentLimit(KickerConstants.kKickerSecondaryCurrentLimit);
 		m_kicker.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		if (s_theKicker == null) {
 			s_theKicker = this;

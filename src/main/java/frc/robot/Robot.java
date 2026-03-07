@@ -83,7 +83,7 @@ public class Robot extends TimedRobot {
 
 		m_driverController.R1().onTrue(
 				new SequentialCommandGroup(IntakeCommands.getOutCommand(),
-						new IntakeCommands.SpinIntake(.5)));// Deploys arm TODO: tune position
+						new IntakeCommands.Spintake(.5)));// Deploys arm TODO: tune position
 		m_driverController.L1().onTrue(
 				new SequentialCommandGroup(IntakeCommands.getInCommand(),
 						new IntakeCommands.StopIntake()));// Retracts arm and stops power TODO: tune position
@@ -158,8 +158,8 @@ public class Robot extends TimedRobot {
 			m_operatorController.circle().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
 			m_operatorController.cross().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
 			m_operatorController.square().toggleOnTrue(
-					new IntakeCommands.SpinIntake(
-							-.5)); /* POWER */
+					new IntakeCommands.Spintake(
+							0.5)); /* POWER */
 		}
 
 	}

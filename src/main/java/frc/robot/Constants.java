@@ -60,7 +60,7 @@ public class Constants {
 
 			public static final int kWheelSmartCurrentLimit = 10;
 			public static final int kWheelSecondaryCurrentLimit = 20;
-			public static final boolean kWheelInvert = false;
+			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;
 			public static final int kArmSecondaryCurrentLimit = 20;
@@ -75,14 +75,17 @@ public class Constants {
 			public static final double kP = 0.2;
 		}
 
-		public static final class TransportConstants {
+		public static final class KickerConstants {
 			public static final int kKickerPort = 56;
 			public static final int kKickerSmartCurrentLimit = 10;
 			public static final int kKickerSecondaryCurrentLimit = 20;
+			public static final boolean kKickerInvert = true;
+		}
+
+		public static final class AgitatorConstants {
 			public static final int kAgitatorPort = 57;
 			public static final int kAgitatorSmartCurrentLimit = 20;
 			public static final int kAgitatorSecondaryCurrentLimit = 30;
-			public static final boolean kKickerInvert = true;
 			public static final boolean kAgitatorInvert = true;
 		}
 
