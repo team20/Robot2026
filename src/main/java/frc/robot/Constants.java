@@ -126,20 +126,36 @@ public class Constants {
 	}
 
 	public static final class DriveConstants {
-		public static final double kDeadzone = 0.05;
+		public static final double kDeadzone = 0.1;
+
 		// CAN IDs (updated)
-		public static final int kFrontRightDrivePort = 10;
-		public static final int kFrontRightSteerPort = 11;
-		public static final int kFrontLeftDrivePort = 40;
-		public static final int kFrontLeftSteerPort = 41;
-		public static final int kBackRightDrivePort = 20;
-		public static final int kBackRightSteerPort = 21;
-		public static final int kBackLeftDrivePort = 30;
-		public static final int kBackLeftSteerPort = 31;
-		public static final int kFrontRightCANCoderPort = 12;
-		public static final int kFrontLeftCANCoderPort = 42;
-		public static final int kBackRightCANCoderPort = 22;
-		public static final int kBackLeftCANCoderPort = 32;
+		public static final class FrontRight {
+			public static final int kDrivePort = 10;
+			public static final int kSteerPort = 11;
+			public static final int kCANCoderPort = 12;
+			public static final boolean kInverted = false;
+		}
+
+		public static final class FrontLeft {
+			public static final int kDrivePort = 40;
+			public static final int kSteerPort = 41;
+			public static final int kCANCoderPort = 42;
+			public static final boolean kInverted = true;
+		}
+
+		public static final class BackRight {
+			public static final int kDrivePort = 20;
+			public static final int kSteerPort = 21;
+			public static final int kCANCoderPort = 22;
+			public static final boolean kInverted = false;
+		}
+
+		public static final class BackLeft {
+			public static final int kDrivePort = 30;
+			public static final int kSteerPort = 31;
+			public static final int kCANCoderPort = 32;
+			public static final boolean kInverted = true;
+		}
 
 		// TODO: Make sure these are tuned (can do with SysId)
 		public static final double kP = 0.01;
@@ -154,6 +170,8 @@ public class Constants {
 		public static final double kWheelCircumference = Math.PI * kWheelDiameter;
 
 		public static final double kMetersPerMotorRotation = kWheelCircumference / kDriveGearRatio;
+
+		public static final double kMaxThrottle = (kCompBot) ? 1 : 0.5; // Adjust max throttle if needed
 
 		// https://docs.wpilib.org/en/latest/docs/software/basic-programming/coordinate-system.html
 		public static final double kModuleDistFromCenter = Units.inchesToMeters(14.5); // Width/2

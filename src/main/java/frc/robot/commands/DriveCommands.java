@@ -9,10 +9,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.ClampedP;
+import frc.robot.ScaledJoystick;
 import frc.robot.subsystems.Drive;
 
 public class DriveCommands {
@@ -30,15 +33,13 @@ public class DriveCommands {
 	 *         input
 	 */
 	public static class JoystickDrive extends Command {
-		private final DoubleSupplier m_forwardSpeed;
-		private final DoubleSupplier m_strafeSpeed;
+		private final ScaledJoystick m_joystick;
 		private final DoubleSupplier m_rotation;
 		private final BooleanSupplier m_isRobotRelative;
 
 		public JoystickDrive(DoubleSupplier forwardSpeed, DoubleSupplier strafeSpeed,
 				DoubleSupplier rotation, BooleanSupplier isRobotRelative) {
-			m_forwardSpeed = forwardSpeed;
-			m_strafeSpeed = strafeSpeed;
+			m_joystick = new ScaledJoystick(forwardSpeed, strafeSpeed, kDeadzone);
 			m_rotation = rotation;
 			m_isRobotRelative = isRobotRelative;
 			setName("Drive With Joysticks");
@@ -48,12 +49,9 @@ public class DriveCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			double forwardStick = MathUtil.applyDeadband(m_forwardSpeed.getAsDouble(), kDeadzone);
-			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI;
-			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
-			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
+			m_joystick.update();
+			Drive.swerveDrive(m_joystick.getX(), m_joystick.getY(), rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 
 		// Called once the command ends or is interrupted.
@@ -69,19 +67,69 @@ public class DriveCommands {
 		}
 	}
 
-	public static class DrivePowerAndTime extends Command {
-		private final double m_fwdPower;
-		private final double m_strafePower;
-		private final double m_rotSpeed;
-		private final double m_time;
-		private Timer m_timer = new Timer();
+	public static class TurnSteerToAngle extends Command {
+		private final double m_angle;
+		private final double m_tolerance;
 
-		public DrivePowerAndTime(double fwdPower, double strafePower, double rot, double time) {
-			m_fwdPower = fwdPower;
-			m_strafePower = strafePower;
-			m_rotSpeed = rot;
+		public TurnSteerToAngle(double angle) {
+			m_angle = angle;
+			m_tolerance = 3; // Can be constant from command to command
+			addRequirements(Drive.getDrive());
+		}
+
+		@Override
+		public void execute() {
+			Drive.turnSteerToAngle(Rotation2d.fromDegrees(m_angle));
+		}
+
+		// Finishes when all four modules are within angle tolerance
+		@Override
+		public boolean isFinished() {
+			SwerveModulePosition[] poses = Drive.getModulePositions();
+			for (int i = 0; i < 4; i++) {
+				if (Math.abs(poses[i].angle.getDegrees() - m_angle) > m_tolerance) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	public static class RotateSteerToAngle extends Command {
+		private final Rotation2d m_angle;
+
+		public RotateSteerToAngle(double degrees) {
+			this(Rotation2d.fromDegrees(degrees));
+		}
+
+		public RotateSteerToAngle(Rotation2d angle) {
+			m_angle = angle;
+			setName("Turn wheels to an angle");
+			addRequirements(Drive.getDrive());
+		}
+
+		@Override
+		public void initialize() {
+			Drive.turnSteerToAngle(m_angle);
+		}
+
+		@Override
+		public boolean isFinished() {
+			// We don't need to check for tolerance because the modules will still move
+			// after the command ends.
+			return true;
+		}
+	}
+
+	public static class PowerAndTime extends Command {
+		private final Timer m_timer = new Timer();
+		private final double m_power;
+		private final double m_time;
+
+		public PowerAndTime(double power, double time) {
+			m_power = power;
 			m_time = time;
-			setName("Drive For Power and Time");
+			setName("Drive for power and time");
 			addRequirements(Drive.getDrive());
 		}
 
@@ -89,26 +137,19 @@ public class DriveCommands {
 		public void initialize() {
 			m_timer.reset();
 			m_timer.start();
+			Drive.setDrivePower(m_power);
 		}
 
-		@Override
-		public void execute() {
-			Drive.drive(m_fwdPower, m_strafePower, m_rotSpeed, true);
-		}
-
-		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
+			Drive.setDrivePower(0);
 			m_timer.stop();
-			Drive.drive(0, 0, 0, true);
 		}
 
-		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return m_time > 0 && m_timer.hasElapsed(m_time);
+			return m_timer.hasElapsed(m_time);
 		}
-
 	}
 
 	public static class DriveDistance extends Command {
@@ -148,7 +189,7 @@ public class DriveCommands {
 				rotation = ClampedP.clampedP(error, minPower, maxPower, maxErr, m_tolerance);
 			}
 			// rotation = .03;
-			Drive.drive(speed, 0, rotation, true);
+			Drive.swerveDrive(speed, 0, rotation, true);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -188,7 +229,7 @@ public class DriveCommands {
 			double angle = Drive.getPose().minus(m_initialPose).getRotation().getDegrees();
 			double error = angle - m_angle;
 			double speed = ClampedP.clampedP(error, 0.05, m_speed, 45, 5);
-			Drive.drive(0, 0, speed, true);
+			Drive.swerveDrive(0, 0, speed, true);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -224,7 +265,7 @@ public class DriveCommands {
 			double speedX = ClampedP.clampedP(error.getX(), 0.05, m_translationSpeed, 1, 0.01);
 			double speedY = ClampedP.clampedP(error.getY(), 0.05, m_translationSpeed, 1, 0.01);
 			double speedTheta = ClampedP.clampedP(error.getRotation().getDegrees(), 0.05, m_rotationSpeed, 45, 5);
-			Drive.drive(speedX, speedY, speedTheta, true);
+			Drive.swerveDrive(speedX, speedY, speedTheta, true);
 		}
 
 		// Called once the command ends or is interrupted.

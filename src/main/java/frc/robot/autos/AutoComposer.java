@@ -4,12 +4,16 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.AimCommands;
+import frc.robot.commands.AimCommands.AdjustAim;
+import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
+import frc.robot.subsystems.Hood;
 
 public class AutoComposer {
 	private static TimedRobot m_robot;
@@ -38,8 +42,9 @@ public class AutoComposer {
 				new AdjustAim(true, 11.6, m_robot).withTimeout(.5),
 				new WaitCommand(3), // test changing to 2
 				TransportCommands.getTimedShoot(6),
-				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-						Hood.getConstants())).withName("Right one shoot auto");
+				new AngularPositionCommands.SetAngleHardware(Hood.getHood(), 100),
+				new AngularPositionCommands.SettleAngle(Hood.getHood(), Hood.getConstants().tolerance()))
+						.withName("Right one shoot auto");
 	}
 
 	public Command getRightOneShootAuto() {
@@ -55,9 +60,11 @@ public class AutoComposer {
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				HoodCommands.getHoodDownCommand(),
-				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
-				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
-				new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, 0.25), // Potentially remove to save time
+				new DriveCommands.RotateSteerToAngle(0),
+				new DriveCommands.PowerAndTime(.2, 3.8),
+				new DriveCommands.RotateSteerToAngle(90),
+				new DriveCommands.PowerAndTime(0.2, 1),
+				new DriveCommands.PowerAndTime(-0.2, 0.25), // Potentially remove to save time
 
 				// addition
 				IntakeCommands.getArmOutCombinedCommand(),
@@ -70,8 +77,10 @@ public class AutoComposer {
 		return new SequentialCommandGroup(
 				getShootCommand(36, 9.1, 6),
 				HoodCommands.getHoodDownCommand(),
-				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
-				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1.5),
+				new DriveCommands.RotateSteerToAngle(0),
+				new DriveCommands.PowerAndTime(.2, 3.8),
+				new DriveCommands.RotateSteerToAngle(90),
+				new DriveCommands.PowerAndTime(0.2, 1.5),
 
 				// addition
 				IntakeCommands.getArmOutCombinedCommand(),
@@ -84,9 +93,11 @@ public class AutoComposer {
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				HoodCommands.getHoodDownCommand(),
-				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
-				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
-				new DriveCommands.DrivePowerAndTime(-.2, 0, 0, .5),
+				new DriveCommands.RotateSteerToAngle(0),
+				new DriveCommands.PowerAndTime(.2, 3.8),
+				new DriveCommands.RotateSteerToAngle(90),
+				new DriveCommands.PowerAndTime(0.2, 1),
+				new DriveCommands.PowerAndTime(-0.2, 0.5),
 
 				// addition
 				new ParallelCommandGroup(
