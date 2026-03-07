@@ -119,7 +119,7 @@ public class Robot extends TimedRobot {
 
 		m_driverController.cross().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
-						0.6 /* POWER */));
+						0.75 /* POWER */));
 		m_driverController.square().whileTrue(
 				new TransportCommands.RunKickerAtPower(
 						0.4 /* POWER */));
@@ -136,9 +136,14 @@ public class Robot extends TimedRobot {
 						.1, /* POWER */
 						0)); /* TIME */
 
-		m_operatorController.triangle().toggleOnTrue(
+		m_operatorController.triangle().debounce(0.1).toggleOnTrue(
 				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 						m_operatorController.povLeft()));
+
+		/*
+		 * m_operatorController.triangle().debounce(0.1).toggleOnTrue(
+		 * new ShooterCommands.RunAtDynamicRPM(1000));
+		 */
 
 		m_operatorController.povDown().whileTrue(
 				new HoodCommands.RunAtPower(
@@ -157,9 +162,9 @@ public class Robot extends TimedRobot {
 		{ // intake test bindings
 			m_operatorController.circle().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
 			m_operatorController.cross().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
-			m_operatorController.square().toggleOnTrue(
+			m_operatorController.square().debounce(0.1).toggleOnTrue(
 					new IntakeCommands.Spintake(
-							0.5)); /* POWER */
+							0.85)); /* POWER */
 		}
 
 	}
