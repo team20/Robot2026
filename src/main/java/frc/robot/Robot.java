@@ -35,7 +35,7 @@ import frc.robot.subsystems.Turret;
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
-	public static final boolean compControls = true;
+	public static final boolean compControls = false;
 	private final CommandPS5Controller m_driverController = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
@@ -63,12 +63,8 @@ public class Robot extends TimedRobot {
 				new DriveCommands.DriveDistance(1.5),
 				new DriveCommands.DriveDistance(-1.5),
 				new DriveCommands.DriveDistance(1.5));
-	public Robot() {
-		bindTestControls(); // Change to bindCompControls() for competition
 	}
 
-	// If code had comments then it is most likely
-	// good for competition unless otherwise noted
 	private void bindCompControls() {
 
 		// *************** DRIVER BINDINGS ***************
@@ -154,8 +150,8 @@ public class Robot extends TimedRobot {
 						0)); /* TIME */
 
 		{ // climber test bindings
-			m_driverController.triangle().onTrue(ClimberCommands.getRunAtPowerCommand(.6));
-			m_driverController.circle().onTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
+			m_driverController.triangle().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
+			m_driverController.circle().whileTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
 		}
 
 		{ // intake test bindings

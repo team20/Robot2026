@@ -8,7 +8,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
 public class Constants {
-	public static final boolean kCompBot = false;
+	public static final boolean kCompBot = true;
 	public static final boolean kLogging = true;
 
 	public static final class Subsystems {
