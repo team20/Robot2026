@@ -8,11 +8,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
 public class Constants {
-	public static final boolean kCompBot = false;
+	public static final boolean kCompBot = true;
 	public static final boolean kLogging = true;
 
 	public static final class Subsystems {
 		public static final class TurretConstants {
+			public static final boolean kMotorInvert = true;
+			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
@@ -25,11 +27,15 @@ public class Constants {
 			public static final double kSmallDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
-			public static final double kMinAngle = 50;
-			public static final double kMaxAngle = 270;
+			public static final double kMinAngle = 0;
+			public static final double kMaxAngle = 220;
+			public static final double kPositionConversionFactor = 7.0 / 6;
+			public static final double kStraightAheadAngle = 105;
 		}
 
 		public static final class HoodConstants {
+			public static final boolean kMotorInvert = true;
+			public static final boolean kEncoderInvert = false;
 			public static final int kHoodPort = 52;
 			public static final double kMaxDutyCycle = 0.5;
 			public static final double kMinPower = 0.025;
@@ -42,7 +48,7 @@ public class Constants {
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
 			public static final double kMinAngle = 0;
-			public static final double kMaxAngle = 38;
+			public static final double kMaxAngle = 35;
 		}
 
 		public static final class ShooterConstants {
@@ -50,6 +56,7 @@ public class Constants {
 			public static final double kCurrentLimit = 30;
 			public static final double kV = 480;
 			public static final int kDefaultDistance = 10;
+			public static final int kDefaultRPM = 2000;
 			public static final double kRampRate = 10;
 		}
 
@@ -60,7 +67,7 @@ public class Constants {
 
 			public static final int kWheelSmartCurrentLimit = 10;
 			public static final int kWheelSecondaryCurrentLimit = 20;
-			public static final boolean kWheelInvert = false;
+			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;
 			public static final int kArmSecondaryCurrentLimit = 20;
@@ -75,13 +82,18 @@ public class Constants {
 			public static final double kP = 0.2;
 		}
 
-		public static final class TransportConstants {
+		public static final class KickerConstants {
 			public static final int kKickerPort = 56;
-			public static final int kKickerSmartCurrentLimit = 10;
-			public static final int kKickerSecondaryCurrentLimit = 20;
+			public static final int kKickerSmartCurrentLimit = 20;
+			public static final int kKickerSecondaryCurrentLimit = 30;
+			public static final boolean kKickerInvert = true;
+		}
+
+		public static final class AgitatorConstants {
 			public static final int kAgitatorPort = 57;
-			public static final int kAgitatorSmartCurrentLimit = 20;
-			public static final int kAgitatorSecondaryCurrentLimit = 30;
+			public static final int kAgitatorSmartCurrentLimit = 40;
+			public static final int kAgitatorSecondaryCurrentLimit = 50;
+			public static final boolean kAgitatorInvert = true;
 		}
 
 		public static final class ClimberConstants {

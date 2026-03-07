@@ -1,13 +1,16 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.*;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Subsystems.TransportConstants;
+import frc.robot.Constants.Subsystems.AgitatorConstants;
 
 /**
  * The Transport subsystem is responsible for moving game pieces from the intake
@@ -23,10 +26,11 @@ public class Agitator extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Agitator() {
-		m_agitator = new SparkMax(TransportConstants.kAgitatorPort, MotorType.kBrushless);
+		m_agitator = new SparkMax(AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
-		config.smartCurrentLimit(TransportConstants.kAgitatorSmartCurrentLimit);
-		config.secondaryCurrentLimit(TransportConstants.kAgitatorSecondaryCurrentLimit);
+		config.inverted(AgitatorConstants.kAgitatorInvert);
+		config.smartCurrentLimit(AgitatorConstants.kAgitatorSmartCurrentLimit);
+		config.secondaryCurrentLimit(AgitatorConstants.kAgitatorSecondaryCurrentLimit);
 		m_agitator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 		if (s_theAgitator == null) {
@@ -59,5 +63,13 @@ public class Agitator extends SubsystemBase {
 	 */
 	public static void stop() {
 		s_theAgitator.m_agitator.set(0);
+	}
+
+	@Override
+	public void periodic() {
+		if (kLogging) {
+			SmartDashboard.putNumber("Agitator/Current", s_theAgitator.m_agitator.getOutputCurrent());
+			SmartDashboard.putNumber("Agitator/Voltage", s_theAgitator.m_agitator.getAppliedOutput());
+		}
 	}
 }

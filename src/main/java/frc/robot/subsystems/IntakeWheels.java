@@ -36,7 +36,7 @@ public class IntakeWheels extends SubsystemBase {
 		}
 	}
 
-	public static IntakeWheels getIntake() {
+	public static IntakeWheels getIntakeWheels() {
 		return s_theIntake;
 	}
 
