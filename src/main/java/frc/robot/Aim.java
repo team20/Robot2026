@@ -47,10 +47,15 @@ public abstract class Aim {
 		 * 2750 };
 		 */
 
-		private static final double[] s_distances = new double[] { 5.333, 8.292, 9.41, 11.75, 17, 500 }; // 2, 12.5, 22,
-																											// 500 };
-		private static final double[] s_angles = new double[] { 2, 11, 16.8, 25, 40, 40 }; // 0, 19, 37, 37 };
-		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700, 2700 };
+		private static final double[] s_distances = new double[] { -500, 5.333, 8.292, 9.41, 11.75, 17, 500 }; // 2,
+																												// 12.5,
+																												// 22,
+																												// 500
+																												// };
+		// Angles are offset to prevent wrapping from 0 to 360
+		private static final double[] s_angles = new double[] { 99, 99, 11 + 98, 16.8 + 98, 25 + 98, 40 + 98,
+				40 + 98 }; // 0, 19, 37, 37 };
+		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700, 2700, 2700, 2700 };
 
 		private static double interpolate(double a, double b, double t) {
 			return (1 - t) * a + t * b;

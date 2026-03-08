@@ -168,9 +168,9 @@ public class Robot extends TimedRobot {
 		{ // Shooting bindings
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
-			m_operatorController.cross().onTrue(new AimCommands.AdjustAim(absolute, 4.5, this)); // 5 ft absolute
-			m_operatorController.circle().onTrue(new AimCommands.AdjustAim(absolute, 7.5, this));
-			m_operatorController.triangle().onTrue(new AimCommands.AdjustAim(absolute, 12.5, this));
+			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9, this));
+			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
 			absolute = false;
 			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
 			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
