@@ -7,24 +7,16 @@ import frc.robot.commands.ShooterCommands;
 import frc.robot.subsystems.Hood;
 
 public abstract class Aim {
-	public record ShooterState(double turretAngle, double hoodAngle, double shooterVelocity) {
-	}
 
-	protected abstract double getShooterVelocity(double distance);
+	public abstract double getShooterVelocity(double distance);
 
-	protected abstract double getHoodAngle(double distance);
-
-	public ShooterState getShooterState(double x, double y) {
-		double distance = Math.hypot(x, y);
-		double turretAngle = Math.atan2(y, x);
-		return new ShooterState(turretAngle, getHoodAngle(distance), getShooterVelocity(distance));
-	}
+	public abstract double getHoodAngle(double distance);
 
 	public Command getAimCommand(double distance) {
-		ShooterState state = getShooterState(distance, 0);
+		double[] angleAndRPM = { getHoodAngle(distance), getShooterVelocity(distance) };
 		return Commands.parallel(
-				new ShooterCommands.RunAtDynamicRPM(state.shooterVelocity),
-				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), state.hoodAngle, Hood.getConstants()));
+				new ShooterCommands.RunAtDynamicRPM(angleAndRPM[1]),
+				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), angleAndRPM[0], Hood.getConstants()));
 	}
 
 	public static class Regression extends Aim {
@@ -36,12 +28,12 @@ public abstract class Aim {
 		private static final double s_angleC = 0;
 
 		@Override
-		protected double getShooterVelocity(double distance) {
+		public double getShooterVelocity(double distance) {
 			return (s_velocityA * distance + s_velocityB) * distance + s_velocityC;
 		}
 
 		@Override
-		protected double getHoodAngle(double distance) {
+		public double getHoodAngle(double distance) {
 			return (s_angleA * distance + s_angleB) * distance + s_angleC;
 		}
 
@@ -55,9 +47,10 @@ public abstract class Aim {
 		 * 2750 };
 		 */
 
-		private static final double[] s_distances = new double[] { 2, 12.5, 22, 500 };
-		private static final double[] s_angles = new double[] { 0, 19, 37, 37 };
-		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700 };
+		private static final double[] s_distances = new double[] { 5.333, 8.292, 9.41, 11.75, 17, 500 }; // 2, 12.5, 22,
+																											// 500 };
+		private static final double[] s_angles = new double[] { 2, 11, 16.8, 25, 40, 40 }; // 0, 19, 37, 37 };
+		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700, 2700 };
 
 		private static double interpolate(double a, double b, double t) {
 			return (1 - t) * a + t * b;
@@ -83,6 +76,16 @@ public abstract class Aim {
 				double t = (distance - s_distances[index]) / delta;
 				return interpolate(a, b, t);
 			}
+		}
+
+		@Override
+		public double getShooterVelocity(double distance) {
+			return interpolate(distance, s_velocities);
+		}
+
+		@Override
+		public double getHoodAngle(double distance) {
+			return interpolate(distance, s_angles);
 		}
 
 		public static Command testCommand() {
@@ -112,16 +115,6 @@ public abstract class Aim {
 				}
 				System.out.println("All interpolation tests passing!!!!!!!");
 			});
-		}
-
-		@Override
-		protected double getShooterVelocity(double distance) {
-			return interpolate(distance, s_velocities);
-		}
-
-		@Override
-		protected double getHoodAngle(double distance) {
-			return interpolate(distance, s_angles);
 		}
 	}
 
@@ -207,12 +200,12 @@ public abstract class Aim {
 		}
 
 		@Override
-		protected double getShooterVelocity(double distance) {
+		public double getShooterVelocity(double distance) {
 			return interpolate(distance, s_velocities);
 		}
 
 		@Override
-		protected double getHoodAngle(double distance) {
+		public double getHoodAngle(double distance) {
 			return interpolate(distance, s_angles);
 		}
 	};

@@ -47,8 +47,8 @@ public class Constants {
 			public static final double kDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
-			public static final double kMinAngle = 3;
-			public static final double kMaxAngle = 35;
+			public static final double kMinAngle = 2;
+			public static final double kMaxAngle = 37;
 		}
 
 		public static final class ShooterConstants {

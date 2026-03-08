@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Aim;
-import frc.robot.Aim.ShooterState;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
@@ -21,10 +20,6 @@ public class AimCommands {
 		private final double m_distance;
 		private final TimedRobot m_robot;
 		private final Aim m_aim = new Aim.Linear();
-
-		static {
-			resetAim();
-		}
 
 		/**
 		 * A command to set the setpoints of the hood and shooter for aiming. In
@@ -38,7 +33,7 @@ public class AimCommands {
 		 * @param robot your robot
 		 */
 		public AdjustAim(boolean absolute, double distance, TimedRobot robot) {
-			// addRequirements(Hood.getHood(), Shooter.getShooter());
+			addRequirements(Hood.getHood(), Shooter.getShooter());
 			setName("Adjust aim command");
 			m_absolute = absolute;
 			m_distance = distance;
@@ -53,9 +48,10 @@ public class AimCommands {
 				s_distance += m_distance * m_robot.getPeriod();
 			}
 			SmartDashboard.putNumber("Aim distance", s_distance);
-			ShooterState state = m_aim.getShooterState(s_distance, 0);
-			Hood.getHood().setAngle(state.hoodAngle());
-			Shooter.setRPM(state.shooterVelocity());
+			// ShooterState state = m_aim.getShooterState(s_distance, 0);
+
+			Hood.getHood().setAngle(m_aim.getHoodAngle(s_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(s_distance));
 			// Clearly doable
 		}
 
@@ -102,9 +98,8 @@ public class AimCommands {
 
 		@Override
 		public void execute() {
-			ShooterState state = m_aim.getShooterState(m_distance, 0);
-			Shooter.setRPM(state.shooterVelocity());
-			Hood.getHood().setAngle(state.hoodAngle());
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 
 		@Override
@@ -169,9 +164,8 @@ public class AimCommands {
 					m_distance = m_distances[i];
 				}
 			}
-			ShooterState state = m_aim.getShooterState(m_distance, 0);
-			Shooter.setRPM(state.shooterVelocity());
-			Hood.getHood().setAngle(state.hoodAngle());
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 
 		@Override

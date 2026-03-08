@@ -13,6 +13,7 @@ public class Hood extends AngularPositionSubsystem {
 		super(HoodConstants.kHoodPort, "Hood", HoodConstants.kP, HoodConstants.kI, HoodConstants.kCurrent,
 				HoodConstants.kSmartCurrent, HoodConstants.kMinAngle, HoodConstants.kMaxAngle,
 				1, HoodConstants.kMaxDutyCycle, HoodConstants.kMotorInvert, HoodConstants.kEncoderInvert);
+
 	}
 
 	public static void create() {

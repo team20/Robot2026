@@ -11,7 +11,7 @@ public class IntakeArm extends PositionControlSubsystem {
 	public static IntakeArm s_theIntakeArm;
 
 	public IntakeArm() {
-		super(IntakeConstants.kIntakeArmPort);
+		super(IntakeConstants.kIntakeArmPort, true);
 
 		SparkMaxConfig config = new SparkMaxConfig();
 

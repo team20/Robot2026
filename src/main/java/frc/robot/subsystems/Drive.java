@@ -222,7 +222,7 @@ public class Drive extends SubsystemBase {
 	 */
 	public static void drive(double forwardSpeed, double strafeSpeed, double rotation, boolean isRobotRelative) {
 		setModuleStates(
-				calculateModuleStates(new ChassisSpeeds(forwardSpeed, strafeSpeed, rotation), !isRobotRelative));
+				calculateModuleStates(new ChassisSpeeds(forwardSpeed, strafeSpeed, rotation), isRobotRelative));
 	}
 
 	/**

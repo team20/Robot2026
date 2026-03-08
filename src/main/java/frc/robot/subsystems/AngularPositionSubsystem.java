@@ -48,7 +48,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		config.absoluteEncoder.inverted(encoderInverted);
 		config.closedLoop.pid(kP, kI, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
-		config.closedLoop.positionWrappingEnabled(false);
+		config.closedLoop.positionWrappingEnabled(true);
 		config.smartCurrentLimit(smartCurrentLimit);
 		config.secondaryCurrentLimit(currentLimit);
 		config.inverted(motorInverted);
