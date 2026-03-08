@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends SubsystemBase {
+	private static Vision s_vision;
 	private final PhotonCamera m_camera;
 	private final AprilTagFieldLayout m_aprilTagFieldLayout = AprilTagFieldLayout
 			.loadField(AprilTagFields.k2026RebuiltAndymark);
@@ -23,65 +24,50 @@ public class Vision extends SubsystemBase {
 	// PhotonPoseEstimator(m_aprilTagFieldLayout, botToCam);
 
 	public Vision() {
-		m_camera = new PhotonCamera("TestCamLBord");
+		if (s_vision == null) {
+			s_vision = this;
+		} else {
+			throw new Error("Vision already instantiated");
+		}
+
+		m_camera = new PhotonCamera("TurretCamera");
 	}
+
+	public static Vision getVision() {
+		return s_vision;
+	}
+
+	private double m_angleToHubTag;
 
 	public void periodic() {
 		var results = m_camera.getAllUnreadResults();
+
 		for (var result : results) {
 			if (result.hasTargets()) {
 				List<PhotonTrackedTarget> targets = result.getTargets();
 				double sum = 0;
 				for (PhotonTrackedTarget target : targets) {
 					Transform3d botPose = target.getBestCameraToTarget();
+
+					m_angleToHubTag = target.yaw;
+
 					sum += botPose.getX() +
 							Units.inchesToMeters(23.5);
 				}
+
 				m_distanceToTags = sum / targets.size();
+
+				SmartDashboard.putNumber("Vision/Angle to Tag", m_angleToHubTag);
 
 				SmartDashboard.putNumber(
 						"Vision/PoseX", Units.metersToFeet(m_distanceToTags));
 			}
-			/*
-			 * // var multiTagResult = result.getMultiTagResult();
-			 * SmartDashboard.putBoolean("Vision/Has Results", result.hasTargets());
-			 * // if (multiTagResult.isPresent()) {
-			 * if (result.hasTargets()) {
-			 * Optional<EstimatedRobotPose> visionEst =
-			 * m_poseEstimator.estimateCoprocMultiTagPose(result);
-			 * if (visionEst.isEmpty()) {
-			 * visionEst = m_poseEstimator.estimateLowestAmbiguityPose(result);
-			 * }
-			 * Pose3d tagPose = m_aprilTagFieldLayout.getTagPose(4).get();
-			 * Pose3d hubPose = new Pose3d(new Pose2d(tagPose.getX() - 23.5, tagPose.getY(),
-			 * new Rotation2d()));
-			 * Pose3d estimate = visionEst.get().estimatedPose;
-			 * Translation3d poseDiff =
-			 * hubPose.getTranslation().minus(estimate.getTranslation());
-			 * // multiTagResult.get().estimatedPose.best.getTranslation());
-			 * SmartDashboard.putNumber("Vision/PoseX", estimate.getX());
-			 * SmartDashboard.putNumber("Vision/PoseY", estimate.getY());
-			 * SmartDashboard.putNumber("Vision/PoseZ", estimate.getZ());
-			 * }
-			 */
 
-			// SmartDashboard.putNumber("Vision/PoseY", botPose.getY());
-			// SmartDashboard.putNumber("Vision/PoseZ", botPose.getZ());
-
-			// int id = target.getFiducialId();
-			// var tagPose = m_aprilTagFieldLayout.getTagPose(id);
-			// if (tagPose.isPresent()) {
-			// Pose3d botPose = PhotonUtils
-			// .estimateFieldToRobotAprilTag(
-			// target.getBestCameraToTarget(), tagPose.get(),
-			// new Transform3d(new Transform2d(0, 0, Rotation2d.fromDegrees(0))));
-			// SmartDashboard.putNumber(
-			// "Vision/PoseX", botPose.getX() +
-			// Units.inchesToMeters(23.5));
-			// SmartDashboard.putNumber("Vision/PoseY", botPose.getY());
-			// SmartDashboard.putNumber("Vision/PoseZ", botPose.getZ());
-			// }
 		}
+	}
+
+	public double getAngleToHubTag() {
+		return m_angleToHubTag;
 	}
 
 	public double getDistanceToTags() {

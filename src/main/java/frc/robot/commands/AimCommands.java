@@ -12,8 +12,40 @@ import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Vision;
 
 public class AimCommands {
+
+	public static class AutoAim extends Command {
+		private final Vision m_vision;
+		private double m_distance;
+		private Aim m_aim = new Aim.Linear();
+
+		public AutoAim(Vision vision) {
+			m_vision = vision;
+			setName("Auto Aim Shooter and Hood");
+			addRequirements(Shooter.getShooter(), Hood.getHood(), vision);
+		}
+
+		@Override
+		public void execute() {
+			m_distance = m_vision.getDistanceToHub();
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
+		}
+
+		// @Override
+		// public void end(boolean interrupted) {
+		// Shooter.stop();
+		// Hood.getHood().stop();
+		// }
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
+
 	public static class AdjustAim extends Command {
 		private static double s_distance;
 		private final boolean m_absolute;
@@ -92,10 +124,6 @@ public class AimCommands {
 			addRequirements(Shooter.getShooter(), Hood.getHood());
 		}
 
-		public void setAim(Aim aim) {
-			m_aim = aim;
-		}
-
 		@Override
 		public void execute() {
 			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
@@ -143,10 +171,6 @@ public class AimCommands {
 			m_distance = distance;
 			setName("Aim Shooter and Hood Using D-Pad");
 			addRequirements(Shooter.getShooter(), Hood.getHood());
-		}
-
-		public void setAim(Aim aim) {
-			m_aim = aim;
 		}
 
 		@Override

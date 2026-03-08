@@ -54,6 +54,7 @@ public abstract class Aim {
 																												// };
 		// Angles are offset to prevent wrapping from 0 to 360
 		private static final double[] s_angles = new double[] { 99, 99, 11 + 98, 16.8 + 98, 25 + 98, 40 + 98,
+				// 15 <-- 16.8, 20 <-- 25
 				40 + 98 }; // 0, 19, 37, 37 };
 		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700, 2700, 2700, 2700 };
 
