@@ -126,10 +126,10 @@ public class ShooterCommands {
 		public void execute() {
 			double change = 0;
 			if (m_up.getAsBoolean()) {
-				change += ShooterConstants.kRampRate;
+				change += ShooterConstants.kRPMRamp;
 			}
 			if (m_down.getAsBoolean()) {
-				change -= ShooterConstants.kRampRate;
+				change -= ShooterConstants.kRPMRamp;
 			}
 			m_rpm += change * m_robot.getPeriod();
 			Shooter.setRPM(m_rpm);

@@ -48,9 +48,16 @@ public abstract class Aim {
 	};
 
 	public static class Linear extends Aim {
-		private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
-		private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
-		private static final double[] s_velocities = new double[] { 2050, 2200, 2550, 2750 };
+		/*
+		 * private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
+		 * private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
+		 * private static final double[] s_velocities = new double[] { 2050, 2200, 2550,
+		 * 2750 };
+		 */
+
+		private static final double[] s_distances = new double[] { 2, 12.5, 22, 500 };
+		private static final double[] s_angles = new double[] { 0, 19, 37, 37 };
+		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700 };
 
 		private static double interpolate(double a, double b, double t) {
 			return (1 - t) * a + t * b;

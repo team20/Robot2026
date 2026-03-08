@@ -16,11 +16,15 @@ import frc.robot.subsystems.Shooter;
 
 public class AimCommands {
 	public static class AdjustAim extends Command {
-		private static double s_distance = ShooterConstants.kDefaultDistance;
+		private static double s_distance;
 		private final boolean m_absolute;
 		private final double m_distance;
 		private final TimedRobot m_robot;
 		private final Aim m_aim = new Aim.Linear();
+
+		static {
+			resetAim();
+		}
 
 		/**
 		 * A command to set the setpoints of the hood and shooter for aiming. In
@@ -58,6 +62,10 @@ public class AimCommands {
 		@Override
 		public boolean isFinished() {
 			return m_absolute;
+		}
+
+		public static void resetAim() {
+			s_distance = ShooterConstants.kDefaultDistance;
 		}
 	}
 

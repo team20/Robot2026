@@ -20,10 +20,10 @@ public class Shooter extends SubsystemBase {
 
 	public Shooter() {
 		TalonFXConfiguration config = new TalonFXConfiguration();
-		config.CurrentLimits.StatorCurrentLimit = ShooterConstants.kCurrentLimit;
-		config.CurrentLimits.StatorCurrentLimitEnable = true;
+		config.CurrentLimits.SupplyCurrentLimit = ShooterConstants.kCurrentLimit;
+		config.CurrentLimits.SupplyCurrentLimitEnable = true;
 		config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-		config.Slot0.kP = 0.4000;
+		config.Slot0.kP = 0.8000;
 		config.Slot0.kI = 0;
 		config.Slot0.kD = 0;
 

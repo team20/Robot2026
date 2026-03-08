@@ -47,17 +47,18 @@ public class Constants {
 			public static final double kDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
-			public static final double kMinAngle = 0;
+			public static final double kMinAngle = 3;
 			public static final double kMaxAngle = 35;
 		}
 
 		public static final class ShooterConstants {
 			public static final int kFlywheelPort = 51;
-			public static final double kCurrentLimit = 30;
+			public static final double kCurrentLimit = 60;
 			public static final double kV = 480;
 			public static final int kDefaultDistance = 10;
 			public static final int kDefaultRPM = 2000;
 			public static final double kRampRate = 10;
+			public static final double kRPMRamp = 250;
 		}
 
 		public static final class IntakeConstants {
@@ -80,7 +81,7 @@ public class Constants {
 			public static final double kOutPosition = 178;
 			public static final double kInPosition = 0;
 			public static final double kP = 0.2;
-			public static final double kWheelPower = 0.8;
+			public static final double kWheelPower = 1;
 		}
 
 		public static final class KickerConstants {
@@ -101,8 +102,8 @@ public class Constants {
 
 		public static final class ClimberConstants {
 			public static final int kClimberPort = 55;
-			public static final int kSmartCurrentLimit = 30;
-			public static final int kSecondaryCurrentLimit = 40;
+			public static final int kSmartCurrentLimit = 40;
+			public static final int kSecondaryCurrentLimit = 60;
 			public static final boolean kInvert = false;
 			public static final double kGearRatio = 81.0 / 1.0;
 			public static final double kClimbPosition = 27744; // TODO: Find actual positions
