@@ -9,12 +9,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
-import frc.robot.Constants.Subsystems.KickerConstants;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
@@ -159,8 +159,8 @@ public class Robot extends TimedRobot {
 		{ // Transport commands
 			m_operatorController.R1().whileTrue( // Runs agitator and kicker (for shooting) when pressed on R1
 					Commands.parallel(
-							new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower),
-							new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
+							new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower)));
+			// new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
 			m_operatorController.povLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 			m_operatorController.L1().debounce(.05)
@@ -173,11 +173,14 @@ public class Robot extends TimedRobot {
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
 			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
-			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9, this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9.1, this));
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
 
 			m_operatorController.create().whileTrue(
-					new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision()));
+					new RepeatCommand(new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision())));
+			// m_operatorController.triangle().debounce(0.1).onTrue(
+			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
+			// m_operatorController.povLeft()));
 
 			absolute = false;
 			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
