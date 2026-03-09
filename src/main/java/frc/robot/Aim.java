@@ -1,109 +1,95 @@
 package frc.robot;
 
+import java.util.function.ToDoubleFunction;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.AngularPositionCommands;
+import frc.robot.commands.ShooterCommands;
+import frc.robot.subsystems.Hood;
 
 public abstract class Aim {
+	public record InterpolationPoint(double distance, double angle, int rpm) {
+	}
 
 	public abstract double getShooterVelocity(double distance);
 
 	public abstract double getHoodAngle(double distance);
 
-	public static class Regression extends Aim {
-		private static final double s_velocityA = 0;
-		private static final double s_velocityB = 0;
-		private static final double s_velocityC = 0;
-		private static final double s_angleA = 0;
-		private static final double s_angleB = 0;
-		private static final double s_angleC = 0;
-
-		@Override
-		public double getShooterVelocity(double distance) {
-			return (s_velocityA * distance + s_velocityB) * distance + s_velocityC;
-		}
-
-		@Override
-		public double getHoodAngle(double distance) {
-			return (s_angleA * distance + s_angleB) * distance + s_angleC;
-		}
-
-	};
+	public Command getAimCommand(double distance) {
+		return Commands.parallel(
+				new ShooterCommands.RunAtDynamicRPM(getShooterVelocity(distance)),
+				new AngularPositionCommands.SetAngleHardware(Hood.getHood(), getHoodAngle(distance)),
+				new AngularPositionCommands.SettleAngle(Hood.getHood(), Hood.getConstants().tolerance()));
+	}
 
 	public static class Linear extends Aim {
-		/*
-		 * private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
-		 * private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
-		 * private static final double[] s_velocities = new double[] { 2050, 2200, 2550,
-		 * 2750 };
-		 */
-
-		private static final double[] s_distances = new double[] { -500, 5.333, 9.1, 13.1, 18, 500 }; // 2,
-																										// 12.5,
-																										// 22,
-																										// 500
-																										// };
-		// Angles are offset to prevent wrapping from 0 to 360
-		private static final double[] s_angles = new double[] { 99, 99, 122, 137, 137,
-				137 }; // 11, 16.8, 25, 40 + 98 ---------- // 0, 19, 37, 37 };
-		private static final double[] s_velocities = new double[] { 2000, 2000, 2300, 2535, 2850, 3000 };
+		private static final InterpolationPoint[] s_points = new InterpolationPoint[] {
+				new InterpolationPoint(-500, 99, 2000),
+				new InterpolationPoint(5.333, 99, 2000),
+				new InterpolationPoint(9.1, 122, 2300),
+				new InterpolationPoint(13.1, 137, 2535),
+				new InterpolationPoint(18, 137, 2850),
+				new InterpolationPoint(500, 137, 3000)
+		};
 
 		private static double interpolate(double a, double b, double t) {
 			return (1 - t) * a + t * b;
 		}
 
 		private static int getIndex(double distance) {
-			for (int i = 0; i < s_distances.length - 1; i++) {
-				if (s_distances[i] <= distance && s_distances[i + 1] > distance) {
+			for (int i = 0; i < s_points.length - 1; i++) {
+				if (s_points[i].distance() <= distance && s_points[i + 1].distance() > distance) {
 					return i;
 				}
 			}
 			return -1;
 		}
 
-		private static double interpolate(double distance, double[] list) {
+		private static double interpolate(double distance, ToDoubleFunction<InterpolationPoint> accessor) {
 			int index = getIndex(distance);
 			if (index < 0) {
 				return -1;
 			} else {
-				double a = list[index];
-				double b = list[index + 1];
-				double delta = s_distances[index + 1] - s_distances[index];
-				double t = (distance - s_distances[index]) / delta;
+				double a = accessor.applyAsDouble(s_points[index]);
+				double b = accessor.applyAsDouble(s_points[index + 1]);
+				double delta = s_points[index + 1].distance() - s_points[index].distance();
+				double t = (distance - s_points[index].distance()) / delta;
 				return interpolate(a, b, t);
 			}
 		}
 
 		@Override
 		public double getShooterVelocity(double distance) {
-			return interpolate(distance, s_velocities);
+			return interpolate(distance, InterpolationPoint::rpm);
 		}
 
 		@Override
 		public double getHoodAngle(double distance) {
-			return interpolate(distance, s_angles);
+			return interpolate(distance, InterpolationPoint::angle);
 		}
 
 		public static Command testCommand() {
 			return Commands.runOnce(() -> {
 				Aim aimer = new Interpolation();
-				for (int i = 0; i < s_distances.length - 1; i++) {
-					double middle = (s_distances[i] + s_distances[i + 1]) / 2;
+				for (int i = 0; i < s_points.length - 1; i++) {
+					double middle = (s_points[i].distance() + s_points[i + 1].distance()) / 2;
 					double velocity = aimer.getShooterVelocity(middle);
 					double angle = aimer.getHoodAngle(middle);
-					double maxV = Math.max(s_velocities[i], s_velocities[i + 1]);
+					double maxV = Math.max(s_points[i].rpm(), s_points[i + 1].rpm());
 					double maxErr = 0.01;
 					if (velocity > maxV && (velocity - maxV) / maxV > maxErr) {
 						throw new Error(String.format("Velocity interpolation was too high (%f > %f)", velocity, maxV));
 					}
-					double minV = Math.min(s_velocities[i], s_velocities[i + 1]);
+					double minV = Math.min(s_points[i].rpm(), s_points[i + 1].rpm());
 					if (velocity < minV && (minV - velocity) / minV > maxErr) {
 						throw new Error(String.format("Velocity interpolation was too low (%f < %f)", velocity, minV));
 					}
-					double maxA = Math.max(s_angles[i], s_angles[i + 1]);
+					double maxA = Math.max(s_points[i].angle(), s_points[i + 1].angle());
 					if (angle > maxA && (angle - maxA) / maxA > maxErr) {
 						throw new Error(String.format("Angle interpolation was too high (%f > %f)", angle, maxA));
 					}
-					double minA = Math.min(s_angles[i], s_angles[i + 1]);
+					double minA = Math.min(s_points[i].angle(), s_points[i + 1].angle());
 					if (angle < minA && (minA - angle) / minA > maxErr) {
 						throw new Error(String.format("Angle interpolation was too low (%f < %f)", angle, minA));
 					}
@@ -114,9 +100,14 @@ public abstract class Aim {
 	}
 
 	public static class Interpolation extends Aim {
-		private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
-		private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
-		private static final double[] s_velocities = new double[] { 2050, 2200, 2550, 2750 };
+		private static final InterpolationPoint[] s_points = new InterpolationPoint[] {
+				new InterpolationPoint(-500, 99, 2000),
+				new InterpolationPoint(5.333, 99, 2000),
+				new InterpolationPoint(9.1, 122, 2300),
+				new InterpolationPoint(13.1, 137, 2535),
+				new InterpolationPoint(18, 137, 2850),
+				new InterpolationPoint(500, 137, 3000)
+		};
 
 		private static double interpolate(double a, double b, double da, double db, double t) {
 			double result = 0;
@@ -128,39 +119,45 @@ public abstract class Aim {
 		}
 
 		private static int getIndex(double distance) {
-			for (int i = 0; i < s_distances.length - 1; i++) {
-				if (s_distances[i] <= distance && s_distances[i + 1] > distance) {
+			for (int i = 0; i < s_points.length - 1; i++) {
+				if (s_points[i].distance() <= distance && s_points[i + 1].distance() > distance) {
 					return i;
 				}
 			}
 			return -1;
 		}
 
-		private static double interpolate(double distance, double[] list) {
+		private static double interpolate(double distance, ToDoubleFunction<InterpolationPoint> accessor) {
 			int index = getIndex(distance);
 			if (index < 0) {
 				return -1;
 			} else {
-				int end = s_distances.length - 2;
-				double a = list[index];
-				double b = list[index + 1];
+				int end = s_points.length - 2;
+				double a = accessor.applyAsDouble(s_points[index]);
+				double b = accessor.applyAsDouble(s_points[index + 1]);
 				double da;
 				double db;
 				if (index == 0) {
-					da = (list[1] - list[0]) / (s_distances[1] - s_distances[0]);
-					db = ((list[2] - list[1]) / (s_distances[2] - s_distances[1]) + da) / 2;
+					da = (accessor.applyAsDouble(s_points[1]) - accessor.applyAsDouble(s_points[0]))
+							/ (s_points[1].distance() - s_points[0].distance());
+					db = ((accessor.applyAsDouble(s_points[2]) - accessor.applyAsDouble(s_points[1]))
+							/ (s_points[2].distance() - s_points[1].distance()) + da) / 2;
 				} else if (index == end) {
-					db = (list[end + 1] - list[end]) / (s_distances[end + 1] - s_distances[end]);
-					da = ((list[end] - list[end - 1]) / (s_distances[end] - s_distances[end - 1]) + db) / 2;
+					db = (accessor.applyAsDouble(s_points[end + 1]) - accessor.applyAsDouble(s_points[end]))
+							/ (s_points[end + 1].distance() - s_points[end].distance());
+					da = ((accessor.applyAsDouble(s_points[end]) - accessor.applyAsDouble(s_points[end - 1]))
+							/ (s_points[end].distance() - s_points[end - 1].distance()) + db) / 2;
 				} else {
-					double d = (b - a) / (s_distances[index + 1] - s_distances[index]);
-					da = ((a - list[index - 1]) / (s_distances[index] - s_distances[index - 1]) + d) / 2;
-					db = ((list[index + 2] - b) / (s_distances[index + 2] - s_distances[index + 1]) + d) / 2;
+					double d = (b - a) / (s_points[index + 1].distance() - s_points[index].distance());
+					da = ((a - accessor.applyAsDouble(s_points[index - 1]))
+							/ (s_points[index].distance() - s_points[index - 1].distance()) + d) / 2;
+					db = ((accessor.applyAsDouble(s_points[index + 2]) - b)
+							/ (s_points[index + 2].distance() - s_points[index + 1].distance()) + d) / 2;
 				}
-				double delta = s_distances[index + 1] - s_distances[index];
+				double delta = s_points[index + 1].distance() - s_points[index].distance();
 				da *= delta;
 				db *= delta;
-				double t = (distance - s_distances[index]) / delta;
+				double t = (distance - s_points[index].distance()) / delta;
 				return interpolate(a, b, da, db, t);
 			}
 		}
@@ -168,24 +165,24 @@ public abstract class Aim {
 		public static Command testCommand() {
 			return Commands.runOnce(() -> {
 				Aim aimer = new Interpolation();
-				for (int i = 0; i < s_distances.length - 1; i++) {
-					double middle = (s_distances[i] + s_distances[i + 1]) / 2;
+				for (int i = 0; i < s_points.length - 1; i++) {
+					double middle = (s_points[i].distance() + s_points[i + 1].distance()) / 2;
 					double velocity = aimer.getShooterVelocity(middle);
 					double angle = aimer.getHoodAngle(middle);
-					double maxV = Math.max(s_velocities[i], s_velocities[i + 1]);
+					double maxV = Math.max(s_points[i].rpm(), s_points[i + 1].rpm());
 					double maxErr = 0.01;
 					if (velocity > maxV && (velocity - maxV) / maxV > maxErr) {
 						throw new Error(String.format("Velocity interpolation was too high (%f > %f)", velocity, maxV));
 					}
-					double minV = Math.min(s_velocities[i], s_velocities[i + 1]);
+					double minV = Math.min(s_points[i].rpm(), s_points[i + 1].rpm());
 					if (velocity < minV && (minV - velocity) / minV > maxErr) {
 						throw new Error(String.format("Velocity interpolation was too low (%f < %f)", velocity, minV));
 					}
-					double maxA = Math.max(s_angles[i], s_angles[i + 1]);
+					double maxA = Math.max(s_points[i].angle(), s_points[i + 1].angle());
 					if (angle > maxA && (angle - maxA) / maxA > maxErr) {
 						throw new Error(String.format("Angle interpolation was too high (%f > %f)", angle, maxA));
 					}
-					double minA = Math.min(s_angles[i], s_angles[i + 1]);
+					double minA = Math.min(s_points[i].angle(), s_points[i + 1].angle());
 					if (angle < minA && (minA - angle) / minA > maxErr) {
 						throw new Error(String.format("Angle interpolation was too low (%f < %f)", angle, minA));
 					}
@@ -196,12 +193,12 @@ public abstract class Aim {
 
 		@Override
 		public double getShooterVelocity(double distance) {
-			return interpolate(distance, s_velocities);
+			return interpolate(distance, InterpolationPoint::rpm);
 		}
 
 		@Override
 		public double getHoodAngle(double distance) {
-			return interpolate(distance, s_angles);
+			return interpolate(distance, InterpolationPoint::distance);
 		}
 	};
 }
