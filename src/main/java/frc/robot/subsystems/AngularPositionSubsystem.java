@@ -13,6 +13,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.AngleUtility;
 import frc.robot.Constants;
 
 /**
@@ -65,15 +66,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	}
 
 	public double getPosition() {
-		double position = m_encoder.getPosition();
-		/*
-		 * if (position < m_minAngle || position > m_disallowedMidpoint) {
-		 * return m_minAngle;
-		 * } else if (position > m_maxAngle && position < m_disallowedMidpoint) {
-		 * return m_maxAngle;
-		 * }
-		 */
-		return position;
+		return m_encoder.getPosition();
 	}
 
 	public void runAtDutyCycle(double dutyCycle) {
@@ -87,18 +80,16 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		m_motor.stopMotor();
 	}
 
-	private double minDifference(double a, double b) {
-		double difference = Math.abs(a - b);
-		return Math.min(difference, 360 - difference);
-	}
-
 	private boolean limited() {
+		if (Constants.kLogging) {
+			SmartDashboard.putNumber(String.format("%s current draw (A)", m_name), m_motor.getOutputCurrent());
+		}
 		double position = getPosition();
 		if (position < m_maxAngle && position > m_minAngle) {
 			return false;
 		}
-		double distanceToMax = minDifference(position, m_maxAngle);
-		double distanceToMin = minDifference(position, m_minAngle);
+		double distanceToMax = AngleUtility.minDifference(position, m_maxAngle);
+		double distanceToMin = AngleUtility.minDifference(position, m_minAngle);
 		if (distanceToMin < distanceToMax) {
 			return m_dutyCycle < 0; // We overshot the minimum, no negative power
 		} else {

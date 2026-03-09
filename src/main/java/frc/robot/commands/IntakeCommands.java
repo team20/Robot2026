@@ -44,15 +44,15 @@ public class IntakeCommands {
 	}
 
 	public static Command getOutCommand() {
-		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kInPosition,
+		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kOutPosition,
 				0.1, 0.7,
-				0.5, 0.125, false);
+				0.5, 0.125, false).withTimeout(2);
 	}
 
 	public static Command getInCommand() {
-		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kOutPosition,
+		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kInPosition,
 				0.1, 0.7,
-				0.5, 0.125, false).withTimeout(1);
+				0.5, 0.125, false).withTimeout(2);
 	}
 
 	public static Command getRunArmAtPowerCommand(double power) {
@@ -62,7 +62,11 @@ public class IntakeCommands {
 	public static Command getArmZeroCommand() { // TODO: Find actual power and time needed
 		return PositionControlCommands.getZeroCommand(
 				IntakeArm.getIntakeArm(),
-				-.3 /* POWER */,
-				5 /* TIME */);
+				-.15 /* POWER */,
+				10 /* TIME */);
+	}
+
+	public static Command getEncoderResetCommand() {
+		return new PositionControlCommands.ResetEncoder(IntakeArm.getIntakeArm());
 	}
 }

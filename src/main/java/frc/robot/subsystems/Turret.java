@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
 
 public class Turret extends AngularPositionSubsystem {
@@ -25,5 +26,10 @@ public class Turret extends AngularPositionSubsystem {
 
 	public static AngularPositionSubsystem getTurret() {
 		return s_theTurret;
+	}
+
+	public static ClampedPConstants getConstants() {
+		return new ClampedPConstants(TurretConstants.kMinPower, TurretConstants.kMaxPower, TurretConstants.kMaxErr,
+				TurretConstants.kTolerance);
 	}
 }
