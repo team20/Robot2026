@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.List;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -12,6 +14,12 @@ public class Constants {
 	public static final boolean kLogging = true;
 
 	public static final class Subsystems {
+		public static final class VisionConstants {
+			// 3 red, 3 blue
+			public static final List<Integer> kTrackableTags = List.of(8, 9, 11);
+
+		}
+
 		public static final class TurretConstants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;
@@ -21,7 +29,7 @@ public class Constants {
 			public static final double kMaxPower = kMaxDutyCycle;
 			public static final double kMaxErr = 25;
 			public static final double kTolerance = 3;
-			public static final double kP = 0.006;
+			public static final double kP = 0.018;
 			public static final double kI = 0.0000;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
 			public static final double kSmallDeadzone = 0.05;
@@ -42,7 +50,7 @@ public class Constants {
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
 			public static final double kTolerance = 1;
-			public static final double kP = 0.02;
+			public static final double kP = 0.04;
 			public static final double kI = 0.0000;
 			public static final double kDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;

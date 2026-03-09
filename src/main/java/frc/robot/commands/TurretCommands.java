@@ -19,9 +19,7 @@ public class TurretCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			System.out.println("hiiii");
 			double rotationNeeded = m_vision.getAngleToHubTag();
-			System.out.printf("target turret vision angle: %f", rotationNeeded);
 			if (rotationNeeded == 0)
 				return;
 

@@ -10,35 +10,41 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
+import frc.robot.subsystems.AngularPositionSubsystem;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 
 public class AimCommands {
 
 	public static class AutoAim extends Command {
+		private final AngularPositionSubsystem m_turret;
 		private final Vision m_vision;
 		private double m_distance;
 		private Aim m_aim = new Aim.Linear();
 
-		public AutoAim(Vision vision) {
+		public AutoAim(AngularPositionSubsystem turret, Vision vision) {
+			m_turret = turret;
 			m_vision = vision;
 			setName("Auto Aim Shooter and Hood");
-			addRequirements(Shooter.getShooter(), Hood.getHood(), vision);
+			addRequirements(Shooter.getShooter(), Hood.getHood(), turret, vision);
 		}
 
 		@Override
 		public void execute() {
+			double rotationNeeded = m_vision.getAngleToHubTag();
+			if (rotationNeeded == 0)
+				return;
+			double currentTurretAngle = Turret.getTurret().getPosition();
+			double newTurretAngle = currentTurretAngle + rotationNeeded;
+
 			m_distance = m_vision.getDistanceToHub();
+
 			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
+			Turret.getTurret().setAngle(newTurretAngle);
 		}
-
-		// @Override
-		// public void end(boolean interrupted) {
-		// Shooter.stop();
-		// Hood.getHood().stop();
-		// }
 
 		@Override
 		public boolean isFinished() {

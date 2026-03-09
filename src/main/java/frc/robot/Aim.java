@@ -53,9 +53,8 @@ public abstract class Aim {
 																												// 500
 																												// };
 		// Angles are offset to prevent wrapping from 0 to 360
-		private static final double[] s_angles = new double[] { 99, 99, 11 + 98, 16.8 + 98, 25 + 98, 40 + 98,
-				// 15 <-- 16.8, 20 <-- 25
-				40 + 98 }; // 0, 19, 37, 37 };
+		private static final double[] s_angles = new double[] { 99, 99, 14 + 98, 20 + 98, 30 + 98, 135,
+				135 }; // 11, 16.8, 25, 40 + 98 ---------- // 0, 19, 37, 37 };
 		private static final double[] s_velocities = new double[] { 2700, 2700, 2700, 2700, 2700, 2700, 2700 };
 
 		private static double interpolate(double a, double b, double t) {

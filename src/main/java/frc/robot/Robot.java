@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -24,7 +23,6 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TransportCommands;
-import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Agitator;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
@@ -119,7 +117,7 @@ public class Robot extends TimedRobot {
 			m_driverController.cross().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							-.2, /* POWER */
-							0)); /* TIME */
+							0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /* TIME */
 			m_driverController.triangle().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
@@ -178,9 +176,8 @@ public class Robot extends TimedRobot {
 			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9, this));
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
 
-			m_operatorController.create().whileTrue(new RepeatCommand(new AimCommands.AutoAim(Vision.getVision())));
-			m_operatorController.options()
-					.whileTrue(new RepeatCommand(new TurretCommands.TurretAimAtTag(Vision.getVision())));
+			m_operatorController.create().whileTrue(
+					new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision()));
 
 			absolute = false;
 			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
@@ -227,7 +224,7 @@ public class Robot extends TimedRobot {
 						-.3, /* POWER */
 						0)); /* TIME */
 
-		m_operatorController.triangle().debounce(0.1).toggleOnTrue(
+		m_operatorController.triangle().debounce(0.1).onTrue(
 				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 						m_operatorController.povLeft()));
 
