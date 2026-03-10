@@ -58,11 +58,21 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	}
 
 	public void setAngle(double angle) {
-		if (angle < m_minAngle || angle > m_maxAngle) {
-			return;
+		// if (angle < m_minAngle || angle > m_maxAngle) {
+		// return;
+		// }
+
+		if (angle < m_minAngle) {
+			angle = m_minAngle;
+		} else if (angle > m_maxAngle) {
+			angle = m_maxAngle;
 		}
 		m_dutyCycle = 0;
 		m_controller.setSetpoint(angle, ControlType.kPosition);
+	}
+
+	public double getSetpoint() {
+		return m_controller.getSetpoint();
 	}
 
 	public double getPosition() {

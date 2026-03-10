@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
@@ -66,6 +67,48 @@ public class DriveCommands {
 		public boolean isFinished() {
 			return false;
 		}
+	}
+
+	public static class DrivePowerAndTime extends Command {
+		private final double m_fwdPower;
+		private final double m_strafePower;
+		private final double m_rotSpeed;
+		private final double m_time;
+		private Timer m_timer = new Timer();
+
+		public DrivePowerAndTime(double fwdPower, double strafePower, double rot, double time) {
+			m_fwdPower = fwdPower;
+			m_strafePower = strafePower;
+			m_rotSpeed = rot;
+			m_time = time;
+			setName("Drive For Power and Time");
+			addRequirements(Drive.getDrive());
+		}
+
+		@Override
+		public void initialize() {
+			m_timer.reset();
+			m_timer.start();
+		}
+
+		@Override
+		public void execute() {
+			Drive.drive(m_fwdPower, m_strafePower, m_rotSpeed, true);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			m_timer.stop();
+			Drive.drive(0, 0, 0, true);
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return m_time > 0 && m_timer.hasElapsed(m_time);
+		}
+
 	}
 
 	public static class DriveDistance extends Command {

@@ -16,7 +16,7 @@ public class Constants {
 	public static final class Subsystems {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
-			public static final List<Integer> kTrackableTags = List.of(8, 9, 11);
+			public static final List<Integer> kTrackableTags = List.of(2, 10, 5);
 
 		}
 
@@ -28,8 +28,8 @@ public class Constants {
 			public static final double kMinPower = 0.025;
 			public static final double kMaxPower = kMaxDutyCycle;
 			public static final double kMaxErr = 25;
-			public static final double kTolerance = 3;
-			public static final double kP = 0.018;
+			public static final double kTolerance = 1.5;
+			public static final double kP = 0.012;
 			public static final double kI = 0.0000;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
 			public static final double kSmallDeadzone = 0.05;
@@ -56,7 +56,7 @@ public class Constants {
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
 			public static final double kMinAngle = 99;
-			public static final double kMaxAngle = 135;
+			public static final double kMaxAngle = 137;
 		}
 
 		public static final class ShooterConstants {

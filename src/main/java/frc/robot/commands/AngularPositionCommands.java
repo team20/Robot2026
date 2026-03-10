@@ -12,6 +12,7 @@ import frc.robot.subsystems.AngularPositionSubsystem;
 import frc.robot.subsystems.Vision;
 
 public class AngularPositionCommands {
+
 	public static class RunToAngleHardware extends Command {
 		private final AngularPositionSubsystem m_subsystem;
 		private final ClampedPConstants m_constants;

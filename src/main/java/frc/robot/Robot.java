@@ -45,6 +45,7 @@ public class Robot extends TimedRobot {
 	private final Aim m_aim = new Aim.Linear();
 	private final Command m_auto;
 	private final Command m_auto2;
+	private final Command m_AUTO;
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -78,14 +79,26 @@ public class Robot extends TimedRobot {
 		// new DriveCommands.DriveDistance(-1.5),
 		// new DriveCommands.DriveDistance(1.5));
 
-		m_auto = new SequentialCommandGroup(
-				new AdjustAim(true, 12.2, this).withTimeout(2),
+		m_auto2 = new SequentialCommandGroup(
 				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 36,
-						Turret.getConstants()).withTimeout(1),
+						Turret.getConstants()).withTimeout(.5),
+				new AdjustAim(true, 11.6, this).withTimeout(.5),
 				new WaitCommand(3),
-				TransportCommands.getTimedShoot(10));
+				TransportCommands.getTimedShoot(6),
+				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+						Hood.getConstants()));
+		// new WaitCommand(10));
 
-		m_auto2 = new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 36, Turret.getConstants());
+		m_auto = new SequentialCommandGroup(new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
+				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
+				// new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, .5),
+				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 65,
+						Turret.getConstants()).withTimeout(.5),
+				new AdjustAim(true, 18, this).withTimeout(.5),
+				new WaitCommand(3),
+				TransportCommands.getTimedShoot(20));
+
+		m_AUTO = new SequentialCommandGroup(m_auto2, m_auto);
 
 		// Commands.sequence(
 		// new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), 0,
@@ -275,7 +288,7 @@ public class Robot extends TimedRobot {
 	public void autonomousInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(m_auto);
+		m_scheduler.schedule(m_AUTO);
 	}
 
 	@Override
