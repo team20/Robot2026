@@ -19,6 +19,9 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
 			Constants.ControllerConstants.kOperatorControllerPort);
+	private final MissileLauncher m_missileLauncher = new MissileLauncher(0);
+	// private final CommandGenericHID m_hid = new CommandGenericHID(0);
+	// private final CommandPS4Controller m_ps4 = new CommandPS4Controller(0);
 	private final Aim m_aim = new Aim.Linear();
 	private final Command m_auto = null;
 	private final Command m_auto2 = null;
@@ -84,6 +87,21 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindCompControls() {
+		/*
+		 * m_hid.button(11).whileTrue(Commands.run(() ->
+		 * SmartDashboard.putBoolean("Pressed", true)));
+		 * m_hid.button(11).whileFalse(Commands.run(() ->
+		 * SmartDashboard.putBoolean("Pressed", false)));
+		 * m_missileLauncher.bottomFarLeftButton()
+		 * .whileTrue(Commands.run(() -> SmartDashboard.putBoolean("Pressed2", true)));
+		 * m_missileLauncher.bottomFarLeftButton()
+		 * .whileFalse(Commands.run(() -> SmartDashboard.putBoolean("Pressed2",
+		 * false)));
+		 */
+		// m_ps4.options().whileTrue(Commands.run(() ->
+		// SmartDashboard.putBoolean("Pressed", true)));
+		// m_ps4.options().whileFalse(Commands.run(() ->
+		// SmartDashboard.putBoolean("Pressed", false)));
 
 		// *************** DRIVER BINDINGS ***************
 		{ // Drive bindings
@@ -296,6 +314,7 @@ public class Robot extends TimedRobot {
 		m_scheduler.run();
 		if (Constants.kLogging) {
 			SmartDashboard.putData(m_scheduler);
+			SmartDashboard.putData("Missile Launcher", m_missileLauncher);
 		}
 	}
 
