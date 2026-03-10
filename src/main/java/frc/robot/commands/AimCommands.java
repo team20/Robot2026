@@ -9,22 +9,55 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Aim;
-import frc.robot.Aim.ShooterState;
 import frc.robot.Constants.Subsystems.ShooterConstants;
+import frc.robot.subsystems.AngularPositionSubsystem;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Vision;
 
 public class AimCommands {
+
+	public static class AutoAim extends Command {
+		private final AngularPositionSubsystem m_turret;
+		private final Vision m_vision;
+		private double m_distance;
+		private Aim m_aim = new Aim.Linear();
+
+		public AutoAim(AngularPositionSubsystem turret, Vision vision) {
+			m_turret = turret;
+			m_vision = vision;
+			setName("Auto Aim Shooter and Hood");
+			addRequirements(Shooter.getShooter(), Hood.getHood(), turret, vision);
+		}
+
+		@Override
+		public void execute() {
+			double rotationNeeded = m_vision.getAngleToHubTag();
+			if (rotationNeeded == 0)
+				return;
+			double currentTurretAngle = Turret.getTurret().getPosition();
+			double newTurretAngle = currentTurretAngle + rotationNeeded;
+
+			m_distance = m_vision.getDistanceToHub();
+
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
+			Turret.getTurret().setAngle(newTurretAngle);
+		}
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
+
 	public static class AdjustAim extends Command {
 		private static double s_distance;
 		private final boolean m_absolute;
 		private final double m_distance;
 		private final TimedRobot m_robot;
 		private final Aim m_aim = new Aim.Linear();
-
-		static {
-			resetAim();
-		}
 
 		/**
 		 * A command to set the setpoints of the hood and shooter for aiming. In
@@ -38,7 +71,7 @@ public class AimCommands {
 		 * @param robot your robot
 		 */
 		public AdjustAim(boolean absolute, double distance, TimedRobot robot) {
-			// addRequirements(Hood.getHood(), Shooter.getShooter());
+			addRequirements(Hood.getHood(), Shooter.getShooter());
 			setName("Adjust aim command");
 			m_absolute = absolute;
 			m_distance = distance;
@@ -53,9 +86,10 @@ public class AimCommands {
 				s_distance += m_distance * m_robot.getPeriod();
 			}
 			SmartDashboard.putNumber("Aim distance", s_distance);
-			ShooterState state = m_aim.getShooterState(s_distance, 0);
-			Hood.getHood().setAngle(state.hoodAngle());
-			Shooter.setRPM(state.shooterVelocity());
+			// ShooterState state = m_aim.getShooterState(s_distance, 0);
+
+			Hood.getHood().setAngle(m_aim.getHoodAngle(s_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(s_distance));
 			// Clearly doable
 		}
 
@@ -96,15 +130,10 @@ public class AimCommands {
 			addRequirements(Shooter.getShooter(), Hood.getHood());
 		}
 
-		public void setAim(Aim aim) {
-			m_aim = aim;
-		}
-
 		@Override
 		public void execute() {
-			ShooterState state = m_aim.getShooterState(m_distance, 0);
-			Shooter.setRPM(state.shooterVelocity());
-			Hood.getHood().setAngle(state.hoodAngle());
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 
 		@Override
@@ -150,10 +179,6 @@ public class AimCommands {
 			addRequirements(Shooter.getShooter(), Hood.getHood());
 		}
 
-		public void setAim(Aim aim) {
-			m_aim = aim;
-		}
-
 		@Override
 		public void execute() {
 			double change = 0;
@@ -169,9 +194,8 @@ public class AimCommands {
 					m_distance = m_distances[i];
 				}
 			}
-			ShooterState state = m_aim.getShooterState(m_distance, 0);
-			Shooter.setRPM(state.shooterVelocity());
-			Hood.getHood().setAngle(state.hoodAngle());
+			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 
 		@Override

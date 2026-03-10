@@ -9,8 +9,10 @@ import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.subsystems.AngularPositionSubsystem;
+import frc.robot.subsystems.Vision;
 
 public class AngularPositionCommands {
+
 	public static class RunToAngleHardware extends Command {
 		private final AngularPositionSubsystem m_subsystem;
 		private final ClampedPConstants m_constants;
@@ -22,6 +24,41 @@ public class AngularPositionCommands {
 			m_constants = constants;
 			setName(String.format("Run %s To Angle Using Motor Controller", m_subsystem.getName()));
 			addRequirements(m_subsystem);
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void initialize() {
+			m_subsystem.setAngle(m_angle);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			m_subsystem.stop();
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) < m_constants.tolerance();
+		}
+	}
+
+	public static class TurretAimAtTag extends Command {
+		private final AngularPositionSubsystem m_subsystem;
+		private final Vision m_vision;
+		private final ClampedPConstants m_constants;
+		private final double m_angle;
+
+		public TurretAimAtTag(AngularPositionSubsystem subsystem, Vision vision, double angle,
+				ClampedPConstants constants) {
+			m_subsystem = subsystem;
+			m_vision = vision;
+			m_angle = angle;
+			m_constants = constants;
+			setName(String.format("Turret Aim At Tag", m_subsystem.getName()));
+			addRequirements(m_subsystem, vision);
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.

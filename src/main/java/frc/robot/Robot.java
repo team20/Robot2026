@@ -9,11 +9,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
-import frc.robot.Constants.Subsystems.KickerConstants;
 import frc.robot.commands.AimCommands;
+import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.DriveCommands;
@@ -29,6 +32,7 @@ import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Vision;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
@@ -40,6 +44,8 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kOperatorControllerPort);
 	private final Aim m_aim = new Aim.Linear();
 	private final Command m_auto;
+	private final Command m_auto2;
+	private final Command m_AUTO;
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -49,6 +55,7 @@ public class Robot extends TimedRobot {
 		new Climber();
 		new Kicker();
 		new Agitator();
+		new Vision();
 		Turret.create();
 		Hood.create();
 	}
@@ -72,7 +79,28 @@ public class Robot extends TimedRobot {
 		// new DriveCommands.DriveDistance(-1.5),
 		// new DriveCommands.DriveDistance(1.5));
 
-		m_auto = null;// Commands.sequence(
+		m_auto2 = new SequentialCommandGroup(
+				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 36,
+						Turret.getConstants()).withTimeout(.5),
+				new AdjustAim(true, 11.6, this).withTimeout(.5),
+				new WaitCommand(3),
+				TransportCommands.getTimedShoot(6),
+				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+						Hood.getConstants()));
+		// new WaitCommand(10));
+
+		m_auto = new SequentialCommandGroup(new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
+				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
+				// new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, .5),
+				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 65,
+						Turret.getConstants()).withTimeout(.5),
+				new AdjustAim(true, 18, this).withTimeout(.5),
+				new WaitCommand(3),
+				TransportCommands.getTimedShoot(20));
+
+		m_AUTO = new SequentialCommandGroup(m_auto2, m_auto);
+
+		// Commands.sequence(
 		// new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), 0,
 		// Turret.getConstants()),
 		// Commands.waitSeconds(1),
@@ -95,11 +123,26 @@ public class Robot extends TimedRobot {
 							() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(), // L2 rotates left,
 																									// R2 rotates right
 							m_driverController.getHID()::getCreateButton));
-			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetOdometry(Drive.getPose()));
+			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
+		}
+
+		{ // Hood bindings
+			m_driverController.cross().whileTrue(
+					new AngularPositionCommands.RunAtPower(Hood.getHood(),
+							-.2, /* POWER */
+							0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /* TIME */
+			m_driverController.triangle().whileTrue(
+					new AngularPositionCommands.RunAtPower(Hood.getHood(),
+							.2, /* POWER */
+							0)); /* TIME */
+			// m_driverController.cross()
+			// .whileTrue(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 0,
+			// Hood.getConstants()));
 		}
 
 		{ // Intake bindings
-			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
+			// TODO uncomment when robot fixed
+			// //m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_driverController.R1().debounce(0.1).onTrue(IntakeCommands.getOutCommand());// Deploys arm TODO: tune
 																							// position
 			m_driverController.L1().debounce(0.1).onTrue(
@@ -109,18 +152,6 @@ public class Robot extends TimedRobot {
 							IntakeCommands.getInCommand()));// Retracts arm and stops power TODO: tune position
 			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
 			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
-		}
-
-		{
-			m_operatorController.R1().whileTrue( // Runs agitator and kicker (for shooting) when pressed on R1
-					Commands.parallel(
-							new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower),
-							new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
-			m_operatorController.povLeft().debounce(0.1)
-					.toggleOnTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
-			m_operatorController.L1().debounce(.1)
-					.toggleOnTrue(new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
-			m_operatorController.create().whileTrue(new IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
 
 		{ // Climber bindings
@@ -135,17 +166,35 @@ public class Robot extends TimedRobot {
 					new AngularPositionCommands.RunAtPower(Turret.getTurret(), -.2, 0));// Rotates
 			// left/counterclockwise
 			m_operatorController.R2().whileTrue(new AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
-																													// right/clockwise
+			// right/clockwise
+		}
+
+		{ // Transport commands
+			m_operatorController.R1().whileTrue( // Runs agitator and kicker (for shooting) when pressed on R1
+					Commands.parallel(
+							new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower)));
+			// new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
+			m_operatorController.povLeft()
+					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
+			m_operatorController.L1().debounce(.05)
+					.toggleOnTrue(new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
+			// m_operatorController.create().whileTrue(new
+			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
 
 		{ // Shooting bindings
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
-			m_operatorController.touchpad()
-					.onTrue(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 0, Hood.getConstants()));
-			m_operatorController.cross().onTrue(new AimCommands.AdjustAim(absolute, 2, this)); // 5 ft absolute
-			m_operatorController.circle().onTrue(new AimCommands.AdjustAim(absolute, 8, this));
-			m_operatorController.triangle().onTrue(new AimCommands.AdjustAim(absolute, 12.5, this));
+			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9.1, this));
+			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
+
+			m_operatorController.create().whileTrue(
+					new RepeatCommand(new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision())));
+			// m_operatorController.triangle().debounce(0.1).onTrue(
+			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
+			// m_operatorController.povLeft()));
+
 			absolute = false;
 			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
 			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
@@ -157,8 +206,6 @@ public class Robot extends TimedRobot {
 			 * m_operatorController.circle(), 10.0,
 			 * m_operatorController.triangle(), 15.0)));
 			 */ // TODO: Update command to be close preset
-
-			// TODO: Change command to RunForPower (no time)
 		}
 	}
 
@@ -193,7 +240,7 @@ public class Robot extends TimedRobot {
 						-.3, /* POWER */
 						0)); /* TIME */
 
-		m_operatorController.triangle().debounce(0.1).toggleOnTrue(
+		m_operatorController.triangle().debounce(0.1).onTrue(
 				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 						m_operatorController.povLeft()));
 
@@ -241,7 +288,7 @@ public class Robot extends TimedRobot {
 	public void autonomousInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(m_auto);
+		m_scheduler.schedule(m_AUTO);
 	}
 
 	@Override

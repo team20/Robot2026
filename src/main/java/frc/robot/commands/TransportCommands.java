@@ -2,10 +2,19 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.Subsystems.AgitatorConstants;
+import frc.robot.Constants.Subsystems.KickerConstants;
 import frc.robot.subsystems.Agitator;
 import frc.robot.subsystems.Kicker;
 
 public class TransportCommands {
+	public static Command getTimedShoot(double time) {
+		return Commands.parallel(
+				new RunKickerAtPowerAndTime(KickerConstants.kTeleopPower, time),
+				new RunAgitatorAtPowerAndTime(AgitatorConstants.kTeleopPower, time));
+	}
+
 	public static class RunKickerAtPowerAndTime extends Command {
 		private final double m_power;
 		private final double m_time;
