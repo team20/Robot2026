@@ -1,9 +1,11 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.AngleUtility;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.IntakeWheels;
+import frc.robot.subsystems.PositionControlSubsystem;
 
 public class IntakeCommands {
 	public static class Spintake extends Command {
@@ -43,16 +45,58 @@ public class IntakeCommands {
 		}
 	}
 
+	public static class IntakeToPositionHardware extends Command {
+		private final PositionControlSubsystem m_subsystem;
+		private final double m_tolerance;
+		private final double m_position;
+
+		public IntakeToPositionHardware(PositionControlSubsystem subsystem, double position, double tolerance) {
+			m_subsystem = subsystem;
+			m_position = position;
+			m_tolerance = tolerance;
+			setName(String.format("Run %s To Angle Using Motor Controller", m_subsystem.getName()));
+			addRequirements(m_subsystem);
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void initialize() {
+			m_subsystem.setMotorPosition(m_position);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			m_subsystem.stopMotor();
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return AngleUtility.minDifference(m_subsystem.getMotorRotations(), m_position) < m_tolerance;
+		}
+	}
+
 	public static Command getOutCommand() {
-		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kOutPosition,
-				0.1, 0.7,
-				0.5, 0.125, false).withTimeout(2);
+		// return new
+		// PositionControlCommands.RunToPositionHardware(IntakeArm.getIntakeArm(),
+		// IntakeConstants.kOutPosition,
+		// 1);
+		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
+				IntakeConstants.kOutPosition,
+				0.1, 0.6,
+				15, .125, false).withTimeout(2);
 	}
 
 	public static Command getInCommand() {
-		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(), IntakeConstants.kInPosition,
-				0.1, 0.7,
-				0.5, 0.125, false).withTimeout(2);
+		// return new
+		// PositionControlCommands.RunToPositionHardware(IntakeArm.getIntakeArm(),
+		// IntakeConstants.kInPosition,
+		// 1);
+		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
+				IntakeConstants.kInPosition,
+				0.1, 0.6,
+				15, .125, false).withTimeout(2);
 	}
 
 	public static Command getRunArmAtPowerCommand(double power) {
@@ -63,10 +107,10 @@ public class IntakeCommands {
 		return PositionControlCommands.getZeroCommand(
 				IntakeArm.getIntakeArm(),
 				-.15 /* POWER */,
-				10 /* TIME */);
+				6.7 /* TIME */);
 	}
 
 	public static Command getEncoderResetCommand() {
-		return new PositionControlCommands.ResetEncoder(IntakeArm.getIntakeArm());
+		return new PositionControlCommands.ResetEncoder(IntakeArm.getIntakeArm(), 10);
 	}
 }

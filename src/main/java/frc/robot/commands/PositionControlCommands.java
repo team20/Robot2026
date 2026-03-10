@@ -3,6 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.PositionControlSubsystem;
 
@@ -109,23 +110,57 @@ public class PositionControlCommands {
 		}
 	}
 
+	public static class RunToPositionHardware extends Command {
+		private final PositionControlSubsystem m_subsystem;
+		private final double m_tolerance;
+		private final double m_position;
+
+		public RunToPositionHardware(PositionControlSubsystem subsystem, double position, double tolerance) {
+			m_subsystem = subsystem;
+			m_position = position;
+			m_tolerance = tolerance;
+			setName(String.format("Run %s To Angle Using Motor Controller", m_subsystem.getName()));
+			addRequirements(m_subsystem);
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void initialize() {
+			m_subsystem.setMotorPosition(m_position);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			m_subsystem.stopMotor();
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return AngleUtility.minDifference(m_subsystem.getMotorRotations(), m_position) < m_tolerance;
+		}
+	}
+
 	public static class ResetEncoder extends Command {
 		private final PositionControlSubsystem m_subsystem;
+		private final double m_offset;
 
-		public ResetEncoder(PositionControlSubsystem subsystem) {
+		public ResetEncoder(PositionControlSubsystem subsystem, double offset) {
 			m_subsystem = subsystem;
+			m_offset = offset;
 			addRequirements(subsystem);
 		}
 
 		@Override
 		public void initialize() {
-			m_subsystem.resetMotorEncoder();
+			m_subsystem.resetMotorEncoderOffset(m_offset);
 		}
 	}
 
 	public static Command getZeroCommand(PositionControlSubsystem subsystem, double power, double time) {
 		return new SequentialCommandGroup(
 				new PositionControlCommands.SpinMotorPowerForTime(subsystem, power, time),
-				new PositionControlCommands.ResetEncoder(subsystem));
+				new PositionControlCommands.ResetEncoder(subsystem, 0));
 	}
 }

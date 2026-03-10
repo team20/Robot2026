@@ -83,12 +83,10 @@ public class Constants {
 			public static final boolean kArmInvert = true;
 
 			public static final double kArmPower = 0.5;
-			public static final double kArmRetractRotations = 170;
-			public static final double kArmDeployRotations = 0;
 
-			public static final double kOutPosition = 178;
-			public static final double kInPosition = 0;
-			public static final double kP = 0.2;
+			public static final double kOutPosition = 145;
+			public static final double kInPosition = 10;
+			public static final double kP = 0.1;
 			public static final double kWheelPower = 1;
 		}
 
@@ -114,7 +112,7 @@ public class Constants {
 			public static final int kSecondaryCurrentLimit = 60;
 			public static final boolean kInvert = false;
 			public static final double kGearRatio = 81.0 / 1.0;
-			public static final double kClimbPosition = 27744; // TODO: Find actual positions
+			public static final double kClimbPosition = 31000; // TODO: Find actual positions
 			public static final double kRetractPosition = 0;
 			public static final double kP = 0.2;
 		}
