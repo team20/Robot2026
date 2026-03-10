@@ -20,20 +20,24 @@ public class ClimberCommands {
 				5 /* TIME */);
 	}
 
+	public static Command getResetCommand() {
+		return new PositionControlCommands.ResetEncoder(Climber.getClimber(), 0);
+	}
+
 	public static Command getRunAtPowerCommand(double power) {
 		return new PositionControlCommands.SpinMotorPower(Climber.getClimber(), power);
 	}
 
 	public static Command getClimbCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(Climber.getClimber(), ClimberConstants.kClimbPosition,
-				0.1, 0.5,
-				0.5, 0.125, false);
+				0.3, 0.9,
+				3000, 1000, false);
 	}
 
 	public static Command getRetractCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(Climber.getClimber(), ClimberConstants.kRetractPosition,
-				0.1,
-				0.5, 0.5, 0.125, false);
+				0.3,
+				.9, 3000, 1000, false);
 	}
 
 	public static class RunToHeightSoftware extends Command {

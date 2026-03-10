@@ -142,7 +142,6 @@ public class Robot extends TimedRobot {
 
 		{ // Intake bindings
 			// TODO uncomment when robot fixed
-			// //m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_driverController.R1().debounce(0.1).onTrue(IntakeCommands.getOutCommand());// Deploys arm TODO: tune
 																							// position
 			m_driverController.L1().debounce(0.1).onTrue(
@@ -155,8 +154,9 @@ public class Robot extends TimedRobot {
 		}
 
 		{ // Climber bindings
-			m_driverController.povUp().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
-			m_driverController.povDown().whileTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
+			m_driverController.create().debounce(.1).onTrue(ClimberCommands.getResetCommand());
+			m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
+			m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
 		}
 
 		// *************** OPERATOR BINDINGS ***************
@@ -169,17 +169,20 @@ public class Robot extends TimedRobot {
 			// right/clockwise
 		}
 
-		{ // Transport commands
-			m_operatorController.R1().whileTrue( // Runs agitator and kicker (for shooting) when pressed on R1
-					Commands.parallel(
-							new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower)));
-			// new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
-			m_operatorController.povLeft()
-					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
+		{ // Intake bindings
+			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_operatorController.L1().debounce(.05)
 					.toggleOnTrue(new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
 			// m_operatorController.create().whileTrue(new
 			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
+		}
+
+		{ // Transport bindings
+			m_operatorController.R1().whileTrue( // Runs agitator (for shooting) when pressed on R1
+					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
+			// new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
+			m_operatorController.povLeft()
+					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 		}
 
 		{ // Shooting bindings
@@ -300,6 +303,7 @@ public class Robot extends TimedRobot {
 		} else {
 			bindTestControls();
 		}
+
 	}
 
 	@Override

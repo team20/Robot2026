@@ -14,9 +14,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class PositionControlSubsystem extends SubsystemBase {
 	private final SparkBase m_motor;
+	private final double m_maxPower;
 
-	public PositionControlSubsystem(int port, boolean sparkMax) {
-
+	public PositionControlSubsystem(int port, boolean sparkMax, double maxPower) {
+		m_maxPower = maxPower;
 		if (sparkMax) {
 			m_motor = new SparkMax(port, MotorType.kBrushless);
 
@@ -31,7 +32,7 @@ public class PositionControlSubsystem extends SubsystemBase {
 	}
 
 	public void setMotorPower(double power) {
-		m_motor.set(power);
+		m_motor.set(Math.min(m_maxPower, power));
 	}
 
 	public double getMotorRotations() {
@@ -44,6 +45,10 @@ public class PositionControlSubsystem extends SubsystemBase {
 
 	public void resetMotorEncoder() {
 		m_motor.getEncoder().setPosition(0);
+	}
+
+	public void resetMotorEncoderOffset(double offset) {
+		m_motor.getEncoder().setPosition(offset);
 	}
 
 	public void configureMotor(SparkMaxConfig config) {
