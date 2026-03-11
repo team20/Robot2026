@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -15,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
+import frc.robot.autos.AutoComposer;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
@@ -46,6 +48,8 @@ public class Robot extends TimedRobot {
 	private final Command m_auto;
 	private final Command m_auto2;
 	private final Command m_AUTO;
+	private final AutoComposer m_autoComposer;
+	private final SendableChooser m_autoChooser;
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -70,15 +74,18 @@ public class Robot extends TimedRobot {
 		Shooter.stop();
 	}
 
-	{ // Here is the auto currently being run
-		// m_auto = new SequentialCommandGroup(
-		// new DriveCommands.DriveDistance(-1.5),
-		// new DriveCommands.DriveDistance(1.5),
-		// new DriveCommands.DriveDistance(-1.5),
-		// new DriveCommands.DriveDistance(1.5),
-		// new DriveCommands.DriveDistance(-1.5),
-		// new DriveCommands.DriveDistance(1.5));
+	public Robot() {
+		m_autoComposer = new AutoComposer(this);
+		m_autoChooser = new SendableChooser<Command>();
+		bindAutoOptions();
+	}
 
+	@SuppressWarnings("unchecked")
+	private void bindAutoOptions() {
+		m_autoChooser.addOption("Red Right Two Score Auto", m_autoComposer.getRedRightTwoShootAuto());
+	}
+
+	{
 		m_auto2 = new SequentialCommandGroup(
 				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 36,
 						Turret.getConstants()).withTimeout(.5),
@@ -99,18 +106,6 @@ public class Robot extends TimedRobot {
 				TransportCommands.getTimedShoot(20));
 
 		m_AUTO = new SequentialCommandGroup(m_auto2, m_auto);
-
-		// Commands.sequence(
-		// new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), 0,
-		// Turret.getConstants()),
-		// Commands.waitSeconds(1),
-		// new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(),
-		// TurretConstants.kStraightAheadAngle,
-		// Turret.getConstants()),
-		// Commands.waitSeconds(1),
-		// new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(),
-		// TurretConstants.kMaxAngle,
-		// Turret.getConstants()));
 	}
 
 	private void bindCompControls() {
@@ -222,9 +217,6 @@ public class Robot extends TimedRobot {
 		m_driverController.cross().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
 						0.75 /* POWER */));
-		m_driverController.square().whileTrue(
-				new TransportCommands.RunKickerAtPower(
-						0.4 /* POWER */));
 		m_operatorController.L2().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
 						-0.75)); // POWER
