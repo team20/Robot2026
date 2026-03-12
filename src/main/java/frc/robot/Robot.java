@@ -31,7 +31,6 @@ import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.IntakeWheels;
-import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
@@ -44,12 +43,12 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
 			Constants.ControllerConstants.kOperatorControllerPort);
-	private final Aim m_aim = new Aim.Linear();
 	private final Command m_auto;
 	private final Command m_auto2;
 	private final Command m_AUTO;
 	private final AutoComposer m_autoComposer;
-	private final SendableChooser m_autoChooser;
+	private final SendableChooser<Command> m_autoChooser;
+	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -57,7 +56,6 @@ public class Robot extends TimedRobot {
 		new IntakeWheels();
 		new IntakeArm();
 		new Climber();
-		new Kicker();
 		new Agitator();
 		new Vision();
 		Turret.create();
@@ -70,19 +68,28 @@ public class Robot extends TimedRobot {
 		IntakeArm.getIntakeArm().stopMotor();
 		IntakeWheels.stopWheel();
 		Agitator.stop();
-		Kicker.stop();
 		Shooter.stop();
 	}
 
 	public Robot() {
 		m_autoComposer = new AutoComposer(this);
-		m_autoChooser = new SendableChooser<Command>();
+		m_autoChooser = new SendableChooser<>();
 		bindAutoOptions();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void bindAutoOptions() {
-		m_autoChooser.addOption("Red Right Two Score Auto", m_autoComposer.getRedRightTwoShootAuto());
+		m_autoChooser.addOption("Left One Shoot Auto", m_autoComposer.getLeftOneShootAuto());
+		m_autoChooser.addOption("Right One Shoot Auto", m_autoComposer.getRightOneShootAuto());
+		m_autoChooser.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
+		m_autoChooser
+				.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
+		m_autoChooser
+				.addOption("Right Two Shoot Auto Practice", m_autoComposer.getRightTwoShootAutoPracticeModified());
+		m_autoChooser
+				.setDefaultOption(
+						"Right Two Shoot Auto Practice", m_autoComposer.getRightTwoShootAutoPracticeModified());
+		m_isInPit.addOption("Is in pit", true);
+		m_isInPit.setDefaultOption("Not in pit", false);
 	}
 
 	{
@@ -111,34 +118,42 @@ public class Robot extends TimedRobot {
 	private void bindCompControls() {
 
 		// *************** DRIVER BINDINGS ***************
-		{ // Drive bindings
-			Drive.getDrive().setDefaultCommand(
-					new DriveCommands.JoystickDrive(
-							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-							() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(), // L2 rotates left,
-																									// R2 rotates right
-							m_driverController.getHID()::getCreateButton));
-			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
-		}
+		// Drive bindings
+
+		Drive.getDrive().setDefaultCommand(
+				new DriveCommands.JoystickDrive(
+						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
+						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(), // L2 rotates left,
+						// R2 rotates right
+						m_driverController.getHID()::getCreateButton));
+		m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
 
 		{ // Hood bindings
-			m_driverController.cross().whileTrue(
-					new AngularPositionCommands.RunAtPower(Hood.getHood(),
-							-.2, /* POWER */
-							0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /* TIME */
+
+			// m_driverController.cross().whileTrue(
+			// new AngularPositionCommands.RunAtPower(Hood.getHood(),
+			// -.2, /* POWER */
+			// 0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /*
+			// TIME */
+
 			m_driverController.triangle().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
 							0)); /* TIME */
-			// m_driverController.cross()
-			// .whileTrue(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 0,
-			// Hood.getConstants()));
+
+			m_driverController.cross().whileTrue( // Untested
+					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
 			// TODO uncomment when robot fixed
-			m_driverController.R1().debounce(0.1).onTrue(IntakeCommands.getOutCommand());// Deploys arm TODO: tune
-																							// position
+			m_driverController.R1().debounce(0.1) // Untested
+					.onTrue(Commands.sequence(IntakeCommands.getOutCommand(), new IntakeCommands.Spintake(1)));// Deploys
+																												// arm
+																												// TODO:
+																												// tune
+			// position
 			m_driverController.L1().debounce(0.1).onTrue(
 					Commands.sequence(
 							new IntakeCommands.StopIntake(),
@@ -175,7 +190,6 @@ public class Robot extends TimedRobot {
 		{ // Transport bindings
 			m_operatorController.R1().whileTrue( // Runs agitator (for shooting) when pressed on R1
 					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
-			// new TransportCommands.RunKickerAtPower(KickerConstants.kTeleopPower)));
 			m_operatorController.povLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 		}
@@ -184,7 +198,7 @@ public class Robot extends TimedRobot {
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
 			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
-			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 9.1, this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
 
 			m_operatorController.create().whileTrue(
@@ -208,11 +222,14 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindTestControls() {
-		Drive.getDrive().setDefaultCommand(
-				new DriveCommands.JoystickDrive(
-						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-						() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
-						m_driverController.getHID()::getCreateButton));
+
+		if (!m_isInPit.getSelected().booleanValue()) {
+			Drive.getDrive().setDefaultCommand(
+					new DriveCommands.JoystickDrive(
+							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
+							() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
+							m_driverController.getHID()::getCreateButton));
+		}
 
 		m_driverController.cross().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
@@ -274,6 +291,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotPeriodic() {
 		m_scheduler.run();
+		SmartDashboard.putData("Real Auto Chooser", m_autoChooser);
+		SmartDashboard.putData("Pit Selector 2000", m_isInPit);
 		if (Constants.kLogging) {
 			SmartDashboard.putData(m_scheduler);
 		}
@@ -283,7 +302,9 @@ public class Robot extends TimedRobot {
 	public void autonomousInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(m_AUTO);
+		Command kommander = m_autoChooser.getSelected();
+		System.out.println(kommander.getName());
+		m_scheduler.schedule(kommander);
 	}
 
 	@Override

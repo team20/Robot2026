@@ -5,8 +5,6 @@ import java.util.List;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,9 +14,7 @@ import frc.robot.Constants.Subsystems.VisionConstants;
 public class Vision extends SubsystemBase {
 	private static Vision s_vision;
 	private final PhotonCamera m_camera;
-	private final AprilTagFieldLayout m_aprilTagFieldLayout = AprilTagFieldLayout
-			.loadField(AprilTagFields.k2026RebuiltAndymark);
-	private double m_distanceToTags;
+	private double m_distanceToHub, m_angleToHubTag;
 
 	public Vision() {
 		if (s_vision == null) {
@@ -34,8 +30,6 @@ public class Vision extends SubsystemBase {
 		return s_vision;
 	}
 
-	private double m_angleToHubTag;
-
 	public void periodic() {
 		var results = m_camera.getAllUnreadResults();
 
@@ -44,27 +38,31 @@ public class Vision extends SubsystemBase {
 				List<PhotonTrackedTarget> targets = result.getTargets();
 				double distanceSum = 0;
 				double angleSum = 0;
-				int numTags = 0;
+				// double totalWeight = 0;
+				double numTags = 0;
 				for (PhotonTrackedTarget target : targets) {
 					if (!VisionConstants.kTrackableTags.contains(target.fiducialId))
 						continue;
 
 					numTags++;
+					// double weight = Math.pow(target.getArea(), 2) * (1 -
+					// target.getPoseAmbiguity());
+					// totalWeight += weight;
 					Transform3d botPose = target.getBestCameraToTarget();
 
-					angleSum += target.yaw;
+					angleSum += target.yaw;// * weight;
 
-					distanceSum += botPose.getX() +
-							Units.inchesToMeters(23.5);
+					distanceSum += (botPose.getX() +
+							Units.inchesToMeters(23.5));// * Math.sqrt(4 / Math.PI))) * weight;
 				}
 
-				m_distanceToTags = distanceSum / numTags;
-				m_angleToHubTag = angleSum / numTags;
+				m_distanceToHub = distanceSum / numTags;// totalWeight;
+				m_angleToHubTag = angleSum / numTags;// totalWeight;
 
 				SmartDashboard.putNumber("Vision/Angle to Tag", m_angleToHubTag);
 
 				SmartDashboard.putNumber(
-						"Vision/PoseX", Units.metersToFeet(m_distanceToTags));
+						"Vision/PoseX", Units.metersToFeet(m_distanceToHub));
 			}
 
 		}
@@ -74,11 +72,7 @@ public class Vision extends SubsystemBase {
 		return m_angleToHubTag;
 	}
 
-	public double getDistanceToTags() {
-		return Units.metersToFeet(m_distanceToTags);
-	}
-
 	public double getDistanceToHub() {
-		return getDistanceToTags() + (23.5 / 12);
+		return Units.metersToFeet(m_distanceToHub);
 	}
 }
