@@ -4,8 +4,8 @@ import static frc.robot.Constants.*;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,7 +18,7 @@ import frc.robot.Constants.Subsystems.AgitatorConstants;
  */
 public class Agitator extends SubsystemBase {
 	private static Agitator s_theAgitator;
-	private final SparkMax m_agitator;
+	private final SparkFlex m_agitator;
 
 	/**
 	 * Constructs a new Transport subsystem.
@@ -26,7 +26,7 @@ public class Agitator extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Agitator() {
-		m_agitator = new SparkMax(AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
+		m_agitator = new SparkFlex(AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.inverted(AgitatorConstants.kAgitatorInvert);
 		config.smartCurrentLimit(AgitatorConstants.kAgitatorSmartCurrentLimit);

@@ -1,6 +1,6 @@
 package frc.robot;
 
-import java.util.List;
+import java.util.Set;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -16,7 +16,7 @@ public class Constants {
 	public static final class Subsystems {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
-			public static final List<Integer> kTrackableTags = List.of(2, 10, 5);
+			public static final Set<Integer> kTrackableTags = Set.of(8, 24, 10, 26, 11, 27);
 
 		}
 
@@ -112,7 +112,7 @@ public class Constants {
 			public static final int kSecondaryCurrentLimit = 60;
 			public static final boolean kInvert = false;
 			public static final double kGearRatio = 81.0 / 1.0;
-			public static final double kClimbPosition = 31000; // TODO: Find actual positions
+			public static final double kClimbPosition = 29000; // TODO: Find actual positions
 			public static final double kRetractPosition = 0;
 			public static final double kP = 0.2;
 		}
