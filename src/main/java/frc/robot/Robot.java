@@ -130,29 +130,21 @@ public class Robot extends TimedRobot {
 
 		{ // Hood bindings
 
-			// m_driverController.cross().whileTrue(
-			// new AngularPositionCommands.RunAtPower(Hood.getHood(),
-			// -.2, /* POWER */
-			// 0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /*
-			// TIME */
-
+			m_driverController.cross().whileTrue(
+			new AngularPositionCommands.RunAtPower(Hood.getHood(),
+			-.2, /* POWER */
+			0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /*
+			TIME */
 			m_driverController.triangle().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
 							0)); /* TIME */
-
-			m_driverController.cross().whileTrue( // Untested
-					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
 			// TODO uncomment when robot fixed
-			m_driverController.R1().debounce(0.1) // Untested
-					.onTrue(Commands.sequence(IntakeCommands.getOutCommand(), new IntakeCommands.Spintake(1)));// Deploys
-																												// arm
-																												// TODO:
-																												// tune
+			m_driverController.R1().debounce(0.1)
+					.onTrue(Commands.sequence(IntakeCommands.getOutCommand())); // Deploys arm TODO: tune
 			// position
 			m_driverController.L1().debounce(0.1).onTrue(
 					Commands.sequence(

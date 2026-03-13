@@ -45,19 +45,16 @@ public class Vision extends SubsystemBase {
 						continue;
 
 					numTags++;
-					// double weight = Math.pow(target.getArea(), 2) * (1 -
-					// target.getPoseAmbiguity());
-					// totalWeight += weight;
 					Transform3d botPose = target.getBestCameraToTarget();
 
-					angleSum += target.yaw;// * weight;
+					angleSum += target.yaw;
 
 					distanceSum += (botPose.getX() +
-							Units.inchesToMeters(23.5));// * Math.sqrt(4 / Math.PI))) * weight;
+							Units.inchesToMeters(23.5));
 				}
 
-				m_distanceToHub = distanceSum / numTags;// totalWeight;
-				m_angleToHubTag = angleSum / numTags;// totalWeight;
+				m_distanceToHub = distanceSum / numTags;
+				m_angleToHubTag = angleSum / numTags;
 
 				SmartDashboard.putNumber("Vision/Angle to Tag", m_angleToHubTag);
 

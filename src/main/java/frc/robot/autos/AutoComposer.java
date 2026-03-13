@@ -50,7 +50,6 @@ public class AutoComposer {
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
-				new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, .25), // Untested
 
 				// addition
 				IntakeCommands.getOutCommand(),
