@@ -118,8 +118,8 @@ public class Robot extends TimedRobot {
 	private void bindCompControls() {
 
 		// *************** DRIVER BINDINGS ***************
-		// Drive bindings
 
+		// Drive bindings
 		Drive.getDrive().setDefaultCommand(
 				new DriveCommands.JoystickDrive(
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
@@ -130,23 +130,24 @@ public class Robot extends TimedRobot {
 
 		{ // Hood bindings
 
-			m_driverController.cross().whileTrue(
-			new AngularPositionCommands.RunAtPower(Hood.getHood(),
-			-.2, /* POWER */
-			0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)); /*
-			TIME */
+			// m_driverController.cross().whileTrue(
+			// new AngularPositionCommands.RunAtPower(Hood.getHood(),
+			// -.2, /* POWER */
+			// 0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 			m_driverController.triangle().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
 							0)); /* TIME */
+			m_driverController.cross().whileTrue( // Untested
+					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
-			// TODO uncomment when robot fixed
-			m_driverController.R1().debounce(0.1)
-					.onTrue(Commands.sequence(IntakeCommands.getOutCommand())); // Deploys arm TODO: tune
-			// position
-			m_driverController.L1().debounce(0.1).onTrue(
+			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm (Untested)
+					Commands.sequence(
+							Commands.sequence(IntakeCommands.getOutCommand(), new IntakeCommands.Spintake(1))));
+			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
 					Commands.sequence(
 							new IntakeCommands.StopIntake(),
 							new TransportCommands.StopAgitator(),
