@@ -4,7 +4,7 @@ import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
 
 public class Turret extends AngularPositionSubsystem {
-	private static AngularPositionSubsystem s_theTurret;
+	private static Turret s_theTurret;
 
 	/**
 	 * Call create() instead
@@ -24,7 +24,7 @@ public class Turret extends AngularPositionSubsystem {
 		}
 	}
 
-	public static AngularPositionSubsystem getTurret() {
+	public static Turret getTurret() {
 		return s_theTurret;
 	}
 

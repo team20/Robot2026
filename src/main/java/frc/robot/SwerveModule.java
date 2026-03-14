@@ -20,6 +20,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 
 /**
@@ -164,6 +165,16 @@ public class SwerveModule {
 		m_driveMotor.set(ABBA.preventBrownout(state.speedMetersPerSecond));
 		double turnPower = m_steerController.calculate(getModuleAngle(), state.angle.getDegrees());
 		m_steerMotor.set(ABBA.preventBrownout(turnPower));
+		SmartDashboard.putNumber(
+				String.format("Swerve Supply Currents (A)/%d", m_index),
+				m_driveMotor.getSupplyCurrent().getValueAsDouble());
+		SmartDashboard.putNumber(
+				String.format("Swerve Torque Currents (A)/%d", m_index),
+				m_driveMotor.getTorqueCurrent().getValueAsDouble());
+		SmartDashboard.putNumber(String.format("Swerve Angles (deg)/%d", m_index), getModuleAngle());
+		SmartDashboard.putNumber(
+				String.format("Swerve Velocities (m\\s)/%d", m_index),
+				m_driveMotor.getVelocity().getValueAsDouble() * DriveConstants.kMetersPerMotorRotation);
 		updateSim();
 		return state;
 	}

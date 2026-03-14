@@ -1,6 +1,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.AngleUtility;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.IntakeArm;
@@ -8,6 +10,35 @@ import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.PositionControlSubsystem;
 
 public class IntakeCommands {
+	public static class Teletake extends Command {
+		private boolean m_on = false;
+		private double m_speed;
+
+		public Teletake(double speed, Trigger trigger) {
+			setName("Teleop intake");
+			m_speed = speed;
+			trigger.debounce(.05).onTrue(Commands.runOnce(() -> m_on ^= true));
+			addRequirements(IntakeWheels.getIntakeWheels());
+		}
+
+		@Override
+		public void execute() {
+			if (m_on) {
+				IntakeWheels.setWheelPower(m_speed);
+			} else {
+				IntakeWheels.stopWheel();
+			}
+		}
+
+		@Override
+		public void end(boolean interrupted) {
+			if (!interrupted) {
+				m_on = false;
+			}
+			IntakeWheels.stopWheel();
+		}
+	}
+
 	public static class Spintake extends Command {
 		private double m_speed;
 

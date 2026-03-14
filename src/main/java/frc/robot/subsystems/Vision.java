@@ -38,23 +38,27 @@ public class Vision extends SubsystemBase {
 				List<PhotonTrackedTarget> targets = result.getTargets();
 				double distanceSum = 0;
 				double angleSum = 0;
-				// double totalWeight = 0;
+				double totalWeight = 0;
 				double numTags = 0;
 				for (PhotonTrackedTarget target : targets) {
 					if (!VisionConstants.kTrackableTags.contains(target.fiducialId))
 						continue;
 
 					numTags++;
+					double weight = Math.pow(target.getArea(), 2) * (1 -
+							target.getPoseAmbiguity());
+					totalWeight += weight;
+
 					Transform3d botPose = target.getBestCameraToTarget();
 
-					angleSum += target.yaw;
+					angleSum += target.yaw; // * weight;
 
 					distanceSum += (botPose.getX() +
-							Units.inchesToMeters(23.5));
+							Units.inchesToMeters(23.5));// * Math.sqrt(4 / Math.PI))) * weight;
 				}
 
-				m_distanceToHub = distanceSum / numTags;
-				m_angleToHubTag = angleSum / numTags;
+				m_distanceToHub = distanceSum / numTags;// totalWeight
+				m_angleToHubTag = angleSum / numTags;// totalWeight
 
 				SmartDashboard.putNumber("Vision/Angle to Tag", m_angleToHubTag);
 

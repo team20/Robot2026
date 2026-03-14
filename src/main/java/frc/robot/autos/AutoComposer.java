@@ -50,6 +50,7 @@ public class AutoComposer {
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
+				new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, 0.25), // Potentially remove to save time
 
 				// addition
 				IntakeCommands.getOutCommand(),
@@ -60,7 +61,7 @@ public class AutoComposer {
 
 	public Command getRightTwoShootAutoPracticeModified() {
 		return new SequentialCommandGroup(
-				getShootCommand(36, 10.2, 6),
+				getShootCommand(36, 9.1, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
@@ -70,7 +71,7 @@ public class AutoComposer {
 				IntakeCommands.getOutCommand(),
 				// addition
 
-				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
+				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto front of bump");
 	}
 
 	public Command getRightTwoShootAutoWithIntake() {

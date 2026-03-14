@@ -201,7 +201,8 @@ public class Drive extends SubsystemBase {
 		m_currentChassisSpeedsPublisher.set(speeds);
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
 			m_gyroSim.set(
-					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod) + m_gyro.getYaw());
+					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
+							+ getHeading().getDegrees());
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
 	}
 
