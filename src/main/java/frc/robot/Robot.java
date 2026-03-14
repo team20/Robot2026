@@ -42,9 +42,6 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
 			Constants.ControllerConstants.kOperatorControllerPort);
-	private final Command m_auto;
-	private final Command m_auto2;
-	private final Command m_AUTO;
 	private final AutoComposer m_autoComposer;
 	private final SendableChooser<Command> m_autoChooser;
 	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
