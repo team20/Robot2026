@@ -1,5 +1,8 @@
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
@@ -38,6 +41,43 @@ public class TurretCommands {
 		@Override
 		public boolean isFinished() {
 			return true;
+		}
+	}
+
+	public static class GradualAim extends Command {
+		private Turret m_turret;
+		private double m_maxSpeed;
+		private double m_deadzone;
+		private DoubleSupplier m_left;
+		private DoubleSupplier m_right;
+
+		public GradualAim(double maxSpeed, double deadzone, DoubleSupplier left, DoubleSupplier right) {
+			m_turret = Turret.getTurret();
+			m_maxSpeed = maxSpeed;
+			m_deadzone = deadzone;
+			m_left = left;
+			m_right = right;
+
+			addRequirements(m_turret);
+			setName("Gradual turret aim");
+		}
+
+		@Override
+		public void execute() {
+			double left = Math.pow((m_left.getAsDouble() + 1) / 2, 2);
+			double right = Math.pow((m_right.getAsDouble() + 1) / 2, 2);
+			double value = MathUtil.applyDeadband(right - left, m_deadzone) * m_maxSpeed;
+			m_turret.runAtDutyCycle(value);
+		}
+
+		@Override
+		public void end(boolean interrupted) {
+			m_turret.stop();
+		}
+
+		@Override
+		public boolean isFinished() {
+			return false;
 		}
 	}
 }

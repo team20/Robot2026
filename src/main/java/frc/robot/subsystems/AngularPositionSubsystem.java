@@ -55,6 +55,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		m_encoder = m_motor.getAbsoluteEncoder();
 		m_controller = m_motor.getClosedLoopController();
+		SmartDashboard.putNumber("Aim Distance", 0);
 	}
 
 	public void setAngle(double angle) {

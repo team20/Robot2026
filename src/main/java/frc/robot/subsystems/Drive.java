@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.Subsystems.AutoConstants;
 import frc.robot.SwerveModule;
 
 public class Drive extends SubsystemBase {
@@ -114,7 +115,8 @@ public class Drive extends SubsystemBase {
 	 * @return The heading
 	 */
 	public static Rotation2d getHeading() {
-		return s_theDrive.m_gyro.getRotation2d();
+		return s_theDrive.m_gyro.getRotation2d()
+				.rotateBy((AutoConstants.isBackwardsAtStart) ? Rotation2d.k180deg : Rotation2d.kZero);
 	}
 
 	/**
@@ -201,7 +203,8 @@ public class Drive extends SubsystemBase {
 		m_currentChassisSpeedsPublisher.set(speeds);
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
 			m_gyroSim.set(
-					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod) + m_gyro.getYaw());
+					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
+							+ getHeading().getDegrees());
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
 	}
 

@@ -11,20 +11,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.autos.AutoComposer;
 import frc.robot.commands.AimCommands;
-import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TransportCommands;
+import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Agitator;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
@@ -49,6 +48,8 @@ public class Robot extends TimedRobot {
 	private final AutoComposer m_autoComposer;
 	private final SendableChooser<Command> m_autoChooser;
 	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
+	// private final PowerDistribution m_pdh = new PowerDistribution(62,
+	// ModuleType.kRev);
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -78,41 +79,19 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindAutoOptions() {
+		m_autoChooser.addOption("No Auto", new WaitCommand(2));
 		m_autoChooser.addOption("Left One Shoot Auto", m_autoComposer.getLeftOneShootAuto());
 		m_autoChooser.addOption("Right One Shoot Auto", m_autoComposer.getRightOneShootAuto());
 		m_autoChooser.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
 		m_autoChooser
 				.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
 		m_autoChooser
-				.addOption("Right Two Shoot Auto Practice", m_autoComposer.getRightTwoShootAutoPracticeModified());
+				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoPracticeModified());
 		m_autoChooser
 				.setDefaultOption(
-						"Right Two Shoot Auto Practice", m_autoComposer.getRightTwoShootAutoPracticeModified());
+						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoPracticeModified());
 		m_isInPit.addOption("Is in pit", true);
 		m_isInPit.setDefaultOption("Not in pit", false);
-	}
-
-	{
-		m_auto2 = new SequentialCommandGroup(
-				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 36,
-						Turret.getConstants()).withTimeout(.5),
-				new AdjustAim(true, 11.6, this).withTimeout(.5),
-				new WaitCommand(3),
-				TransportCommands.getTimedShoot(6),
-				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-						Hood.getConstants()));
-		// new WaitCommand(10));
-
-		m_auto = new SequentialCommandGroup(new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
-				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
-				// new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, .5),
-				new AngularPositionCommands.RunToAngleHardware(Turret.getTurret(), 65,
-						Turret.getConstants()).withTimeout(.5),
-				new AdjustAim(true, 18, this).withTimeout(.5),
-				new WaitCommand(3),
-				TransportCommands.getTimedShoot(20));
-
-		m_AUTO = new SequentialCommandGroup(m_auto2, m_auto);
 	}
 
 	private void bindCompControls() {
@@ -146,7 +125,9 @@ public class Robot extends TimedRobot {
 		{ // Intake bindings
 			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm (Untested)
 					Commands.sequence(
-							Commands.sequence(IntakeCommands.getOutCommand(), new IntakeCommands.Spintake(1))));
+							Commands.sequence(
+									IntakeCommands.getOutCommand(),
+									new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
 			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
 					Commands.sequence(
 							new IntakeCommands.StopIntake(),
@@ -165,17 +146,22 @@ public class Robot extends TimedRobot {
 		// *************** OPERATOR BINDINGS ***************
 
 		{ // Turret bindings
-			m_operatorController.L2().whileTrue(
-					new AngularPositionCommands.RunAtPower(Turret.getTurret(), -.2, 0));// Rotates
+			// m_operatorController.L2().whileTrue(
+			// new AngularPositionCommands.RunAtPower(Turret.getTurret(), -.2, 0)); //
+			// Rotates
 			// left/counterclockwise
-			m_operatorController.R2().whileTrue(new AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
+			// m_operatorController.R2().whileTrue(new
+			// AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
 			// right/clockwise
+			Turret.getTurret().setDefaultCommand(
+					new TurretCommands.GradualAim(0.2, 0.05, m_operatorController::getL2Axis,
+							m_operatorController::getR2Axis));
 		}
 
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			m_operatorController.L1().debounce(.05)
-					.toggleOnTrue(new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
+			IntakeWheels.getIntakeWheels().setDefaultCommand(
+					new IntakeCommands.Teletake(IntakeConstants.kWheelPower, m_operatorController.L1()));
 			// m_operatorController.create().whileTrue(new
 			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
@@ -192,7 +178,7 @@ public class Robot extends TimedRobot {
 			boolean absolute = true;
 			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
 			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
-			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 13, this));
+			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			m_operatorController.create().whileTrue(
 					new RepeatCommand(new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision())));
@@ -288,6 +274,11 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putData("Pit Selector 2000", m_isInPit);
 		if (Constants.kLogging) {
 			SmartDashboard.putData(m_scheduler);
+			// SmartDashboard.putNumber("PDH Current Draw (A)", m_pdh.getTotalCurrent());
+			// SmartDashboard.putNumber("PDH Voltage (V)", m_pdh.getVoltage());
+			// SmartDashboard.putNumber("PDH Power Draw (W)", m_pdh.getTotalPower());
+			// SmartDashboard.putNumber("PDH Temperature",
+			// Celsius.of(m_pdh.getTemperature()).in(Fahrenheit));
 		}
 	}
 

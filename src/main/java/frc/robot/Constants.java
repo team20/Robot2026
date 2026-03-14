@@ -20,6 +20,10 @@ public class Constants {
 
 		}
 
+		public static final class AutoConstants {
+			public static boolean isBackwardsAtStart = false;
+		}
+
 		public static final class TurretConstants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;

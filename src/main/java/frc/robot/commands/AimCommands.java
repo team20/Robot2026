@@ -44,6 +44,8 @@ public class AimCommands {
 			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 			Turret.getTurret().setAngle(newTurretAngle);
+
+			SmartDashboard.putNumber("Aim Distance", m_distance);
 		}
 
 		@Override
@@ -85,7 +87,8 @@ public class AimCommands {
 			} else {
 				s_distance += m_distance * m_robot.getPeriod();
 			}
-			SmartDashboard.putNumber("Aim distance", s_distance);
+
+			SmartDashboard.putNumber("Aim Distance", s_distance);
 			// ShooterState state = m_aim.getShooterState(s_distance, 0);
 
 			Hood.getHood().setAngle(m_aim.getHoodAngle(s_distance));
