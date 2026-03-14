@@ -84,10 +84,11 @@ public class Robot extends TimedRobot {
 		m_autoChooser
 				.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
 		m_autoChooser
-				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoPracticeModified());
+				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser.addOption("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
 		m_autoChooser
 				.setDefaultOption(
-						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoPracticeModified());
+						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_isInPit.addOption("Is in pit", true);
 		m_isInPit.setDefaultOption("Not in pit", false);
 	}
@@ -152,7 +153,7 @@ public class Robot extends TimedRobot {
 			// AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
 			// right/clockwise
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.2, 0.05, m_operatorController::getL2Axis,
+					new TurretCommands.GradualAim(0.05, 0.3, 0.05, m_operatorController::getL2Axis,
 							m_operatorController::getR2Axis));
 		}
 

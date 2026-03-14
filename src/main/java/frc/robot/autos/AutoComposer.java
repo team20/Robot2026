@@ -31,11 +31,20 @@ public class AutoComposer {
 	}
 
 	public Command getLeftOneShootAuto() {
-		AutoConstants.isBackwardsAtStart = true; // Untested
+		// AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(92 + (92 - 36), 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 						Hood.getConstants())).withName("Left one shoot auto");
+	}
+
+	public Command getManualRightShootAuto() {
+		return new SequentialCommandGroup(
+				new AdjustAim(true, 11.6, m_robot).withTimeout(.5),
+				new WaitCommand(3), // test changing to 2
+				TransportCommands.getTimedShoot(6),
+				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+						Hood.getConstants())).withName("Right one shoot auto");
 	}
 
 	public Command getRightOneShootAuto() {
@@ -63,10 +72,22 @@ public class AutoComposer {
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
 	}
 
-	public Command getRightTwoShootAutoPracticeModified() {
+	public Command getRightTwoShootAutoAbbr() { // Untested
 		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
-				getShootCommand(36, 9.1, 6),
+				getShootCommand(36, 11.6, 6),
+				new ParallelCommandGroup(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+						Hood.getConstants()),
+						new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8)),
+				new ParallelCommandGroup(new DriveCommands.DrivePowerAndTime(-0.05, 0.2, 0, 1),
+						IntakeCommands.getOutCommand()),
+				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
+	}
+
+	public Command getRightTwoShootAutoBump() {
+		AutoConstants.isBackwardsAtStart = true; // Untested
+		return new SequentialCommandGroup(
+				getShootCommand(36, 10, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
