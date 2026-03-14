@@ -115,7 +115,7 @@ public class Drive extends SubsystemBase {
 	 * @return The heading
 	 */
 	public static Rotation2d getHeading() {
-		return s_theDrive.m_gyro.getRotation2d()
+		return s_theDrive.m_gyro.getRotation2d() // Untested
 				.rotateBy((AutoConstants.isBackwardsAtStart) ? Rotation2d.k180deg : Rotation2d.kZero);
 	}
 

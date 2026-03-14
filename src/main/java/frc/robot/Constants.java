@@ -21,7 +21,7 @@ public class Constants {
 		}
 
 		public static final class AutoConstants {
-			public static boolean isBackwardsAtStart = false;
+			public static boolean isBackwardsAtStart = false; // Untested
 		}
 
 		public static final class TurretConstants {

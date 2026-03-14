@@ -31,7 +31,7 @@ public class AutoComposer {
 	}
 
 	public Command getLeftOneShootAuto() {
-		AutoConstants.isBackwardsAtStart = true;
+		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(92 + (92 - 36), 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -39,7 +39,7 @@ public class AutoComposer {
 	}
 
 	public Command getRightOneShootAuto() {
-		AutoConstants.isBackwardsAtStart = true;
+		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -47,14 +47,14 @@ public class AutoComposer {
 	}
 
 	public Command getRightTwoShootAuto() {
-		AutoConstants.isBackwardsAtStart = true;
+		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
-				new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, 0.25), // Untested
+				new DriveCommands.DrivePowerAndTime(-0.2, 0, 0, 0.25), // Potentially remove to save time
 
 				// addition
 				IntakeCommands.getOutCommand(),
@@ -64,7 +64,7 @@ public class AutoComposer {
 	}
 
 	public Command getRightTwoShootAutoPracticeModified() {
-		AutoConstants.isBackwardsAtStart = true;
+		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 9.1, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -80,7 +80,7 @@ public class AutoComposer {
 	}
 
 	public Command getRightTwoShootAutoWithIntake() {
-		AutoConstants.isBackwardsAtStart = true;
+		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,

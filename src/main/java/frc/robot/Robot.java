@@ -47,6 +47,7 @@ public class Robot extends TimedRobot {
 	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
 	// private final PowerDistribution m_pdh = new PowerDistribution(62,
 	// ModuleType.kRev);
+	// Untested ^
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -114,13 +115,13 @@ public class Robot extends TimedRobot {
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
 							0)); /* TIME */
-			m_driverController.cross().whileTrue( // Untested
+			m_driverController.cross().whileTrue(
 					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
-			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm (Untested)
+			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm
 					Commands.sequence(
 							Commands.sequence(
 									IntakeCommands.getOutCommand(),
@@ -276,6 +277,7 @@ public class Robot extends TimedRobot {
 			// SmartDashboard.putNumber("PDH Power Draw (W)", m_pdh.getTotalPower());
 			// SmartDashboard.putNumber("PDH Temperature",
 			// Celsius.of(m_pdh.getTemperature()).in(Fahrenheit));
+			// Untested ^
 		}
 	}
 
