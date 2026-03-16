@@ -36,6 +36,15 @@ public class AutoComposer {
 						Hood.getConstants())).withName("Left one shoot auto");
 	}
 
+	public Command getManualRightShootAuto() {
+		return new SequentialCommandGroup(
+				new AdjustAim(true, 11.6, m_robot).withTimeout(.5),
+				new WaitCommand(3), // test changing to 2
+				TransportCommands.getTimedShoot(6),
+				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
+						Hood.getConstants())).withName("Right one shoot auto");
+	}
+
 	public Command getRightOneShootAuto() {
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
@@ -59,9 +68,9 @@ public class AutoComposer {
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
 	}
 
-	public Command getRightTwoShootAutoPracticeModified() {
+	public Command getRightTwoShootAutoBump() {
 		return new SequentialCommandGroup(
-				getShootCommand(36, 9.1, 6),
+				getShootCommand(36, 10, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 						Hood.getConstants()),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
