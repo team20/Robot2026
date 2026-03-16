@@ -45,9 +45,6 @@ public class Robot extends TimedRobot {
 	private final AutoComposer m_autoComposer;
 	private final SendableChooser<Command> m_autoChooser;
 	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
-	// private final PowerDistribution m_pdh = new PowerDistribution(62,
-	// ModuleType.kRev);
-	// Untested ^
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -273,12 +270,6 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putData("Pit Selector 2000", m_isInPit);
 		if (Constants.kLogging) {
 			SmartDashboard.putData(m_scheduler);
-			// SmartDashboard.putNumber("PDH Current Draw (A)", m_pdh.getTotalCurrent());
-			// SmartDashboard.putNumber("PDH Voltage (V)", m_pdh.getVoltage());
-			// SmartDashboard.putNumber("PDH Power Draw (W)", m_pdh.getTotalPower());
-			// SmartDashboard.putNumber("PDH Temperature",
-			// Celsius.of(m_pdh.getTemperature()).in(Fahrenheit));
-			// Untested ^
 		}
 	}
 

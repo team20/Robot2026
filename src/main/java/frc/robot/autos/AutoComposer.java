@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.Constants.Subsystems.AutoConstants;
 import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.DriveCommands;
@@ -31,7 +30,6 @@ public class AutoComposer {
 	}
 
 	public Command getLeftOneShootAuto() {
-		// AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(92 + (92 - 36), 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -48,7 +46,6 @@ public class AutoComposer {
 	}
 
 	public Command getRightOneShootAuto() {
-		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -56,7 +53,6 @@ public class AutoComposer {
 	}
 
 	public Command getRightTwoShootAuto() {
-		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -72,20 +68,7 @@ public class AutoComposer {
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
 	}
 
-	public Command getRightTwoShootAutoAbbr() { // Untested
-		AutoConstants.isBackwardsAtStart = true; // Untested
-		return new SequentialCommandGroup(
-				getShootCommand(36, 11.6, 6),
-				new ParallelCommandGroup(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-						Hood.getConstants()),
-						new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8)),
-				new ParallelCommandGroup(new DriveCommands.DrivePowerAndTime(-0.05, 0.2, 0, 1),
-						IntakeCommands.getOutCommand()),
-				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
-	}
-
 	public Command getRightTwoShootAutoBump() {
-		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 10, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
@@ -101,7 +84,6 @@ public class AutoComposer {
 	}
 
 	public Command getRightTwoShootAutoWithIntake() {
-		AutoConstants.isBackwardsAtStart = true; // Untested
 		return new SequentialCommandGroup(
 				getShootCommand(36, 11.6, 6),
 				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
