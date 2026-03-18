@@ -115,7 +115,7 @@ public class IntakeCommands {
 		// 1);
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
 				IntakeConstants.kOutPosition,
-				0.1, 0.6,
+				0.1, 1.0,
 				15, .125, false).withTimeout(2);
 	}
 
@@ -126,7 +126,7 @@ public class IntakeCommands {
 		// 1);
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
 				IntakeConstants.kInPosition,
-				0.1, 0.6,
+				0.1, 1.0,
 				15, .125, false).withTimeout(2);
 	}
 

@@ -119,10 +119,9 @@ public class Robot extends TimedRobot {
 
 		{ // Intake bindings
 			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm
-					Commands.sequence(
-							Commands.sequence(
-									IntakeCommands.getOutCommand(),
-									new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+					Commands.parallel(
+							IntakeCommands.getOutCommand(),
+							new IntakeCommands.Spintake(IntakeConstants.kWheelPower)));
 			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
 					Commands.sequence(
 							new IntakeCommands.StopIntake(),
