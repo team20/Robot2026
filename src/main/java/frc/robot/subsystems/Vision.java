@@ -1,20 +1,32 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.VisionConstants;
+import frc.robot.PoseUtils;
 
 public class Vision extends SubsystemBase {
 	private static Vision s_vision;
 	private final PhotonCamera m_camera;
 	private double m_distanceToHub, m_angleToHubTag;
+	private final StructPublisher<Pose3d> estimatedPoseTopic = NetworkTableInstance.getDefault()
+			.getStructTopic("Estimated Vision Pose", Pose3d.struct)
+			.publish(); // Initialize network table topic for estimated vision pose
 
 	public Vision() {
 		if (s_vision == null) {
@@ -30,8 +42,67 @@ public class Vision extends SubsystemBase {
 		return s_vision;
 	}
 
+	public Pose3d getPose(List<PhotonPipelineResult> results, Angle turretAngle) {
+		List<Pose3d> poses = new ArrayList<Pose3d>();
+
+		// Estimate pose for each pipeline result
+		for (PhotonPipelineResult result : results) {
+			poses.add(PoseUtils.EstimatePoseFromPipelineResult(result, turretAngle));
+		}
+
+		// Get initial average of each pose component (x, y, and z)
+		Pose3d averagePose = PoseUtils.getAveragePose(poses);
+
+		double components[] = {
+				averagePose.getX(),
+				averagePose.getY(),
+				averagePose.getZ(),
+				averagePose.getRotation().getX(),
+				averagePose.getRotation().getY(),
+				averagePose.getRotation().getZ() };
+
+		// Cull any results that are not within 10 percent of the average
+		for (int i = poses.size() - 1; i >= 0; i--) {
+			boolean cull = false;
+
+			if (Math.abs(poses.get(i).getX() - components[0]) > 0.1 * components[0]) {
+				cull = true;
+			}
+
+			if (Math.abs(poses.get(i).getY() - components[1]) > 0.1 * components[1]) {
+				cull = true;
+			}
+
+			if (Math.abs(poses.get(i).getZ() - components[2]) > 0.1 * components[2]) {
+				cull = true;
+			}
+
+			if (Math.abs(poses.get(i).getRotation().getX() - components[3]) > 0.1 * components[3]) {
+				cull = true;
+			}
+
+			if (Math.abs(poses.get(i).getRotation().getY() - components[4]) > 0.1 * components[4]) {
+				cull = true;
+			}
+
+			if (Math.abs(poses.get(i).getRotation().getZ() - components[5]) > 0.1 * components[5]) {
+				cull = true;
+			}
+
+			if (cull) {
+				poses.remove(i);
+			}
+		}
+
+		// Get more accurate average without outliers
+		return PoseUtils.getAveragePose(poses);
+	}
+
 	public void periodic() {
 		var results = m_camera.getAllUnreadResults();
+
+		Pose3d estimatedPose = getPose(results, Angle.ofBaseUnits(0, Radians));
+		estimatedPoseTopic.set(estimatedPose);
 
 		for (var result : results) {
 			if (result.hasTargets()) {

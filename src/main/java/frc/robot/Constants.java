@@ -17,6 +17,8 @@ public class Constants {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
 			public static final Set<Integer> kTrackableTags = Set.of(8, 24, 10, 26, 11, 27);
+			public static final double cameraDist = 0; // TODO: Find camera distance from center of turret in meters
+			public static final double cameraHeight = 0; // TODO: Find camera height from drivetrain in meters
 
 		}
 
