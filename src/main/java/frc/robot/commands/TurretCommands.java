@@ -9,6 +9,20 @@ import frc.robot.subsystems.Vision;
 
 public class TurretCommands {
 
+	public static Command getTurnToAngleCommand(double angle) {
+		return AngularPositionCommands.RunToAngleHardware(
+				Turret.getTurret(), angle,
+				Turret.getConstants().tolerance());
+	}
+
+	public static Command getSetAngleCommand(double angle) {
+		return new AngularPositionCommands.SetAngleHardware(Turret.getTurret(), angle);
+	}
+
+	public static Command getSettleAngleCommand() {
+		return new AngularPositionCommands.SettleAngle(Turret.getTurret(), Turret.getConstants().tolerance());
+	}
+
 	public static class TurretAimAtTag extends Command {
 		private final Vision m_vision;
 
@@ -29,7 +43,7 @@ public class TurretCommands {
 			double currentTurretAngle = Turret.getTurret().getPosition();
 			double newTurretAngle = currentTurretAngle + rotationNeeded;
 
-			Turret.getTurret().setAngle(newTurretAngle);
+			Turret.getTurret().moveToAngle(newTurretAngle);
 		}
 
 		// Called once the command ends or is interrupted.

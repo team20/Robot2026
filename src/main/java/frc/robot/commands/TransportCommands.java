@@ -2,14 +2,12 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.subsystems.Agitator;
 
 public class TransportCommands {
 	public static Command getTimedShoot(double time) {
-		return Commands.parallel(
-				new RunAgitatorAtPowerAndTime(AgitatorConstants.kTeleopPower, time));
+		return new RunAgitatorAtPowerAndTime(AgitatorConstants.kTeleopPower, time);
 	}
 
 	public static class RunAgitatorAtPowerAndTime extends Command {
@@ -28,7 +26,7 @@ public class TransportCommands {
 		// Called when the command is initially scheduled.
 		@Override
 		public void initialize() {
-			m_timer.start();
+			m_timer.restart();
 			Agitator.setPower(m_power);
 		}
 

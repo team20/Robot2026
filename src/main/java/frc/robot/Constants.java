@@ -57,6 +57,7 @@ public class Constants {
 			public static final int kCurrent = 25;
 			public static final double kMinAngle = 99;
 			public static final double kMaxAngle = 137;
+			public static final double kDownPosition = kMinAngle + 1;
 		}
 
 		public static final class ShooterConstants {
@@ -67,6 +68,7 @@ public class Constants {
 			public static final int kDefaultRPM = 2000;
 			public static final double kRampRate = 10;
 			public static final double kRPMRamp = 250;
+			public static final double kTolerance = 200;
 		}
 
 		public static final class IntakeConstants {

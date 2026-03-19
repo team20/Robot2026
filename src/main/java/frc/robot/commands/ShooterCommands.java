@@ -41,6 +41,62 @@ public class ShooterCommands {
 		}
 	}
 
+	public static class SetRPM extends Command {
+		private double m_rpm;
+
+		/** Creates a new runShooter. */
+		public SetRPM(double rpm) {
+			m_rpm = rpm;
+			setName("Set Shooter RPM");
+			addRequirements(Shooter.getShooter());
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void initialize() {
+			Shooter.setRPM(m_rpm);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
+
+	public static class SettleRPM extends Command {
+
+		/** Creates a new runShooter. */
+		public SettleRPM() {
+			setName("Settle Shooter RPM");
+			addRequirements(Shooter.getShooter());
+		}
+
+		// Called every time the scheduler runs while the command is scheduled.
+		@Override
+		public void initialize() {
+
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			return Shooter.getShooter().isSettled(ShooterConstants.kTolerance);
+		}
+	}
+
 	public static class RunAtPower extends Command {
 		private final double m_power;
 		private final double m_time;

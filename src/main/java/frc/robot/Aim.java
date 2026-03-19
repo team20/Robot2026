@@ -2,22 +2,12 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.AngularPositionCommands;
-import frc.robot.commands.ShooterCommands;
-import frc.robot.subsystems.Hood;
 
 public abstract class Aim {
 
 	public abstract double getShooterVelocity(double distance);
 
 	public abstract double getHoodAngle(double distance);
-
-	public Command getAimCommand(double distance) {
-		double[] angleAndRPM = { getHoodAngle(distance), getShooterVelocity(distance) };
-		return Commands.parallel(
-				new ShooterCommands.RunAtDynamicRPM(angleAndRPM[1]),
-				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), angleAndRPM[0], Hood.getConstants()));
-	}
 
 	public static class Regression extends Aim {
 		private static final double s_velocityA = 0;

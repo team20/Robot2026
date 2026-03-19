@@ -5,78 +5,77 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.subsystems.AngularPositionSubsystem;
-import frc.robot.subsystems.Vision;
 
 public class AngularPositionCommands {
 
-	public static class RunToAngleHardware extends Command {
+	public static Command RunToAngleHardware(AngularPositionSubsystem subsystem, double angle, double tolerance) {
+		return new SequentialCommandGroup(
+				new SetAngleHardware(subsystem, angle),
+				new SettleAngle(subsystem, tolerance));
+	}
+
+	public static class SetAngleHardware extends Command {
 		private final AngularPositionSubsystem m_subsystem;
-		private final ClampedPConstants m_constants;
 		private final double m_angle;
 
-		public RunToAngleHardware(AngularPositionSubsystem subsystem, double angle, ClampedPConstants constants) {
+		public SetAngleHardware(AngularPositionSubsystem subsystem, double angle) {
 			m_subsystem = subsystem;
 			m_angle = angle;
-			m_constants = constants;
-			setName(String.format("Run %s To Angle Using Motor Controller", m_subsystem.getName()));
+			setName(String.format("Set %s Angle Using Motor Controller", m_subsystem.getName()));
 			addRequirements(m_subsystem);
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			m_subsystem.setAngle(m_angle);
+			m_subsystem.moveToAngle(m_angle);
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_subsystem.stop();
+			// Don't stop motor
 		}
 
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) < m_constants.tolerance();
+			return true;
 		}
 	}
 
-	public static class TurretAimAtTag extends Command {
+	public static class SettleAngle extends Command {
 		private final AngularPositionSubsystem m_subsystem;
-		private final Vision m_vision;
-		private final ClampedPConstants m_constants;
-		private final double m_angle;
+		private final double m_tolerance;
 
-		public TurretAimAtTag(AngularPositionSubsystem subsystem, Vision vision, double angle,
-				ClampedPConstants constants) {
+		public SettleAngle(AngularPositionSubsystem subsystem, double tolerance) {
 			m_subsystem = subsystem;
-			m_vision = vision;
-			m_angle = angle;
-			m_constants = constants;
-			setName(String.format("Turret Aim At Tag", m_subsystem.getName()));
-			addRequirements(m_subsystem, vision);
+			m_tolerance = tolerance;
+			setName(String.format("Settle %s Angle", m_subsystem.getName()));
+			addRequirements(m_subsystem);
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			m_subsystem.setAngle(m_angle);
+
 		}
 
 		// Called once the command ends or is interrupted.
 		@Override
 		public void end(boolean interrupted) {
-			m_subsystem.stop();
+
 		}
 
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) < m_constants.tolerance();
+			return m_subsystem.isSettled(m_tolerance);
 		}
 	}
 

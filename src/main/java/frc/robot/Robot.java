@@ -20,6 +20,7 @@ import frc.robot.commands.AimCommands;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TransportCommands;
@@ -113,8 +114,9 @@ public class Robot extends TimedRobot {
 							.2, /* POWER */
 							0)); /* TIME */
 			m_driverController.cross().whileTrue(
-					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
+					HoodCommands.getHoodDownCommand()
+							// Overrides all conflicting commands
+							.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
@@ -238,9 +240,6 @@ public class Robot extends TimedRobot {
 				new AngularPositionCommands.RunAtPower(Hood.getHood(),
 						.2, /* POWER */
 						0)); /* TIME */
-
-		m_operatorController.touchpad()
-				.onTrue(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 0, Hood.getConstants()));
 
 		{ // climber test bindings
 			m_driverController.triangle().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
