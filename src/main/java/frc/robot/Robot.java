@@ -20,6 +20,7 @@ import frc.robot.commands.AimCommands;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.commands.TransportCommands;
@@ -114,21 +115,17 @@ public class Robot extends TimedRobot {
 							.2, /* POWER */
 							0)); /* TIME */
 			m_driverController.cross().whileTrue(
-					new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-							Hood.getConstants()).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
+					HoodCommands.getHoodDownCommand()
+							// Overrides all conflicting commands
+							.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
 		}
 
 		{ // Intake bindings
 			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm
-					Commands.sequence(
-							Commands.sequence(
-									IntakeCommands.getOutCommand(),
-									new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+					IntakeCommands.getArmOutCombinedCommand());
 			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
-					Commands.sequence(
-							new IntakeCommands.StopIntake(),
-							new TransportCommands.StopAgitator(),
-							IntakeCommands.getInCommand()));// Retracts arm and stops power TODO: tune position
+					IntakeCommands.getArmInCombinedCommand());// Retracts arm and stops power TODO: tune position
+
 			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
 			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
 		}
@@ -244,9 +241,6 @@ public class Robot extends TimedRobot {
 				new AngularPositionCommands.RunAtPower(Hood.getHood(),
 						.2, /* POWER */
 						0)); /* TIME */
-
-		m_operatorController.touchpad()
-				.onTrue(new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 0, Hood.getConstants()));
 
 		{ // climber test bindings
 			m_driverController.triangle().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));

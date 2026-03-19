@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
@@ -41,9 +42,9 @@ public class AimCommands {
 
 			m_distance = m_vision.getDistanceToHub();
 
-			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Hood.getHood().moveToAngle(m_aim.getHoodAngle(m_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
-			Turret.getTurret().setAngle(newTurretAngle);
+			Turret.getTurret().moveToAngle(newTurretAngle);
 
 			SmartDashboard.putNumber("Aim Distance", m_distance);
 		}
@@ -52,6 +53,27 @@ public class AimCommands {
 		public boolean isFinished() {
 			return true;
 		}
+	}
+
+	public static Command getAimCommand(double distance) {
+		return new SequentialCommandGroup(getSetAimCommand(distance), getSettleAimCommand());
+	}
+
+	/**
+	 * Returns instantly, need to settle afterwards.
+	 * 
+	 * @param distance
+	 * @return
+	 */
+	public static Command getSetAimCommand(double distance) {
+		Aim aim = new Aim.Linear();
+		return new SequentialCommandGroup(
+				HoodCommands.getTurnToAngleCommand(aim.getHoodAngle(distance)),
+				new ShooterCommands.SetRPM(aim.getShooterVelocity(distance)));
+	}
+
+	public static Command getSettleAimCommand() {
+		return new SequentialCommandGroup(HoodCommands.getSettleAngleCommand(), new ShooterCommands.SettleRPM());
 	}
 
 	public static class AdjustAim extends Command {
@@ -91,7 +113,7 @@ public class AimCommands {
 			SmartDashboard.putNumber("Aim Distance", s_distance);
 			// ShooterState state = m_aim.getShooterState(s_distance, 0);
 
-			Hood.getHood().setAngle(m_aim.getHoodAngle(s_distance));
+			Hood.getHood().moveToAngle(m_aim.getHoodAngle(s_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(s_distance));
 			// Clearly doable
 		}
@@ -135,7 +157,7 @@ public class AimCommands {
 
 		@Override
 		public void execute() {
-			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Hood.getHood().moveToAngle(m_aim.getHoodAngle(m_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 
@@ -197,7 +219,7 @@ public class AimCommands {
 					m_distance = m_distances[i];
 				}
 			}
-			Hood.getHood().setAngle(m_aim.getHoodAngle(m_distance));
+			Hood.getHood().moveToAngle(m_aim.getHoodAngle(m_distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
 		}
 

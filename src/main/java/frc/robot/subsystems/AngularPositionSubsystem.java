@@ -30,6 +30,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	private final double m_maxDutyCycle;
 	private final SparkAbsoluteEncoder m_encoder;
 	private final SparkClosedLoopController m_controller;
+	private double m_setpoint;
 
 	public AngularPositionSubsystem(int id, String name,
 			double kP, double kI,
@@ -58,22 +59,28 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		SmartDashboard.putNumber("Aim Distance", 0);
 	}
 
-	public void setAngle(double angle) {
-		// if (angle < m_minAngle || angle > m_maxAngle) {
-		// return;
-		// }
+	public void moveToAngle(double angle) {
+		setSetpoint(angle);
+		m_controller.setSetpoint(m_setpoint, ControlType.kPosition);
+	}
 
-		if (angle < m_minAngle) {
-			angle = m_minAngle;
-		} else if (angle > m_maxAngle) {
-			angle = m_maxAngle;
+	public void setSetpoint(double setpoint) {
+		if (setpoint < m_minAngle) {
+			setpoint = m_minAngle;
+		} else if (setpoint > m_maxAngle) {
+			setpoint = m_maxAngle;
 		}
+
 		m_dutyCycle = 0;
-		m_controller.setSetpoint(angle, ControlType.kPosition);
+		m_setpoint = setpoint;
 	}
 
 	public double getSetpoint() {
-		return m_controller.getSetpoint();
+		return m_setpoint;
+	}
+
+	public boolean isSettled(double tolerance) {
+		return Math.abs(getPosition() - m_setpoint) <= tolerance;
 	}
 
 	public double getPosition() {

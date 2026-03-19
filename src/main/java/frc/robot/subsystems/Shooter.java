@@ -17,6 +17,7 @@ public class Shooter extends SubsystemBase {
 
 	private final TalonFX m_motor = new TalonFX(ShooterConstants.kFlywheelPort);
 	private final VelocityVoltage m_request = new VelocityVoltage(0);
+	private double m_setpointRPM;
 
 	public Shooter() {
 		TalonFXConfiguration config = new TalonFXConfiguration();
@@ -54,13 +55,22 @@ public class Shooter extends SubsystemBase {
 		s_theShooter.m_motor.setVoltage(voltage);
 	}
 
+	public static void setSetpointRPM(double setpointRPM) {
+		s_theShooter.m_setpointRPM = setpointRPM;
+	}
+
 	public static void setRPM(double rpm) {
+		setSetpointRPM(rpm);
 		double voltage = rpm / getRPMperVolt();
 		s_theShooter.m_motor.setControl(s_theShooter.m_request.withVelocity(RPM.of(rpm)).withFeedForward(voltage));
 	}
 
 	public static double getRPM() {
 		return s_theShooter.m_motor.getVelocity().getValue().in(RPM);
+	}
+
+	public boolean isSettled(double tolerance) {
+		return Math.abs(getRPM() - s_theShooter.m_setpointRPM) <= tolerance;
 	}
 
 	public static double getRPMperVolt() {
