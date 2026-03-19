@@ -119,14 +119,10 @@ public class Robot extends TimedRobot {
 
 		{ // Intake bindings
 			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm
-					Commands.parallel(
-							IntakeCommands.getOutCommand(),
-							new IntakeCommands.Spintake(IntakeConstants.kWheelPower)));
+					IntakeCommands.getArmOutCombinedCommand());
 			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
-					Commands.sequence(
-							new IntakeCommands.StopIntake(),
-							new TransportCommands.StopAgitator(),
-							IntakeCommands.getInCommand()));// Retracts arm and stops power TODO: tune position
+					IntakeCommands.getArmInCombinedCommand());// Retracts arm and stops power TODO: tune position
+
 			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
 			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
 		}

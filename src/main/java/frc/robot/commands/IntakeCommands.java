@@ -108,7 +108,7 @@ public class IntakeCommands {
 		}
 	}
 
-	public static Command getOutCommand() {
+	public static Command getArmOutCommand() {
 		// return new
 		// PositionControlCommands.RunToPositionHardware(IntakeArm.getIntakeArm(),
 		// IntakeConstants.kOutPosition,
@@ -117,6 +117,19 @@ public class IntakeCommands {
 				IntakeConstants.kOutPosition,
 				0.1, 1.0,
 				15, .125, false).withTimeout(2);
+	}
+
+	public static Command getArmOutCombinedCommand() {
+		return Commands.parallel(
+				getArmOutCommand(),
+				new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
+	}
+
+	public static Command getArmInCombinedCommand() {
+		return Commands.sequence(
+				new IntakeCommands.StopIntake(),
+				new TransportCommands.StopAgitator(),
+				IntakeCommands.getInCommand());
 	}
 
 	public static Command getInCommand() {
