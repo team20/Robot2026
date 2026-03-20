@@ -39,6 +39,10 @@ public class Vision extends SubsystemBase {
 		return s_vision;
 	}
 
+	public static PhotonCamera getCamera() {
+		return s_vision.m_camera;
+	}
+
 	public Pose3d getPose(List<PhotonPipelineResult> results) {
 		List<Pose3d> poses = new ArrayList<Pose3d>();
 

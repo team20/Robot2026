@@ -208,6 +208,11 @@ public class Drive extends SubsystemBase {
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
 	}
 
+	public static ChassisSpeeds getChassisSpeeds() {
+		return s_theDrive.m_kinematics
+				.toChassisSpeeds(doModuleX(SwerveModule::getModuleState, SwerveModuleState[]::new));
+	}
+
 	public static void toggleCoastMode() {
 		setCoastMode(switch (s_theDrive.coastMode) {
 			case Coast -> NeutralModeValue.Brake;
