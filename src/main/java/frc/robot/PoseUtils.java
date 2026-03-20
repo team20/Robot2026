@@ -95,7 +95,7 @@ public class PoseUtils {
 		double xStdDev = findStdDevOfData(index -> data.get(index * 4), targets, x);
 		double yStdDev = findStdDevOfData(index -> data.get(index * 4 + 1), targets, y);
 		double sinStdDev = findStdDevOfData(index -> data.get(index * 4 + 2), targets, sin);
-		double cosStdDev = findStdDevOfData(index -> data.get(index * 4 + 3), targets, sin);
+		double cosStdDev = findStdDevOfData(index -> data.get(index * 4 + 3), targets, cos);
 		return Optional.of(new PoseResult(pose, xStdDev, yStdDev, Math.hypot(sinStdDev, cosStdDev)));
 	}
 
