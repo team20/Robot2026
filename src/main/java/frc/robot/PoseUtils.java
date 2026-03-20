@@ -2,8 +2,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntToDoubleFunction;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
@@ -23,6 +25,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.subsystems.Turret;
@@ -34,7 +38,7 @@ public class PoseUtils {
 	public record AimResult(double setpoint, double feedforward) {
 	}
 
-	private static AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+	private static AprilTagFieldLayout s_layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
 	/**
 	 * Method to get the estimated pose from a PhotonPipelineResult using
@@ -48,7 +52,7 @@ public class PoseUtils {
 	public static Pose3d EstimatePoseFromPipelineResult(PhotonPipelineResult result) {
 		Transform2d cameraOffsetFromFrame = getCameraOffsetFromFrame();
 		PhotonPoseEstimator estimator = new PhotonPoseEstimator(
-				layout,
+				s_layout,
 				new Transform3d(cameraOffsetFromFrame.getX(), cameraOffsetFromFrame.getY(),
 						TurretConstants.Geometry.kTurretHeightFromFloor,
 						new Rotation3d(cameraOffsetFromFrame.getRotation())));
@@ -66,14 +70,122 @@ public class PoseUtils {
 		return estimatedPose.get().estimatedPose;
 	}
 
+	/**
+	 * Estimate the pose of the robot, including the standard deviations for each
+	 * component of the pose. This hopefully may be more reliable than other methods
+	 * if we want to implement a cutoff which ignores low quality data with high
+	 * standard deviations.
+	 * 
+	 * @param result a {@code PhotonPiplineResult} which has the latest target data
+	 * @return a {@code PoseResult} which contains the {@code Pose2d} of the robot
+	 *         and the standard deviations
+	 */
 	public static PoseResult estimatePoseWithStdDev(PhotonPipelineResult result) {
 		Transform2d cameraOffsetFromFrame = getCameraOffsetFromFrame();
-
-		for (PhotonTrackedTarget target : result.targets) {
-
+		int maxResults = result.getTargets().size();
+		List<Double> data = new ArrayList<>(maxResults * 3);
+		for (PhotonTrackedTarget target : result.getTargets()) {
+			s_layout.getTagPose(target.getFiducialId()).ifPresent(pose -> {
+				Pose2d camera = pose.transformBy(target.getBestCameraToTarget().inverse()).toPose2d();
+				Pose2d frame = camera.transformBy(cameraOffsetFromFrame.inverse());
+				data.add(frame.getX());
+				data.add(frame.getY());
+				data.add(frame.getRotation().getDegrees());
+			});
 		}
+		int targets = data.size() / 3;
+		double x = findCenterOfData(index -> data.get(index * 3), targets);
+		double y = findCenterOfData(index -> data.get(index * 3 + 1), targets);
+		double theta = findCenterOfData(index -> data.get(index * 3 + 2), targets);
+		Pose2d pose = new Pose2d(x, y, Rotation2d.fromDegrees(theta));
+		double xStdDev = findStdDevOfData(index -> data.get(index * 3), targets, x);
+		double yStdDev = findStdDevOfData(index -> data.get(index * 3 + 1), targets, y);
+		double thetaStdDev = findStdDevOfData(index -> data.get(index * 3 + 2), targets, theta);
+		return new PoseResult(pose, xStdDev, yStdDev, thetaStdDev);
+	}
 
-		return new PoseResult(Pose2d.kZero, 0, 0, 0);
+	/**
+	 * Finds the standard deviation of a set of data. This function actually
+	 * computes the average absolute deviation, but they are essentially the same
+	 * for our purposes and standard deviation doesn't work well when there are many
+	 * outliers.
+	 * 
+	 * @param data a way to get the data
+	 * @param size how many data points you have
+	 * @param center the center of the data
+	 * @return the standard deviation of the data
+	 */
+	public static double findStdDevOfData(IntToDoubleFunction data, int size, double center) {
+		double deviation = 0;
+		for (int i = 0; i < size; i++) {
+			deviation += Math.abs(data.applyAsDouble(i) - center);
+		}
+		return deviation / size * Math.sqrt(Math.PI / 2);
+	}
+
+	/**
+	 * Finds the center of a set of data. Internally this function uses a
+	 * bisection algorithm to find the best center.
+	 * 
+	 * @param data a way to get the data
+	 * @param size how many data points you have
+	 * @return the best center of the data
+	 */
+	public static double findCenterOfData(IntToDoubleFunction data, int size) {
+		return findCenterOfData(data, size, 5);
+	}
+
+	/**
+	 * Finds the center of a set of data. It has a data-independent tunable
+	 * parameter called {@code outlierRejectionAbility} which determines whether the
+	 * center is closer to the mean or the median. Internally this function uses a
+	 * bisection algorithm to find the best center.
+	 * 
+	 * @param data a way to get the data
+	 * @param size how many data points you have
+	 * @param outlierRejectionAbility a parameter to tune what types of centers are
+	 *        favored
+	 * @return the best center of the data
+	 */
+	public static double findCenterOfData(IntToDoubleFunction data, int size, double outlierRejectionAbility) {
+		double min = data.applyAsDouble(0), max = min;
+		for (int i = 1; i < size; i++) {
+			double point = data.applyAsDouble(i);
+			max = Math.max(max, point);
+			min = Math.min(min, point);
+		}
+		double k = Math.exp(-outlierRejectionAbility) * (max - min);
+		double high = max, low = min, loss;
+		do {
+			double bisector = (low + high) / 2;
+			loss = loss(data, size, bisector, k);
+			if (loss < 0) {
+				low = bisector;
+			} else {
+				high = bisector;
+			}
+		} while (Math.abs(loss) > 0.01);
+		return (low + high) / 2;
+	}
+
+	/**
+	 * Calculates how good of a center the chosen center is for a given set of data.
+	 * When k is increased, the function favors the median. When k is decreased, the
+	 * function favors the mean.
+	 * 
+	 * @param data a way to get the data
+	 * @param size how many data points you have
+	 * @param center a proposed center for the data
+	 * @param k a parameter to tune what types of centers are favored
+	 * @return how good the center is
+	 */
+	private static double loss(IntToDoubleFunction data, int size, double center, double k) {
+		double total = 0;
+		for (int i = 0; i < size; i++) {
+			double difference = center - data.applyAsDouble(i);
+			total += difference / Math.hypot(difference, k);
+		}
+		return total;
 	}
 
 	/**
@@ -157,8 +269,9 @@ public class PoseUtils {
 	 * continually face the hub during a "shooting-while-driving" maneuver. You will
 	 * need to know where the robot is, where it is moving to, and what it is trying
 	 * to aim at. A feedforward model of the turret (don't have this fully figured
-	 * out yet) will be
-	 * neccessary to do anything with this result.
+	 * out yet) will be neccessary to do anything with this result. Be sure to note
+	 * that the {@code ChassisSpeeds} have been modified to contain power instead of
+	 * velocity.
 	 * 
 	 * @param goalPose the {@code Pose2d} of the target to aim at
 	 * @param robotPose the {@code Pose2d} of the robot
@@ -166,8 +279,18 @@ public class PoseUtils {
 	 * @return angular velocity for the turret
 	 */
 	public static AngularVelocity getTurretAngularVelocity(Pose2d goalPose, Pose2d robotPose, ChassisSpeeds speeds) {
-		Pose2d turretPose = getTurretPose(robotPose);
-
+		Translation2d turretLocation = getTurretPose(robotPose).getTranslation();
+		Translation2d turretTranslation = turretLocation.minus(robotPose.getTranslation());
+		double rpmPerPower = RobotController.getBatteryVoltage() * 60 / DriveConstants.kV;
+		double metersPerSecondPerPower = DriveConstants.kMetersPerMotorRotation * rpmPerPower / 60;
+		double radiansPerSecondPerPower = metersPerSecondPerPower
+				/ Math.hypot(DriveConstants.kModuleDistFromCenter, DriveConstants.kModuleDistFromCenter);
+		double dTheta = speeds.omegaRadiansPerSecond * radiansPerSecondPerPower;
+		double turretDX = speeds.vxMetersPerSecond * metersPerSecondPerPower - dTheta * turretTranslation.getY();
+		double turretDY = speeds.vyMetersPerSecond * metersPerSecondPerPower + dTheta * turretTranslation.getX();
+		Translation2d goalTranslation = goalPose.getTranslation().minus(turretLocation);
+		dTheta += goalTranslation.cross(new Translation2d(turretDX, turretDY)) / goalTranslation.getSquaredNorm();
+		return RadiansPerSecond.of(-dTheta);
 	}
 
 	/**

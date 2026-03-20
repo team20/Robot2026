@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +12,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.VisionConstants;
@@ -42,12 +39,12 @@ public class Vision extends SubsystemBase {
 		return s_vision;
 	}
 
-	public Pose3d getPose(List<PhotonPipelineResult> results, Angle turretAngle) {
+	public Pose3d getPose(List<PhotonPipelineResult> results) {
 		List<Pose3d> poses = new ArrayList<Pose3d>();
 
 		// Estimate pose for each pipeline result
 		for (PhotonPipelineResult result : results) {
-			poses.add(PoseUtils.EstimatePoseFromPipelineResult(result, turretAngle));
+			poses.add(PoseUtils.EstimatePoseFromPipelineResult(result));
 		}
 
 		// Get initial average of each pose component (x, y, and z)
@@ -101,7 +98,7 @@ public class Vision extends SubsystemBase {
 	public void periodic() {
 		var results = m_camera.getAllUnreadResults();
 
-		Pose3d estimatedPose = getPose(results, Angle.ofBaseUnits(0, Radians));
+		Pose3d estimatedPose = getPose(results);
 		estimatedPoseTopic.set(estimatedPose);
 
 		for (var result : results) {
