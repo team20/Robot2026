@@ -76,8 +76,8 @@ public class Constants {
 			public static final int kIntakeArmPort = 53;
 			public static final double kArmConversionFactor = 0.01;
 
-			public static final int kWheelSmartCurrentLimit = 10;
-			public static final int kWheelSecondaryCurrentLimit = 20;
+			public static final int kWheelSmartCurrentLimit = 20;
+			public static final int kWheelSecondaryCurrentLimit = 30;
 			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;

@@ -4,7 +4,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.AimCommands;
+import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
@@ -38,8 +40,7 @@ public class AutoComposer {
 				new AdjustAim(true, 11.6, m_robot).withTimeout(.5),
 				new WaitCommand(3), // test changing to 2
 				TransportCommands.getTimedShoot(6),
-				new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
-						Hood.getConstants())).withName("Right one shoot auto");
+				HoodCommands.getHoodDownCommand()).withName("Right one shoot auto");
 	}
 
 	public Command getRightOneShootAuto() {
