@@ -163,7 +163,7 @@ public class Drive extends SubsystemBase {
 		}
 		if (!isRobotRelative)
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
-		speeds = ChassisSpeeds.discretize(speeds, 0.03);
+		speeds = ChassisSpeeds.discretize(speeds, 0.02);
 		SwerveModuleState[] states = s_theDrive.m_kinematics.toSwerveModuleStates(speeds);
 		SwerveDriveKinematics.desaturateWheelSpeeds(states, 1);
 		Double[] moduleAngles = doModuleX(SwerveModule::getModuleAngle, Double[]::new);

@@ -12,8 +12,7 @@ public class Turret extends AngularPositionSubsystem {
 	private Turret() {
 		super(TurretConstants.kTurretPort, "Turret", TurretConstants.kP, TurretConstants.kI, TurretConstants.kCurrent,
 				TurretConstants.kSmartCurrent, TurretConstants.kMinAngle, TurretConstants.kMaxAngle,
-				TurretConstants.kPositionConversionFactor, TurretConstants.kMaxDutyCycle, TurretConstants.kMotorInvert,
-				TurretConstants.kEncoderInvert);
+				TurretConstants.kMaxDutyCycle, TurretConstants.kMotorInvert, TurretConstants.kEncoderInvert);
 	}
 
 	public static void create() {

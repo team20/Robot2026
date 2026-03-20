@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -17,30 +19,47 @@ public class Constants {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
 			public static final Set<Integer> kTrackableTags = Set.of(8, 24, 10, 26, 11, 27);
-			public static final double cameraDist = 0; // TODO: Find camera distance from center of turret in meters
-			public static final double cameraHeight = 0; // TODO: Find camera height from drivetrain in meters
-
+			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.kZero);
+			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.kZero);
 		}
 
 		public static final class TurretConstants {
-			public static final boolean kMotorInvert = false; // Positive power must increase the angle
-			public static final boolean kEncoderInvert = true;
-			public static final int kTurretPort = 50;
-			public static final double kMaxDutyCycle = 1; // extra limit for test safety
-			public static final double kMinPower = 0.025;
-			public static final double kMaxPower = kMaxDutyCycle;
-			public static final double kMaxErr = 25;
-			public static final double kTolerance = 1.5;
-			public static final double kP = 0.012;
-			public static final double kI = 0.0000;
-			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
-			public static final double kSmallDeadzone = 0.05;
-			public static final int kSmartCurrent = 25;
-			public static final int kCurrent = 30;
-			public static final double kMinAngle = 22; // B
-			public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
-			public static final double kPositionConversionFactor = 1; // 7.0 / 6
-			public static final double kStraightAheadAngle = 90; // 105
+			public static final class Motor {
+				public static final boolean kMotorInvert = false; // Positive power must increase the angle
+				public static final boolean kEncoderInvert = true;
+				public static final int kTurretPort = 50;
+				public static final double kMaxDutyCycle = 1; // extra limit for test safety
+				public static final double kMinPower = 0.025;
+				public static final int kSmartCurrent = 25;
+				public static final int kCurrent = 30;
+			}
+
+			public static final class Control {
+				public static final double kMaxPower = Motor.kMaxDutyCycle;
+				public static final double kMaxErr = 25;
+				public static final double kTolerance = 1.5;
+				public static final double kP = 0.012;
+				public static final double kI = 0.0000;
+				public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
+				public static final double kSmallDeadzone = 0.05;
+			}
+
+			public static final class Feedforward {
+				public static final double kFrictionPower = 0.05; // TODO: Actually determine the real number
+				public static final double kRPMPerPower = 11000; // TODO: Actually determine the real number
+				public static final double kGearRatio = 42; // TODO: Actually determine the real number
+				public static final double kRPMDeadzone = 1; // TODO: Actually determine the real number
+			}
+
+			public static final class Geometry {
+				public static final double kMinAngle = 22; // B
+				public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
+				public static final double kPositionConversionFactor = 7.0 / 6; // 7.0 / 6
+				public static final double kStraightAheadAngle = 90; // 105
+				public static final double kCameraOffsetFromTurret = 0; // TODO: Actually determine the real number
+				public static final double kTurretOffsetFromFrame = 0; // TODO: Actually determine the real number
+				public static final double kTurretHeightFromFloor = Units.inchesToMeters(20.125);
+			}
 		}
 
 		public static final class HoodConstants {
@@ -76,8 +95,8 @@ public class Constants {
 			public static final int kIntakeArmPort = 53;
 			public static final double kArmConversionFactor = 0.01;
 
-			public static final int kWheelSmartCurrentLimit = 10;
-			public static final int kWheelSecondaryCurrentLimit = 20;
+			public static final int kWheelSmartCurrentLimit = 20;
+			public static final int kWheelSecondaryCurrentLimit = 30;
 			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;
@@ -148,15 +167,15 @@ public class Constants {
 		public static final double kV = 0.12;
 		public static final double kA = 0.009;
 
-		public static final double kDriveGearRatio = 6.75;
-		public static final double kSteerGearRatio = 150.0 / 7; // TODO: Change value for 5i's
+		public static final double kDriveGearRatio = 6.03;
+		public static final double kSteerGearRatio = 26; // TODO: Change value for 5i's
 		public static final double kWheelDiameter = Units.inchesToMeters(4);
 		public static final double kWheelCircumference = Math.PI * kWheelDiameter;
 
 		public static final double kMetersPerMotorRotation = kWheelCircumference / kDriveGearRatio;
 
 		// https://docs.wpilib.org/en/latest/docs/software/basic-programming/coordinate-system.html
-		public static final double kModuleDistFromCenter = Units.inchesToMeters(14.5); // Width/2
+		public static final double kModuleDistFromCenter = Units.inchesToMeters(10.875); // Width/2
 		public static final Translation2d kFrontLeftLocation = new Translation2d(kModuleDistFromCenter,
 				kModuleDistFromCenter);
 		public static final Translation2d kFrontRightLocation = new Translation2d(kModuleDistFromCenter,
