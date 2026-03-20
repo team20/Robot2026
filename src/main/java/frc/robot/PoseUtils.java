@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.IntToDoubleFunction;
 
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -49,7 +48,7 @@ public class PoseUtils {
 	 *        robot translation)
 	 * @return Estimated Pose3d
 	 */
-	public static Pose3d EstimatePoseFromPipelineResult(PhotonPipelineResult result) {
+	public static Optional<Pose3d> estimatePoseFromPipelineResult(PhotonPipelineResult result) {
 		Transform2d cameraOffsetFromFrame = getCameraOffsetFromFrame();
 		PhotonPoseEstimator estimator = new PhotonPoseEstimator(
 				s_layout,
@@ -57,17 +56,7 @@ public class PoseUtils {
 						TurretConstants.Geometry.kTurretHeightFromFloor,
 						new Rotation3d(cameraOffsetFromFrame.getRotation())));
 
-		Optional<EstimatedRobotPose> estimatedPose = estimator.estimateCoprocMultiTagPose(result);
-
-		if (estimatedPose.isEmpty()) {
-			estimatedPose = estimator.estimateLowestAmbiguityPose(result);
-		}
-
-		if (estimatedPose.isEmpty()) {
-			return null;
-		}
-
-		return estimatedPose.get().estimatedPose;
+		return estimator.estimateCoprocMultiTagPose(result).map(estimate -> estimate.estimatedPose);
 	}
 
 	/**
@@ -80,28 +69,34 @@ public class PoseUtils {
 	 * @return a {@code PoseResult} which contains the {@code Pose2d} of the robot
 	 *         and the standard deviations
 	 */
-	public static PoseResult estimatePoseWithStdDev(PhotonPipelineResult result) {
+	public static Optional<PoseResult> estimatePoseWithStdDev(PhotonPipelineResult result) {
 		Transform2d cameraOffsetFromFrame = getCameraOffsetFromFrame();
 		int maxResults = result.getTargets().size();
-		List<Double> data = new ArrayList<>(maxResults * 3);
+		List<Double> data = new ArrayList<>(maxResults * 4);
 		for (PhotonTrackedTarget target : result.getTargets()) {
 			s_layout.getTagPose(target.getFiducialId()).ifPresent(pose -> {
 				Pose2d camera = pose.transformBy(target.getBestCameraToTarget().inverse()).toPose2d();
 				Pose2d frame = camera.transformBy(cameraOffsetFromFrame.inverse());
 				data.add(frame.getX());
 				data.add(frame.getY());
-				data.add(frame.getRotation().getDegrees());
+				data.add(frame.getRotation().getSin());
+				data.add(frame.getRotation().getCos());
 			});
 		}
-		int targets = data.size() / 3;
-		double x = findCenterOfData(index -> data.get(index * 3), targets);
-		double y = findCenterOfData(index -> data.get(index * 3 + 1), targets);
-		double theta = findCenterOfData(index -> data.get(index * 3 + 2), targets);
-		Pose2d pose = new Pose2d(x, y, Rotation2d.fromDegrees(theta));
-		double xStdDev = findStdDevOfData(index -> data.get(index * 3), targets, x);
-		double yStdDev = findStdDevOfData(index -> data.get(index * 3 + 1), targets, y);
-		double thetaStdDev = findStdDevOfData(index -> data.get(index * 3 + 2), targets, theta);
-		return new PoseResult(pose, xStdDev, yStdDev, thetaStdDev);
+		int targets = data.size() / 4;
+		if (targets == 0) {
+			return Optional.empty();
+		}
+		double x = findCenterOfData(index -> data.get(index * 4), targets);
+		double y = findCenterOfData(index -> data.get(index * 4 + 1), targets);
+		double sin = findCenterOfData(index -> data.get(index * 4 + 2), targets);
+		double cos = findCenterOfData(index -> data.get(index * 4 + 3), targets);
+		Pose2d pose = new Pose2d(x, y, Rotation2d.fromRadians(Math.atan2(sin, cos)));
+		double xStdDev = findStdDevOfData(index -> data.get(index * 4), targets, x);
+		double yStdDev = findStdDevOfData(index -> data.get(index * 4 + 1), targets, y);
+		double sinStdDev = findStdDevOfData(index -> data.get(index * 4 + 2), targets, sin);
+		double cosStdDev = findStdDevOfData(index -> data.get(index * 4 + 3), targets, sin);
+		return Optional.of(new PoseResult(pose, xStdDev, yStdDev, Math.hypot(sinStdDev, cosStdDev)));
 	}
 
 	/**
@@ -205,7 +200,7 @@ public class PoseUtils {
 				0.0);
 		Translation2d turretOffsetFromFrame = new Translation2d(TurretConstants.Geometry.kTurretOffsetFromFrame, 0.0);
 		cameraOffsetFromFrame = cameraOffsetFromFrame.rotateAround(turretOffsetFromFrame, turretAngle);
-		return new Transform2d(turretOffsetFromFrame, turretAngle);
+		return new Transform2d(cameraOffsetFromFrame, turretAngle);
 	}
 
 	/**

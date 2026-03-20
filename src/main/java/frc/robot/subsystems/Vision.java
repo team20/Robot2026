@@ -48,7 +48,7 @@ public class Vision extends SubsystemBase {
 
 		// Estimate pose for each pipeline result
 		for (PhotonPipelineResult result : results) {
-			poses.add(PoseUtils.EstimatePoseFromPipelineResult(result));
+			PoseUtils.estimatePoseFromPipelineResult(result).ifPresent(poses::add);
 		}
 
 		// Get initial average of each pose component (x, y, and z)

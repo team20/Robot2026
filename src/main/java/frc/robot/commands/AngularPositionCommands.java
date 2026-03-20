@@ -13,7 +13,6 @@ import frc.robot.ClampedP;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.PoseUtils;
 import frc.robot.PoseUtils.AimResult;
-import frc.robot.PoseUtils.PoseResult;
 import frc.robot.subsystems.AngularPositionSubsystem;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
@@ -208,13 +207,15 @@ public class AngularPositionCommands {
 		@Override
 		public void execute() {
 			List<PhotonPipelineResult> result = Vision.getCamera().getAllUnreadResults();
-			PoseResult pose = PoseUtils.estimatePoseWithStdDev(result.get(result.size() - 1));
-			AimResult aim = PoseUtils.aimToHub(pose.pose(), Drive.getChassisSpeeds());
-			double error = m_subsystem.getPosition() - aim.setpoint();
-			double power = ClampedP.clampedP(
-					error, m_constants.minPower(), m_constants.maxPower(), m_constants.maxErr(),
-					m_constants.tolerance());
-			m_subsystem.runAtDutyCycle(power + aim.feedforward());
+			PhotonPipelineResult latest = result.get(result.size() - 1);
+			PoseUtils.estimatePoseWithStdDev(latest).ifPresent(pose -> {
+				AimResult aim = PoseUtils.aimToHub(pose.pose(), Drive.getChassisSpeeds());
+				double error = m_subsystem.getPosition() - aim.setpoint();
+				double power = ClampedP.clampedP(
+						error, m_constants.minPower(), m_constants.maxPower(), m_constants.maxErr(),
+						m_constants.tolerance());
+				m_subsystem.runAtDutyCycle(power + aim.feedforward());
+			});
 		}
 
 		// Called once the command ends or is interrupted.
