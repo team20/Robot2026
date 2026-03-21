@@ -81,7 +81,7 @@ public class TurretCommands {
 			double left = Math.pow((m_left.getAsDouble() + 1) / 2, 2);
 			double right = Math.pow((m_right.getAsDouble() + 1) / 2, 2);
 			if (Math.abs(right - left) > m_deadzone) {
-				double value = m_minSpeed + (right - left) * (m_maxSpeed - m_minSpeed);
+				double value = (m_minSpeed * Math.signum(right - left)) + (right - left) * (m_maxSpeed - m_minSpeed);
 				m_turret.runAtDutyCycle(value);
 			} else {
 				m_turret.stop();
