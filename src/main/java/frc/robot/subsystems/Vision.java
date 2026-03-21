@@ -49,9 +49,11 @@ public class Vision extends SubsystemBase {
 		PhotonPipelineResult latest = result.get(result.size() - 1);
 		PoseUtils.estimateCamPoseStdDev(latest).ifPresent(pose -> {
 			Translation2d difference = PoseUtils.getHub().minus(pose.pose()).getTranslation();
-			m_angle = difference.getAngle().getDegrees();
+			m_angle = -difference.getAngle().getDegrees();
 			m_distance = Units.metersToFeet(difference.getNorm());
 			m_estimatedPoseTopic.accept(pose.pose());
+			SmartDashboard.putNumber("Angle To Hub", m_angle);
+			SmartDashboard.putNumber("Distance To Hub", m_distance);
 			SmartDashboard.putNumber("Estimate Pose Deviation/x", pose.xStdDev());
 			SmartDashboard.putNumber("Estimate Pose Deviation/y", pose.yStdDev());
 			SmartDashboard.putNumber(
