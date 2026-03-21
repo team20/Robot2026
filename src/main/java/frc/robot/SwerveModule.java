@@ -152,7 +152,7 @@ public class SwerveModule {
 	 * @return The module state
 	 */
 	public SwerveModuleState getModuleState() {
-		return new SwerveModuleState(getDriveVoltage(), Rotation2d.fromDegrees(getModuleAngle()));
+		return new SwerveModuleState(m_driveMotor.getDutyCycle().getValue(), Rotation2d.fromDegrees(getModuleAngle()));
 	}
 
 	/**

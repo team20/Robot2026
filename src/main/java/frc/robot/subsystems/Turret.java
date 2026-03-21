@@ -10,11 +10,12 @@ public class Turret extends AngularPositionSubsystem {
 	 * Call create() instead
 	 */
 	private Turret() {
-		super(TurretConstants.kTurretPort, "Turret", TurretConstants.kP, TurretConstants.kI, TurretConstants.kS,
-				TurretConstants.kCurrent,
-				TurretConstants.kSmartCurrent, TurretConstants.kMinAngle, TurretConstants.kMaxAngle,
-				TurretConstants.kPositionConversionFactor, TurretConstants.kMaxDutyCycle, TurretConstants.kMotorInvert,
-				TurretConstants.kEncoderInvert, TurretConstants.kTolerance);
+		super(TurretConstants.Motor.kTurretPort, "Turret", TurretConstants.Control.kP, TurretConstants.Control.kI,
+				TurretConstants.Control.kS, TurretConstants.Motor.kCurrent,
+				TurretConstants.Motor.kSmartCurrent, TurretConstants.Geometry.kMinAngle,
+				TurretConstants.Geometry.kMaxAngle, TurretConstants.Motor.kMaxDutyCycle,
+				TurretConstants.Motor.kMotorInvert, TurretConstants.Motor.kEncoderInvert,
+				TurretConstants.Control.kTolerance);
 	}
 
 	public static void create() {
@@ -30,7 +31,8 @@ public class Turret extends AngularPositionSubsystem {
 	}
 
 	public static ClampedPConstants getConstants() {
-		return new ClampedPConstants(TurretConstants.kMinPower, TurretConstants.kMaxPower, TurretConstants.kMaxErr,
-				TurretConstants.kTolerance);
+		return new ClampedPConstants(TurretConstants.Motor.kMinPower, TurretConstants.Control.kMaxPower,
+				TurretConstants.Control.kMaxErr,
+				TurretConstants.Control.kTolerance);
 	}
 }

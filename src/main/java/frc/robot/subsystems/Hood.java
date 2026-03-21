@@ -11,9 +11,8 @@ public class Hood extends AngularPositionSubsystem {
 	 */
 	private Hood() {
 		super(HoodConstants.kHoodPort, "Hood", HoodConstants.kP, HoodConstants.kI, HoodConstants.kS,
-				HoodConstants.kCurrent,
-				HoodConstants.kSmartCurrent, HoodConstants.kMinAngle, HoodConstants.kMaxAngle,
-				1, HoodConstants.kMaxDutyCycle, HoodConstants.kMotorInvert, HoodConstants.kEncoderInvert,
+				HoodConstants.kCurrent, HoodConstants.kSmartCurrent, HoodConstants.kMinAngle, HoodConstants.kMaxAngle,
+				HoodConstants.kMaxDutyCycle, HoodConstants.kMotorInvert, HoodConstants.kEncoderInvert,
 				HoodConstants.kTolerance);
 
 	}
