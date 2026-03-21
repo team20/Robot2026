@@ -38,6 +38,9 @@ public class Constants {
 			public static final int kCurrent = 30;
 			public static final double kMinAngle = 22; // B
 			public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
+
+			public static final double kAngleToTicksFactor = 6.0 / 7.0;
+
 			public static final double kPositionConversionFactor = 1; // 7.0 / 6
 			public static final double kStraightAheadAngle = 90; // 105
 		}

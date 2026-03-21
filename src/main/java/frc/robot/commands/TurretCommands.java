@@ -39,14 +39,14 @@ public class TurretCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			double rotationNeeded = m_vision.getAngleToHubTag();
-			if (rotationNeeded == 0)
+			double rotationNeededTicks = Turret.getAngleToTicks(m_vision.getAngleToHubTag());
+			if (rotationNeededTicks == 0)
 				return;
 
 			double currentTurretAngle = Turret.getTurret().getPosition();
-			double newTurretAngle = currentTurretAngle + rotationNeeded;
+			double newTurretAngle = currentTurretAngle + rotationNeededTicks;
 
-			Turret.getTurret().moveToAngle(newTurretAngle);
+			Turret.getTurret().moveToPosition(newTurretAngle);
 		}
 
 		// Called once the command ends or is interrupted.

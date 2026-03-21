@@ -32,7 +32,7 @@ public class AngularPositionCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			m_subsystem.moveToAngle(m_angle);
+			m_subsystem.moveToPosition(m_angle);
 		}
 
 		// Called once the command ends or is interrupted.

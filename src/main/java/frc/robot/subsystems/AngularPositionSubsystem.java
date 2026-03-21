@@ -62,20 +62,20 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		SmartDashboard.putNumber("Aim Distance", 0);
 	}
 
-	public void moveToAngle(double angle) {
-		setSetpoint(angle);
+	public void moveToPosition(double position) {
+		setSetpoint(position);
 		m_controller.setSetpoint(m_setpoint, ControlType.kPosition);
 	}
 
-	public void setSetpoint(double setpoint) {
-		if (setpoint < m_minAngle) {
-			setpoint = m_minAngle;
-		} else if (setpoint > m_maxAngle) {
-			setpoint = m_maxAngle;
+	public void setSetpoint(double setpointPosition) {
+		if (setpointPosition < m_minAngle) {
+			setpointPosition = m_minAngle;
+		} else if (setpointPosition > m_maxAngle) {
+			setpointPosition = m_maxAngle;
 		}
 
 		m_dutyCycle = 0;
-		m_setpoint = setpoint;
+		m_setpoint = setpointPosition;
 	}
 
 	public double getSetpoint() {

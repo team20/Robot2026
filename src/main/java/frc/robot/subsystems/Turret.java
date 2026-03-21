@@ -17,6 +17,10 @@ public class Turret extends AngularPositionSubsystem {
 				TurretConstants.kEncoderInvert, TurretConstants.kTolerance);
 	}
 
+	public static double getAngleToTicks(double realAngle) {
+		return realAngle * TurretConstants.kAngleToTicksFactor;
+	}
+
 	public static void create() {
 		if (s_theTurret == null) {
 			s_theTurret = new Turret();
