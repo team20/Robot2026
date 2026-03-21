@@ -38,7 +38,7 @@ import frc.robot.subsystems.Vision;
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
-	public static final boolean compControls = false;
+	public static final boolean compControls = true;
 	private final CommandPS5Controller m_driverController = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
