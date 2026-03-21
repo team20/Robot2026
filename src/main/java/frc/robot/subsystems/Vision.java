@@ -77,7 +77,7 @@ public class Vision extends SubsystemBase {
 
 				m_hubEstimator.updateMidpoint(targets);
 
-				SmartDashboard.putNumber("Vision/Angle to Tag", m_hubEstimator.getMidpointAngle());
+				SmartDashboard.putNumber("Vision/Angle to Hun", m_hubEstimator.getMidpointAngle());
 
 				SmartDashboard.putNumber(
 						"Vision/PoseX", Units.metersToFeet(m_hubEstimator.getMidpointDistance()));

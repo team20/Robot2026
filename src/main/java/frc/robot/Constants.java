@@ -16,7 +16,7 @@ public class Constants {
 	public static final class Subsystems {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
-			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5);
+			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5, 18, 21, 24, 25, 26, 27);
 
 		}
 
