@@ -22,6 +22,10 @@ public class TurretCommands {
 		return new AngularPositionCommands.SettleAngle(Turret.getTurret(), Turret.getConstants().tolerance());
 	}
 
+	public static Command getTurnToAngleSoftwareCommand(double angle) {
+		return new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), angle, Turret.getConstants());
+	}
+
 	public static class TurretAimAtTag extends Command {
 		private final Vision m_vision;
 

@@ -38,7 +38,7 @@ import frc.robot.subsystems.Vision;
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
-	public static final boolean compControls = true;
+	public static final boolean compControls = false;
 	private final CommandPS5Controller m_driverController = new CommandPS5Controller(
 			Constants.ControllerConstants.kDriverControllerPort);
 	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
@@ -147,7 +147,7 @@ public class Robot extends TimedRobot {
 			// AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
 			// right/clockwise
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.05, 0.3, 0.05, m_operatorController::getL2Axis,
+					new TurretCommands.GradualAim(0.0, 0.2, 0.025, m_operatorController::getL2Axis,
 							m_operatorController::getR2Axis));
 		}
 
@@ -171,6 +171,7 @@ public class Robot extends TimedRobot {
 		{ // Shooting bindings
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
+
 			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
 			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));

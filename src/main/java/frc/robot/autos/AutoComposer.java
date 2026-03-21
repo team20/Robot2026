@@ -20,11 +20,11 @@ public class AutoComposer {
 		m_robot = robot;
 	}
 
-	private Command getShootCommand(double turretAngle, double distance, double shootTime) {
+	public Command getShootCommand(double turretAngle, double distance, double shootTime) {
 		return new SequentialCommandGroup(
-				TurretCommands.getSetAngleCommand(turretAngle),
 				AimCommands.getSetAimCommand(distance),
-				TurretCommands.getSettleAngleCommand(),
+				TurretCommands.getTurnToAngleSoftwareCommand(turretAngle),
+				// TurretCommands.getSettleAngleCommand(),
 				AimCommands.getSettleAimCommand(),
 				TransportCommands.getTimedShoot(shootTime)).withName("Shoot command");
 	}

@@ -5,7 +5,6 @@ import java.util.List;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -36,29 +35,28 @@ public class Vision extends SubsystemBase {
 		for (var result : results) {
 			if (result.hasTargets()) {
 				List<PhotonTrackedTarget> targets = result.getTargets();
-				double distanceSum = 0;
-				double angleSum = 0;
-				double totalWeight = 0;
-				double numTags = 0;
+				double minAngle = 0;
+				double maxAngle = 0;
+				double minDistance = 0;
+				double maxDistance = 0;
 				for (PhotonTrackedTarget target : targets) {
 					if (!VisionConstants.kTrackableTags.contains(target.fiducialId))
 						continue;
-
-					numTags++;
-					double weight = Math.pow(target.getArea(), 2) * (1 -
-							target.getPoseAmbiguity());
-					totalWeight += weight;
-
-					Transform3d botPose = target.getBestCameraToTarget();
-
-					angleSum += target.yaw; // * weight;
-
-					distanceSum += (botPose.getX() +
-							Units.inchesToMeters(23.5));// * Math.sqrt(4 / Math.PI))) * weight;
+					double distance = target.getBestCameraToTarget().getX();
+					SmartDashboard.putNumber("Tag Dist/" + target.getFiducialId(), distance);
+					if (minAngle == 0 && maxAngle == 0 && minDistance == 0 && maxDistance == 0) {
+						minAngle = maxAngle = target.yaw;
+						minDistance = maxDistance = distance;
+					} else {
+						minAngle = Math.min(target.yaw, minAngle);
+						maxAngle = Math.max(target.yaw, maxAngle);
+						minDistance = Math.min(distance, minDistance);
+						maxDistance = Math.max(distance, maxDistance);
+					}
 				}
-
-				m_distanceToHub = distanceSum / numTags;// totalWeight
-				m_angleToHubTag = angleSum / numTags;// totalWeight
+				// Get midpoint distance + offset to center of hub
+				m_distanceToHub = (minDistance + maxDistance) / 2 + Units.inchesToMeters(23.5);
+				m_angleToHubTag = (minAngle + maxAngle) / 2;
 
 				SmartDashboard.putNumber("Vision/Angle to Tag", m_angleToHubTag);
 

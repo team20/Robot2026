@@ -10,10 +10,11 @@ public class Turret extends AngularPositionSubsystem {
 	 * Call create() instead
 	 */
 	private Turret() {
-		super(TurretConstants.kTurretPort, "Turret", TurretConstants.kP, TurretConstants.kI, TurretConstants.kCurrent,
+		super(TurretConstants.kTurretPort, "Turret", TurretConstants.kP, TurretConstants.kI, TurretConstants.kS,
+				TurretConstants.kCurrent,
 				TurretConstants.kSmartCurrent, TurretConstants.kMinAngle, TurretConstants.kMaxAngle,
 				TurretConstants.kPositionConversionFactor, TurretConstants.kMaxDutyCycle, TurretConstants.kMotorInvert,
-				TurretConstants.kEncoderInvert);
+				TurretConstants.kEncoderInvert, TurretConstants.kTolerance);
 	}
 
 	public static void create() {
