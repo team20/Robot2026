@@ -7,18 +7,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.IntToDoubleFunction;
 
-import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -40,23 +36,41 @@ public class PoseUtils {
 	private static AprilTagFieldLayout s_layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
 	/**
-	 * Method to get the estimated pose from a PhotonPipelineResult using
-	 * PhotonPoseEstimator
+	 * Estimate the pose of the robot, including the standard deviations for each
+	 * component of the pose. This hopefully may be more reliable than other methods
+	 * if we want to implement a cutoff which ignores low quality data with high
+	 * standard deviations.
 	 * 
-	 * @param result Input pipeline result to estimate pose from
-	 * @param turretAngle Angle of the turret (for getting the actual camera to
-	 *        robot translation)
-	 * @return Estimated Pose3d
+	 * @param result a {@code PhotonPiplineResult} which has the latest target data
+	 * @return a {@code PoseResult} which contains the {@code Pose2d} of the robot
+	 *         and the standard deviations
 	 */
-	public static Optional<Pose3d> estimatePoseFromPipelineResult(PhotonPipelineResult result) {
-		Transform2d cameraOffsetFromFrame = getCameraOffsetFromFrame();
-		PhotonPoseEstimator estimator = new PhotonPoseEstimator(
-				s_layout,
-				new Transform3d(cameraOffsetFromFrame.getX(), cameraOffsetFromFrame.getY(),
-						TurretConstants.Geometry.kTurretHeightFromFloor,
-						new Rotation3d(cameraOffsetFromFrame.getRotation())));
-
-		return estimator.estimateCoprocMultiTagPose(result).map(estimate -> estimate.estimatedPose);
+	public static Optional<PoseResult> estimateCamPoseStdDev(PhotonPipelineResult result) {
+		int maxResults = result.getTargets().size();
+		List<Double> data = new ArrayList<>(maxResults * 4);
+		for (PhotonTrackedTarget target : result.getTargets()) {
+			s_layout.getTagPose(target.getFiducialId()).ifPresent(pose -> {
+				Pose2d camera = pose.transformBy(target.getBestCameraToTarget().inverse()).toPose2d();
+				data.add(camera.getX());
+				data.add(camera.getY());
+				data.add(camera.getRotation().getSin());
+				data.add(camera.getRotation().getCos());
+			});
+		}
+		int targets = data.size() / 4;
+		if (targets == 0) {
+			return Optional.empty();
+		}
+		double x = findCenterOfData(index -> data.get(index * 4), targets);
+		double y = findCenterOfData(index -> data.get(index * 4 + 1), targets);
+		double sin = findCenterOfData(index -> data.get(index * 4 + 2), targets);
+		double cos = findCenterOfData(index -> data.get(index * 4 + 3), targets);
+		Pose2d pose = new Pose2d(x, y, Rotation2d.fromRadians(Math.atan2(sin, cos)));
+		double xStdDev = findStdDevOfData(index -> data.get(index * 4), targets, x);
+		double yStdDev = findStdDevOfData(index -> data.get(index * 4 + 1), targets, y);
+		double sinStdDev = findStdDevOfData(index -> data.get(index * 4 + 2), targets, sin);
+		double cosStdDev = findStdDevOfData(index -> data.get(index * 4 + 3), targets, cos);
+		return Optional.of(new PoseResult(pose, xStdDev, yStdDev, Math.hypot(sinStdDev, cosStdDev)));
 	}
 
 	/**
@@ -192,7 +206,8 @@ public class PoseUtils {
 	 * @return the camera offset from the center of the frame
 	 */
 	public static Transform2d getCameraOffsetFromFrame() {
-		double rawTurretAngle = Turret.getTurret().getPosition() - TurretConstants.Geometry.kStraightAheadAngle;
+		//double rawTurretAngle = Turret.getTurret().getPosition() - TurretConstants.Geometry.kStraightAheadAngle;
+		double rawTurretAngle = 90 - TurretConstants.Geometry.kStraightAheadAngle;
 		Rotation2d turretAngle = Rotation2d
 				.fromDegrees(rawTurretAngle * TurretConstants.Geometry.kPositionConversionFactor);
 		Translation2d cameraOffsetFromFrame = new Translation2d(
@@ -302,34 +317,5 @@ public class PoseUtils {
 		double degrees = transform.getTranslation().getAngle().getDegrees();
 		degrees /= TurretConstants.Geometry.kPositionConversionFactor;
 		return degrees + TurretConstants.Geometry.kStraightAheadAngle;
-	}
-
-	/**
-	 * Method to average each component of a pose
-	 * 
-	 * @param poses Input poses to average
-	 * @return Final average of pose
-	 */
-	public static Pose3d getAveragePose(List<Pose3d> poses) {
-		double sums[] = new double[6];
-		double averages[] = new double[6];
-		for (Pose3d pose : poses) {
-			if (pose == null) {
-				continue;
-			}
-
-			sums[0] += pose.getX();
-			sums[1] += pose.getY();
-			sums[2] += pose.getZ();
-			sums[3] += pose.getRotation().getX();
-			sums[4] += pose.getRotation().getY();
-			sums[5] += pose.getRotation().getZ();
-		}
-
-		for (int i = 0; i < 6; i++) {
-			averages[i] = sums[i] / poses.size();
-		}
-
-		return new Pose3d(averages[0], averages[1], averages[2], new Rotation3d(averages[3], averages[4], averages[5]));
 	}
 }

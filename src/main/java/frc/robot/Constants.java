@@ -56,8 +56,8 @@ public class Constants {
 				public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
 				public static final double kPositionConversionFactor = 7.0 / 6; // 7.0 / 6
 				public static final double kStraightAheadAngle = 90; // 105
-				public static final double kCameraOffsetFromTurret = 0; // TODO: Actually determine the real number
-				public static final double kTurretOffsetFromFrame = 0; // TODO: Actually determine the real number
+				public static final double kCameraOffsetFromTurret = Units.inchesToMeters(7.685);
+				public static final double kTurretOffsetFromFrame = Units.inchesToMeters(5.004);
 				public static final double kTurretHeightFromFloor = Units.inchesToMeters(20.125);
 			}
 		}

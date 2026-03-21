@@ -1,9 +1,6 @@
 package frc.robot.commands;
 
-import java.util.List;
 import java.util.function.DoubleSupplier;
-
-import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
@@ -11,10 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.ClampedP.ClampedPConstants;
-import frc.robot.PoseUtils;
-import frc.robot.PoseUtils.AimResult;
 import frc.robot.subsystems.AngularPositionSubsystem;
-import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
 
 public class AngularPositionCommands {
@@ -177,45 +171,6 @@ public class AngularPositionCommands {
 		@Override
 		public void execute() {
 			m_subsystem.runAtDutyCycle(MathUtil.applyDeadband(m_speed.getAsDouble(), m_constants.tolerance()));
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			m_subsystem.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return false;
-		}
-	}
-
-	public static class AimTurretAtHub extends Command {
-		private final AngularPositionSubsystem m_subsystem;
-		private final ClampedPConstants m_constants;
-
-		public AimTurretAtHub(AngularPositionSubsystem subsytem, ClampedPConstants constants) {
-			m_subsystem = subsytem;
-			m_constants = constants;
-			setName(String.format("Point %s At Hub Using PID Controller", m_subsystem.getName()));
-			addRequirements(m_subsystem);
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			List<PhotonPipelineResult> result = Vision.getCamera().getAllUnreadResults();
-			PhotonPipelineResult latest = result.get(result.size() - 1);
-			PoseUtils.estimatePoseWithStdDev(latest).ifPresent(pose -> {
-				AimResult aim = PoseUtils.aimToHub(pose.pose(), Drive.getChassisSpeeds());
-				double error = m_subsystem.getPosition() - aim.setpoint();
-				double power = ClampedP.clampedP(
-						error, m_constants.minPower(), m_constants.maxPower(), m_constants.maxErr(),
-						m_constants.tolerance());
-				m_subsystem.runAtDutyCycle(power + aim.feedforward());
-			});
 		}
 
 		// Called once the command ends or is interrupted.
