@@ -13,7 +13,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.VisionConstants;
@@ -34,6 +36,8 @@ public class Vision extends SubsystemBase {
 	public class FieldPoseEstimator implements AngleDistanceEstimator {
 		private double m_distance;
 		private double m_angle;
+		private double m_angleDerivative;
+		private double m_distantDerivative;
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -41,8 +45,12 @@ public class Vision extends SubsystemBase {
 		public void updateMidpoint(List<PhotonTrackedTarget> targets) {
 			PoseUtils.estimateCamPoseStdDev(targets).ifPresent(pose -> {
 				Translation2d difference = PoseUtils.getHub().minus(pose.pose()).getTranslation();
-				m_angle = -difference.getAngle().getDegrees();
-				m_distance = difference.getNorm();
+				double angle = -difference.getAngle().getDegrees();
+				m_angleDerivative = (angle - m_angle) / 0.02;
+				m_angle = angle;
+				double distance = difference.getNorm();
+				m_distantDerivative = (distance - m_distance) / 0.02;
+				m_distance = distance;
 				m_estimatedPoseTopic.accept(pose.pose());
 				SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
 				SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", m_distance);
@@ -60,6 +68,14 @@ public class Vision extends SubsystemBase {
 
 		public Distance getDistance() {
 			return Meters.of(m_distance);
+		}
+
+		public LinearVelocity getDistanceDerivative() {
+			return MetersPerSecond.of(m_distantDerivative);
+		}
+
+		public AngularVelocity getAngleDerivative() {
+			return DegreesPerSecond.of(m_angleDerivative);
 		}
 	}
 
@@ -128,9 +144,10 @@ public class Vision extends SubsystemBase {
 		}
 		PhotonPipelineResult latest = results.get(results.size() - 1);
 		List<PhotonTrackedTarget> targets = latest.getTargets();
-
 		m_hubEstimator.updateMidpoint(targets);
 		m_midpointEstimator.updateMidpoint(targets);
+		SmartDashboard.putNumber("Angle Derivative", m_hubEstimator.getAngleDerivative().in(DegreesPerSecond));
+		SmartDashboard.putNumber("Distance Derivative", m_hubEstimator.getDistanceDerivative().in(FeetPerSecond));
 	}
 
 	public AngleDistanceEstimator getMidpointEstimator() {
