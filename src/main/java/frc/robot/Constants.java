@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -17,7 +19,8 @@ public class Constants {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
 			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5, 18, 21, 24, 25, 26, 27);
-
+			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.kZero);
+			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.kZero);
 		}
 
 		public static final class TurretConstants {

@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.*;
+
 import java.util.Map;
 
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -11,46 +13,40 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
-import frc.robot.subsystems.AngularPositionSubsystem;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class AimCommands {
 
 	// This command uses the {@code MidpointEstimator} to estimate angle and
 	// distance to hub, and sets turret, hood, and flywheel accordingly
 	public static class MidpointAim extends Command {
-		private final AngularPositionSubsystem m_turret;
-		private final Vision m_vision;
-		private double m_distance;
+		private final AngleDistanceEstimator m_estimator;
 		private Aim m_aim = new Aim.Linear();
 
-		public MidpointAim(AngularPositionSubsystem turret, Vision vision) {
-			m_turret = turret;
-			m_vision = vision;
+		public MidpointAim(AngleDistanceEstimator estimator) {
+			m_estimator = estimator;
 			setName("Auto Aim Shooter and Hood");
-			addRequirements(Shooter.getShooter(), Hood.getHood(), turret, vision);
+			addRequirements(Shooter.getShooter(), Hood.getHood());
 		}
 
 		@Override
 		public void execute() {
-			double rotationNeeded = m_vision.getAngleToHubTag();
+			double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
 			if (rotationNeeded == 0)
 				return;
 			double currentTurretAngle = Turret.getTurret().getPosition();
 			double newTurretAngle = currentTurretAngle + rotationNeeded;
 
-			m_distance = m_vision.getDistanceToHub();
+			double distance = m_estimator.getDistance().in(Feet);
 
-			Hood.getHood().moveToPosition(m_aim.getHoodAngle(m_distance));
-			Shooter.setRPM(m_aim.getShooterVelocity(m_distance));
+			Hood.getHood().moveToPosition(m_aim.getHoodAngle(distance));
+			Shooter.setRPM(m_aim.getShooterVelocity(distance));
 			// Set hardware setpoint - the controller will continue to track setpoint even
 			// after the command ends
 			Turret.getTurret().moveToPosition(newTurretAngle);
-
-			SmartDashboard.putNumber("Aim Distance", m_distance);
 		}
 
 		@Override

@@ -177,7 +177,7 @@ public class Robot extends TimedRobot {
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			m_operatorController.create().whileTrue(
-					new RepeatCommand(new AimCommands.MidpointAim(Turret.getTurret(), Vision.getVision())));
+					new RepeatCommand(new AimCommands.MidpointAim(Vision.getVision().getMidpointEstimator())));
 			// m_operatorController.triangle().debounce(0.1).onTrue(
 			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 			// m_operatorController.povLeft()));
