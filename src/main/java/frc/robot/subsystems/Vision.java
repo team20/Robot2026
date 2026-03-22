@@ -8,6 +8,7 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -18,6 +19,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.PoseUtils;
 
@@ -36,8 +38,11 @@ public class Vision extends SubsystemBase {
 	public class FieldPoseEstimator implements AngleDistanceEstimator {
 		private double m_distance;
 		private double m_angle;
+		private LinearFilter m_distanceFilter = LinearFilter.movingAverage(5);
+		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distantDerivative;
+		private final Aim.Linear m_aim = new Aim.Linear();
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -45,20 +50,22 @@ public class Vision extends SubsystemBase {
 		public void updateMidpoint(List<PhotonTrackedTarget> targets) {
 			PoseUtils.estimateCamPoseStdDev(targets).ifPresent(pose -> {
 				Translation2d difference = PoseUtils.getHub().minus(pose.pose()).getTranslation();
-				double angle = -difference.getAngle().getDegrees();
-				m_angleDerivative = (angle - m_angle) / 0.02;
-				m_angle = angle;
-				double distance = difference.getNorm();
-				m_distantDerivative = (distance - m_distance) / 0.02;
-				m_distance = distance;
+				m_angleFilter.calculate(-difference.getAngle().getDegrees());
+				m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
+				m_angle = m_angleFilter.lastValue();
+				m_distanceFilter.calculate(difference.getNorm());
+				m_distantDerivative = (m_distanceFilter.lastValue() - m_distance) / 0.02;
+				m_distance = m_distanceFilter.lastValue();
 				m_estimatedPoseTopic.accept(pose.pose());
 				SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
-				SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", m_distance);
+				SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
 				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
 				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
 				SmartDashboard.putNumber(
 						"Vision/FieldPose/Estimate Pose Deviation/theta",
 						pose.thetaStdDev());
+				SmartDashboard.putNumber(
+						"Vision/FieldPose/Estimated Airtime", m_aim.getShotAirtime(Units.metersToFeet(m_distance)));
 			});
 		}
 
@@ -109,7 +116,7 @@ public class Vision extends SubsystemBase {
 
 			SmartDashboard.putNumber("Vision/Midpoint/Angle to Hub", m_midpointAngle);
 
-			SmartDashboard.putNumber("Vision/Midpoint/Distance to Hub", m_midpointDistance);
+			SmartDashboard.putNumber("Vision/Midpoint/Distance to Hub", Units.metersToFeet(m_midpointDistance));
 		}
 
 		public double getAngle() {

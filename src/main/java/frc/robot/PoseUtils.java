@@ -122,7 +122,7 @@ public class PoseUtils {
 			} else {
 				high = bisector;
 			}
-		} while (Math.abs(loss) > 0.01);
+		} while (Math.abs(loss) > 0.001);
 		return (low + high) / 2;
 	}
 
