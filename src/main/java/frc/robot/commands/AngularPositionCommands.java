@@ -6,7 +6,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.subsystems.AngularPositionSubsystem;
@@ -33,7 +32,7 @@ public class AngularPositionCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			m_subsystem.moveToAngle(m_angle);
+			m_subsystem.moveToPosition(m_angle);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -92,6 +91,11 @@ public class AngularPositionCommands {
 			addRequirements(m_subsystem);
 		}
 
+		@Override
+		public void initialize() {
+			m_subsystem.setSetpoint(m_angle);
+		}
+
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
@@ -111,8 +115,9 @@ public class AngularPositionCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			// return false;
-			return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) < m_constants.tolerance();
+			return m_subsystem.isSettled(m_constants.tolerance());
+			// return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) <
+			// m_constants.tolerance();
 		}
 	}
 

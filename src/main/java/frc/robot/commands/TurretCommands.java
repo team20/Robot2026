@@ -4,7 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class TurretCommands {
 
@@ -22,27 +22,31 @@ public class TurretCommands {
 		return new AngularPositionCommands.SettleAngle(Turret.getTurret(), Turret.getConstants().tolerance());
 	}
 
-	public static class TurretAimAtTag extends Command {
-		private final Vision m_vision;
+	public static Command getTurnToAngleSoftwareCommand(double angle) {
+		return new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), angle, Turret.getConstants());
+	}
 
-		public TurretAimAtTag(Vision vision) {
-			m_vision = vision;
+	public static class TurretAimAtTag extends Command {
+		private final AngleDistanceEstimator m_estimator;
+
+		public TurretAimAtTag(AngleDistanceEstimator estimator) {
+			m_estimator = estimator;
 			setName("Turret Aim At Tag");
 
-			addRequirements(Turret.getTurret(), vision);
+			addRequirements(Turret.getTurret());
 		}
 
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void initialize() {
-			double rotationNeeded = m_vision.getAngleToHubTag();
-			if (rotationNeeded == 0)
+			double rotationNeededTicks = Turret.getAngleToTicks(m_estimator.getAngle());
+			if (rotationNeededTicks == 0)
 				return;
 
 			double currentTurretAngle = Turret.getTurret().getPosition();
-			double newTurretAngle = currentTurretAngle + rotationNeeded;
+			double newTurretAngle = currentTurretAngle + rotationNeededTicks;
 
-			Turret.getTurret().moveToAngle(newTurretAngle);
+			Turret.getTurret().moveToPosition(newTurretAngle);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -81,7 +85,7 @@ public class TurretCommands {
 			double left = Math.pow((m_left.getAsDouble() + 1) / 2, 2);
 			double right = Math.pow((m_right.getAsDouble() + 1) / 2, 2);
 			if (Math.abs(right - left) > m_deadzone) {
-				double value = m_minSpeed + (right - left) * (m_maxSpeed - m_minSpeed);
+				double value = (m_minSpeed * Math.signum(right - left)) + (right - left) * (m_maxSpeed - m_minSpeed);
 				m_turret.runAtDutyCycle(value);
 			} else {
 				m_turret.stop();

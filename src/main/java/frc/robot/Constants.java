@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -16,27 +18,32 @@ public class Constants {
 	public static final class Subsystems {
 		public static final class VisionConstants {
 			// 3 red, 3 blue
-			public static final Set<Integer> kTrackableTags = Set.of(8, 24, 10, 26, 11, 27);
-
+			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5, 18, 21, 24, 25, 26, 27);
+			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.kZero);
+			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.kZero);
 		}
 
 		public static final class TurretConstants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
-			public static final double kMaxDutyCycle = 1; // extra limit for test safety
-			public static final double kMinPower = 0.025;
+			public static final double kMaxDutyCycle = .2; // extra limit for test safety
+			public static final double kMinPower = 0.04;
 			public static final double kMaxPower = kMaxDutyCycle;
-			public static final double kMaxErr = 25;
+			public static final double kMaxErr = 40; // 25
 			public static final double kTolerance = 1.5;
-			public static final double kP = 0.012;
+			public static final double kP = 0.010;
 			public static final double kI = 0.0000;
+			public static final double kS = kMinPower;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
 			public static final double kSmallDeadzone = 0.05;
 			public static final int kSmartCurrent = 25;
 			public static final int kCurrent = 30;
 			public static final double kMinAngle = 22; // B
 			public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
+
+			public static final double kAngleToTicksFactor = 6.0 / 7.0;
+
 			public static final double kPositionConversionFactor = 1; // 7.0 / 6
 			public static final double kStraightAheadAngle = 90; // 105
 		}
@@ -52,6 +59,7 @@ public class Constants {
 			public static final double kTolerance = 1;
 			public static final double kP = 0.04;
 			public static final double kI = 0.0000;
+			public static final double kS = 0.00;
 			public static final double kDeadzone = 0.05;
 			public static final int kSmartCurrent = 20;
 			public static final int kCurrent = 25;
@@ -76,8 +84,8 @@ public class Constants {
 			public static final int kIntakeArmPort = 53;
 			public static final double kArmConversionFactor = 0.01;
 
-			public static final int kWheelSmartCurrentLimit = 10;
-			public static final int kWheelSecondaryCurrentLimit = 20;
+			public static final int kWheelSmartCurrentLimit = 20;
+			public static final int kWheelSecondaryCurrentLimit = 30;
 			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;

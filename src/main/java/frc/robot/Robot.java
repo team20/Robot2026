@@ -147,14 +147,16 @@ public class Robot extends TimedRobot {
 			// AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
 			// right/clockwise
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.05, 0.3, 0.05, m_operatorController::getL2Axis,
+					new TurretCommands.GradualAim(0.0, 0.2, 0.025, m_operatorController::getL2Axis,
 							m_operatorController::getR2Axis));
 		}
 
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			IntakeWheels.getIntakeWheels().setDefaultCommand(
-					new IntakeCommands.Teletake(IntakeConstants.kWheelPower, m_operatorController.L1()));
+			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntake());
+			// IntakeWheels.getIntakeWheels().setDefaultCommand(
+			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
+			// m_operatorController.L1()));
 			// m_operatorController.create().whileTrue(new
 			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
@@ -169,12 +171,13 @@ public class Robot extends TimedRobot {
 		{ // Shooting bindings
 			m_operatorController.square().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
+
 			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
 			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			m_operatorController.create().whileTrue(
-					new RepeatCommand(new AimCommands.AutoAim(Turret.getTurret(), Vision.getVision())));
+					new RepeatCommand(new AimCommands.MidpointAim(Vision.getVision().getFieldPoseEstimator())));
 			// m_operatorController.triangle().debounce(0.1).onTrue(
 			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 			// m_operatorController.povLeft()));

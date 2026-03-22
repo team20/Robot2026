@@ -128,7 +128,6 @@ public class IntakeCommands {
 	public static Command getArmInCombinedCommand() {
 		return Commands.sequence(
 				new IntakeCommands.StopIntake(),
-				new TransportCommands.StopAgitator(),
 				IntakeCommands.getInCommand());
 	}
 

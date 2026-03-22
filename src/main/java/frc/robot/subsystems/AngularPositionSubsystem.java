@@ -31,13 +31,14 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	private final SparkAbsoluteEncoder m_encoder;
 	private final SparkClosedLoopController m_controller;
 	private double m_setpoint;
+	private double m_tolerance;
 
 	public AngularPositionSubsystem(int id, String name,
-			double kP, double kI,
+			double kP, double kI, double kS,
 			int currentLimit, int smartCurrentLimit,
 			double minAngle, double maxAngle,
 			double conversionFactor,
-			double maxDutyCycle, boolean motorInverted, boolean encoderInverted) {
+			double maxDutyCycle, boolean motorInverted, boolean encoderInverted, double tolerance) {
 		m_name = name;
 		m_minAngle = minAngle;
 		m_maxAngle = maxAngle;
@@ -48,6 +49,7 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		config.absoluteEncoder.positionConversionFactor(360 * conversionFactor);
 		config.absoluteEncoder.inverted(encoderInverted);
 		config.closedLoop.pid(kP, kI, 0);
+		config.closedLoop.feedForward.kS(kS);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
 		config.closedLoop.positionWrappingEnabled(false);
 		config.smartCurrentLimit(smartCurrentLimit);
@@ -56,23 +58,24 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		m_encoder = m_motor.getAbsoluteEncoder();
 		m_controller = m_motor.getClosedLoopController();
+		m_tolerance = tolerance;
 		SmartDashboard.putNumber("Aim Distance", 0);
 	}
 
-	public void moveToAngle(double angle) {
-		setSetpoint(angle);
+	public void moveToPosition(double position) {
+		setSetpoint(position);
 		m_controller.setSetpoint(m_setpoint, ControlType.kPosition);
 	}
 
-	public void setSetpoint(double setpoint) {
-		if (setpoint < m_minAngle) {
-			setpoint = m_minAngle;
-		} else if (setpoint > m_maxAngle) {
-			setpoint = m_maxAngle;
+	public void setSetpoint(double setpointPosition) {
+		if (setpointPosition < m_minAngle) {
+			setpointPosition = m_minAngle;
+		} else if (setpointPosition > m_maxAngle) {
+			setpointPosition = m_maxAngle;
 		}
 
 		m_dutyCycle = 0;
-		m_setpoint = setpoint;
+		m_setpoint = setpointPosition;
 	}
 
 	public double getSetpoint() {
@@ -123,6 +126,9 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		}
 		if (Constants.kLogging) {
 			SmartDashboard.putNumber(String.format("%s/Position", m_name), getPosition());
+			SmartDashboard.putNumber(String.format("%s/Setpoint", m_name), m_setpoint);
+			SmartDashboard.putNumber(String.format("%s/Setpoint Upper Threshold", m_name), m_setpoint + m_tolerance);
+			SmartDashboard.putNumber(String.format("%s/Setpoint Lower Threshold", m_name), m_setpoint - m_tolerance);
 		}
 	}
 }
