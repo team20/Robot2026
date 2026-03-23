@@ -1,8 +1,11 @@
 package frc.robot.autos;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.AimCommands;
@@ -12,6 +15,7 @@ import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
+import frc.robot.subsystems.Vision;
 
 public class AutoComposer {
 	private static TimedRobot m_robot;
@@ -65,6 +69,24 @@ public class AutoComposer {
 				// addition
 
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
+	}
+
+	public Command getRightTwoShootAutoWithVision() {
+		return new SequentialCommandGroup(
+				new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator()),
+				AimCommands.getSettleAimCommand(),
+				new ParallelRaceGroup(
+						new RepeatCommand(new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())),
+						TransportCommands.getTimedShoot(3)),
+				// getShootCommand(36, 11.6, 6),
+				HoodCommands.getHoodDownCommand(),
+				new DriveCommands.VisionDriveDistance(Units.feetToMeters(10.25), 0, 0),
+				// IntakeCommands.getArmOutCombinedCommand(),
+				new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator()),
+				AimCommands.getSettleAimCommand(),
+				new ParallelRaceGroup(
+						new RepeatCommand(new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())),
+						TransportCommands.getTimedShoot(3)));
 	}
 
 	public Command getRightTwoShootAutoBump() {
