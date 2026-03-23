@@ -84,6 +84,7 @@ public class Robot extends TimedRobot {
 		m_autoChooser
 				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser.addOption("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
+		m_autoChooser.addOption("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
 		m_autoChooser
 				.setDefaultOption(
 						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
@@ -181,7 +182,8 @@ public class Robot extends TimedRobot {
 							m_operatorController.axisLessThan(4, 0.025)
 									.and(m_operatorController.create()))
 					.whileTrue(
-							new RepeatCommand(new AimCommands.MidpointAim(Vision.getVision().getFieldPoseEstimator())));
+							new RepeatCommand(
+									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
 			// m_operatorController.triangle().debounce(0.1).onTrue(
 			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 			// m_operatorController.povLeft()));

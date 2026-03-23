@@ -206,6 +206,7 @@ public class Drive extends SubsystemBase {
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
 		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
+		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
 	}
 
 	public static void toggleCoastMode() {
