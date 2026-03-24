@@ -54,7 +54,7 @@ public class Robot extends TimedRobot {
 		new IntakeArm();
 		new Climber();
 		new Agitator();
-		new Vision();
+		// new Vision();
 		Turret.create();
 		Hood.create();
 	}
@@ -181,7 +181,7 @@ public class Robot extends TimedRobot {
 							m_operatorController.axisLessThan(4, 0.025)
 									.and(m_operatorController.create()))
 					.whileTrue(
-							new RepeatCommand(new AimCommands.MidpointAim(Vision.getVision().getFieldPoseEstimator())));
+							new RepeatCommand(new AimCommands.MidpointAim(Vision.getVision().getFusedEstimator())));
 			// m_operatorController.triangle().debounce(0.1).onTrue(
 			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 			// m_operatorController.povLeft()));
@@ -292,13 +292,12 @@ public class Robot extends TimedRobot {
 		} else {
 			bindTestControls();
 		}
-
 	}
 
 	@Override
 	public void testInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
+		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), SensorFusion.testCommand()));
 	}
 }
