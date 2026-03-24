@@ -16,7 +16,6 @@ import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
 
 public class DriveCommands {
-
 	/**
 	 * Creates a {@code Command} to drive the robot with joystick input.
 	 *
