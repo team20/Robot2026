@@ -5,7 +5,6 @@ import frc.robot.Constants.Subsystems.HoodConstants;
 import frc.robot.subsystems.Hood;
 
 public class HoodCommands {
-
 	public static Command getHoodDownCommand() {
 		return AngularPositionCommands.RunToAngleHardware(
 				Hood.getHood(), HoodConstants.kDownPosition,
@@ -25,5 +24,4 @@ public class HoodCommands {
 	public static Command getSettleAngleCommand() {
 		return new AngularPositionCommands.SettleAngle(Hood.getHood(), Hood.getConstants().tolerance());
 	}
-
 }

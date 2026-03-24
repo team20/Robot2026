@@ -71,25 +71,4 @@ public class TransportCommands {
 			Agitator.stop();
 		}
 	}
-
-	public static class StopAgitator extends Command {
-
-		/** Creates a new StopKicker. */
-		public StopAgitator() {
-			setName("Stop Agitator");
-			addRequirements(Agitator.getAgitator());
-		}
-
-		// Called when the command is initially scheduled.
-		@Override
-		public void initialize() {
-			Agitator.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return true;
-		}
-	}
 }
