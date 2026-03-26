@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Main {
@@ -13,8 +12,8 @@ public final class Main {
 
 	public static void main(String... args) {
 		if (Constants.kLogging) {
-			DataLogManager.logNetworkTables(true);
-			DataLogManager.start();
+			// DataLogManager.logNetworkTables(true);
+			// DataLogManager.start();
 		}
 		RobotBase.startRobot(Robot::new);
 	}

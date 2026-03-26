@@ -1,7 +1,8 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public abstract class Aim {
 
@@ -9,205 +10,78 @@ public abstract class Aim {
 
 	public abstract double getHoodAngle(double distance);
 
-	public static class Regression extends Aim {
-		private static final double s_velocityA = 0;
-		private static final double s_velocityB = 0;
-		private static final double s_velocityC = 0;
-		private static final double s_angleA = 0;
-		private static final double s_angleB = 0;
-		private static final double s_angleC = 0;
-
-		@Override
-		public double getShooterVelocity(double distance) {
-			return (s_velocityA * distance + s_velocityB) * distance + s_velocityC;
-		}
-
-		@Override
-		public double getHoodAngle(double distance) {
-			return (s_angleA * distance + s_angleB) * distance + s_angleC;
-		}
-
-	};
+	public abstract double getShotAirtime(double distance);
 
 	public static class Linear extends Aim {
-		/*
-		 * private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
-		 * private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
-		 * private static final double[] s_velocities = new double[] { 2050, 2200, 2550,
-		 * 2750 };
-		 */
 
-		private static final double[] s_distances = new double[] { -500, 3.17, 6.23, 9.1, 13.1, 18, 500 }; // 2,
-		// 12.5,
-		// 22,
-		// 500
-		// };
-		// Angles are offset to prevent wrapping from 0 to
-		// 360-----113-----2150------6.23
-		private static final double[] s_angles = new double[] { 99, 99, 113, 122, 137, 137,
-				137 }; // 11, 16.8, 25, 40 + 98 ---------- // 0, 19, 37, 37 };
-		private static final double[] s_velocities = new double[] { 2000, 2000, 2100, 2300, 2535, 2850, 3000 };
-		private static final double[] s_airtime = new double[] { 1.1, 1.1, 1.1, 1.2, 1.4, 1.4, 1.4 };
+		// Represents the state of the Hood/Flywheel + the airtime the ball will have
+		public record ShooterPreset(double angle, double rpm, double airtime) {
+		}
+
+		/**
+		 * Mapping from requested distance from the turret the center of the hub ==> to
+		 * their preset {@code ShooterPreset}. Tree map automatically takes care of
+		 * sorting these by their keys (distances) and when the angles or speeds are
+		 * streamed, they come out in order
+		 * 
+		 * @see java.util.TreeMap
+		 **/
+
+		private static final TreeMap<Double, ShooterPreset> s_presets = new TreeMap<>(Map.of(
+				-500.0, new ShooterPreset(99, 2000, 1.1),
+				3.17, new ShooterPreset(99, 2000, 1.1),
+				6.23, new ShooterPreset(113, 2100, 1.1),
+				9.1, new ShooterPreset(122, 2300, 1.2),
+				13.1, new ShooterPreset(137, 2535, 1.4),
+				18.0, new ShooterPreset(137, 2850, 1.4),
+				500.0, new ShooterPreset(137, 3000, 1.4)));
 
 		private static double interpolate(double a, double b, double t) {
 			return (1 - t) * a + t * b;
 		}
 
 		private static int getIndex(double distance) {
-			for (int i = 0; i < s_distances.length - 1; i++) {
-				if (s_distances[i] <= distance && s_distances[i + 1] > distance) {
+			List<Double> distances = s_presets.keySet().stream().toList();
+			for (int i = 0; i < distances.size() - 1; i++) {
+				if (distances.get(i) <= distance && distances.get(i + 1) > distance) {
 					return i;
 				}
 			}
-			return -1;
+			return 0;
 		}
 
-		private static double interpolate(double distance, double[] list) {
+		private static double interpolate(double distance, List<Double> list) {
 			int index = getIndex(distance);
 			if (index < 0) {
 				return -1;
 			} else {
-				double a = list[index];
-				double b = list[index + 1];
-				double delta = s_distances[index + 1] - s_distances[index];
-				double t = (distance - s_distances[index]) / delta;
+				List<Double> distances = s_presets.keySet().stream().toList();
+
+				double a = list.get(index);
+				double b = list.get(index + 1);
+				double delta = distances.get(index + 1) - distances.get(index);
+				double t = (distance - distances.get(index)) / delta;
 				return interpolate(a, b, t);
 			}
 		}
 
 		@Override
 		public double getShooterVelocity(double distance) {
-			return interpolate(distance, s_velocities);
+			List<Double> velocities = s_presets.values().stream().map(p -> p.rpm).toList();
+			return interpolate(distance, velocities);
 		}
 
 		@Override
 		public double getHoodAngle(double distance) {
-			return interpolate(distance, s_angles);
+			List<Double> angles = s_presets.values().stream().map(p -> p.angle).toList();
+			return interpolate(distance, angles);
 		}
 
+		@Override
 		public double getShotAirtime(double distance) {
-			return interpolate(distance, s_airtime);
+			List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
+			return interpolate(distance, airtimes);
 		}
 
-		public static Command testCommand() {
-			return Commands.runOnce(() -> {
-				Aim aimer = new Interpolation();
-				for (int i = 0; i < s_distances.length - 1; i++) {
-					double middle = (s_distances[i] + s_distances[i + 1]) / 2;
-					double velocity = aimer.getShooterVelocity(middle);
-					double angle = aimer.getHoodAngle(middle);
-					double maxV = Math.max(s_velocities[i], s_velocities[i + 1]);
-					double maxErr = 0.01;
-					if (velocity > maxV && (velocity - maxV) / maxV > maxErr) {
-						throw new Error(String.format("Velocity interpolation was too high (%f > %f)", velocity, maxV));
-					}
-					double minV = Math.min(s_velocities[i], s_velocities[i + 1]);
-					if (velocity < minV && (minV - velocity) / minV > maxErr) {
-						throw new Error(String.format("Velocity interpolation was too low (%f < %f)", velocity, minV));
-					}
-					double maxA = Math.max(s_angles[i], s_angles[i + 1]);
-					if (angle > maxA && (angle - maxA) / maxA > maxErr) {
-						throw new Error(String.format("Angle interpolation was too high (%f > %f)", angle, maxA));
-					}
-					double minA = Math.min(s_angles[i], s_angles[i + 1]);
-					if (angle < minA && (minA - angle) / minA > maxErr) {
-						throw new Error(String.format("Angle interpolation was too low (%f < %f)", angle, minA));
-					}
-				}
-				System.out.println("All interpolation tests passing!!!!!!!");
-			});
-		}
 	}
-
-	public static class Interpolation extends Aim {
-		private static final double[] s_distances = new double[] { 4, 8, 12, 15 };
-		private static final double[] s_angles = new double[] { 8.5, 24, 30, 38 };
-		private static final double[] s_velocities = new double[] { 2050, 2200, 2550, 2750 };
-
-		private static double interpolate(double a, double b, double da, double db, double t) {
-			double result = 0;
-			result += ((2 * t - 3) * t * t + 1) * a;
-			result += ((t - 2) * t + 1) * t * da;
-			result += (3 - 2 * t) * t * t * b;
-			result += (t - 1) * t * t * db;
-			return result;
-		}
-
-		private static int getIndex(double distance) {
-			for (int i = 0; i < s_distances.length - 1; i++) {
-				if (s_distances[i] <= distance && s_distances[i + 1] > distance) {
-					return i;
-				}
-			}
-			return -1;
-		}
-
-		private static double interpolate(double distance, double[] list) {
-			int index = getIndex(distance);
-			if (index < 0) {
-				return -1;
-			} else {
-				int end = s_distances.length - 2;
-				double a = list[index];
-				double b = list[index + 1];
-				double da;
-				double db;
-				if (index == 0) {
-					da = (list[1] - list[0]) / (s_distances[1] - s_distances[0]);
-					db = ((list[2] - list[1]) / (s_distances[2] - s_distances[1]) + da) / 2;
-				} else if (index == end) {
-					db = (list[end + 1] - list[end]) / (s_distances[end + 1] - s_distances[end]);
-					da = ((list[end] - list[end - 1]) / (s_distances[end] - s_distances[end - 1]) + db) / 2;
-				} else {
-					double d = (b - a) / (s_distances[index + 1] - s_distances[index]);
-					da = ((a - list[index - 1]) / (s_distances[index] - s_distances[index - 1]) + d) / 2;
-					db = ((list[index + 2] - b) / (s_distances[index + 2] - s_distances[index + 1]) + d) / 2;
-				}
-				double delta = s_distances[index + 1] - s_distances[index];
-				da *= delta;
-				db *= delta;
-				double t = (distance - s_distances[index]) / delta;
-				return interpolate(a, b, da, db, t);
-			}
-		}
-
-		public static Command testCommand() {
-			return Commands.runOnce(() -> {
-				Aim aimer = new Interpolation();
-				for (int i = 0; i < s_distances.length - 1; i++) {
-					double middle = (s_distances[i] + s_distances[i + 1]) / 2;
-					double velocity = aimer.getShooterVelocity(middle);
-					double angle = aimer.getHoodAngle(middle);
-					double maxV = Math.max(s_velocities[i], s_velocities[i + 1]);
-					double maxErr = 0.01;
-					if (velocity > maxV && (velocity - maxV) / maxV > maxErr) {
-						throw new Error(String.format("Velocity interpolation was too high (%f > %f)", velocity, maxV));
-					}
-					double minV = Math.min(s_velocities[i], s_velocities[i + 1]);
-					if (velocity < minV && (minV - velocity) / minV > maxErr) {
-						throw new Error(String.format("Velocity interpolation was too low (%f < %f)", velocity, minV));
-					}
-					double maxA = Math.max(s_angles[i], s_angles[i + 1]);
-					if (angle > maxA && (angle - maxA) / maxA > maxErr) {
-						throw new Error(String.format("Angle interpolation was too high (%f > %f)", angle, maxA));
-					}
-					double minA = Math.min(s_angles[i], s_angles[i + 1]);
-					if (angle < minA && (minA - angle) / minA > maxErr) {
-						throw new Error(String.format("Angle interpolation was too low (%f < %f)", angle, minA));
-					}
-				}
-				System.out.println("All interpolation tests passing!!!!!!!");
-			});
-		}
-
-		@Override
-		public double getShooterVelocity(double distance) {
-			return interpolate(distance, s_velocities);
-		}
-
-		@Override
-		public double getHoodAngle(double distance) {
-			return interpolate(distance, s_angles);
-		}
-	};
 }

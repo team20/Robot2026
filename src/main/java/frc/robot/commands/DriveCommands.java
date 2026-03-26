@@ -9,11 +9,15 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Vision.FieldPoseEstimator;
 
 public class DriveCommands {
 	/**
@@ -110,44 +114,79 @@ public class DriveCommands {
 
 	}
 
-	public static class DriveDistance extends Command {
-		private final double m_distance;
-		private Pose2d m_initialPose;
+	public static class VisionDriveDistance extends Command {
+		private final double m_distanceX;
+		private final double m_distanceY;
+		private final double m_angle;
+		private Pose2d m_targetPose;
 		private static final double m_tolerance = .05; // When to stop trying!!
+		private static final double m_thetaTolerance = 2;
 
-		public DriveDistance(double distance) {
-			m_distance = distance;
+		public VisionDriveDistance(double distanceX, double distanceY, double angle) {
+			m_distanceX = distanceX;
+			m_distanceY = distanceY;
+			m_angle = angle;
 			setName("Drive For A Distance");
 			addRequirements(Drive.getDrive());
 		}
 
 		@Override
 		public void initialize() {
-			m_initialPose = Drive.getPose();
+			Pose2d current = getCurrentPosition();
+
+			m_targetPose = new Pose2d(current.getX() + m_distanceX, current.getY() + m_distanceY,
+					Rotation2d.fromDegrees(current.getRotation().getDegrees() + m_angle));
+		}
+
+		public Pose2d getCurrentPosition() {
+			Pose2d visionPose = Vision.getVision().getFieldPoseEstimator().getPose();
+			Pose2d odometryPose = Drive.getPose();
+			return new Pose2d(visionPose.getX(), visionPose.getY(), odometryPose.getRotation());
+		}
+
+		public double[] getError() {
+			Pose2d currentPos = getCurrentPosition();
+			return new double[] {
+					currentPos.getX() - m_targetPose.getX(), // X error
+					currentPos.getY() - m_targetPose.getY(), // Y error
+					currentPos.getRotation().getDegrees() - m_targetPose.getRotation().getDegrees() }; // Theta error
 		}
 
 		@Override
 		public void execute() {
-			Transform2d transform = Drive.getPose().minus(m_initialPose);
-			double speed, rotation;
+			Pose2d pose = ((FieldPoseEstimator) Vision.getVision().getFieldPoseEstimator()).getPose(); // Drive.getPose().minus(m_initialPose);
+			double speedX, speedY, rotation;
 			{
-				double distance = transform.getTranslation().getNorm();
-				double error = (distance - Math.abs(m_distance)) * Math.signum(m_distance);
+				double error = getError()[0];
+				double minPower = .05;
+				double maxPower = .3;
+				double maxErr = 1; // When to start slowing down!!
+				speedX = -ClampedP.clampedP(
+						error, minPower, maxPower, maxErr,
+						m_tolerance);
+			}
+			{
+				double errorY = getError()[1];
 				double minPower = .05;
 				double maxPower = .1;
 				double maxErr = .5; // When to start slowing down!!
-				speed = ClampedP.clampedP(error, minPower, maxPower, maxErr, m_tolerance);
+				speedY = -ClampedP.clampedP(errorY, minPower, maxPower, maxErr, m_tolerance);
 			}
+
 			{
-				double angle = transform.getTranslation().getAngle().getDegrees();
-				double error = 0 - angle;
-				double minPower = .01;
-				double maxPower = .05;
-				double maxErr = 2; // When to start slowing down!!
-				rotation = ClampedP.clampedP(error, minPower, maxPower, maxErr, m_tolerance);
+				double errorTheta = getError()[2];
+				double minPower = .1;
+				double maxPower = .3;
+				double maxErr = 20; // When to start slowing down!!
+				rotation = ClampedP.clampedP(errorTheta, minPower, maxPower, maxErr, m_thetaTolerance);
 			}
+
+			SmartDashboard.putNumber("Drive Command/X Error", getError()[0]);
+			SmartDashboard.putNumber("Drive Command/Y Error", getError()[1]);
+			SmartDashboard.putNumber("Drive Command/Theta Error", getError()[2]);
+
 			// rotation = .03;
-			Drive.drive(speed, 0, rotation, true);
+			Drive.drive(speedX, speedY, rotation, false);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -159,8 +198,9 @@ public class DriveCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			double distance = Drive.getPose().minus(m_initialPose).getTranslation().getNorm();
-			return Math.abs(distance - Math.abs(m_distance)) < m_tolerance;
+			// return (Math.abs(distanceY - Math.abs(m_distanceY)) < m_tolerance);
+			return (Math.abs(getError()[0]) < m_tolerance) && (Math.abs(getError()[1]) < m_tolerance) &&
+					(Math.abs(getError()[2]) < m_thetaTolerance);
 		}
 
 	}

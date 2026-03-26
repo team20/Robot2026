@@ -14,15 +14,14 @@ import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class AimCommands {
-	/**
-	 * This command uses the {@code MidpointEstimator} to estimate angle and
-	 * distance to hub, and sets turret, hood, and flywheel accordingly
-	 */
-	public static class MidpointAim extends Command {
+
+	// This command uses the {@code MidpointEstimator} to estimate angle and
+	// distance to hub, and sets turret, hood, and flywheel accordingly
+	public static class HubAimCommand extends Command {
 		private final AngleDistanceEstimator m_estimator;
 		private Aim m_aim = new Aim.Linear();
 
-		public MidpointAim(AngleDistanceEstimator estimator) {
+		public HubAimCommand(AngleDistanceEstimator estimator) {
 			m_estimator = estimator;
 			setName("Auto Aim Shooter and Hood");
 			addRequirements(Shooter.getShooter(), Hood.getHood());
