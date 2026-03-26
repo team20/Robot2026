@@ -3,11 +3,9 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.AngleUtility;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.IntakeWheels;
-import frc.robot.subsystems.PositionControlSubsystem;
 
 public class IntakeCommands {
 	public static class Teletake extends Command {
@@ -73,38 +71,6 @@ public class IntakeCommands {
 		@Override
 		public boolean isFinished() {
 			return true;
-		}
-	}
-
-	public static class IntakeToPositionHardware extends Command {
-		private final PositionControlSubsystem m_subsystem;
-		private final double m_tolerance;
-		private final double m_position;
-
-		public IntakeToPositionHardware(PositionControlSubsystem subsystem, double position, double tolerance) {
-			m_subsystem = subsystem;
-			m_position = position;
-			m_tolerance = tolerance;
-			setName(String.format("Run %s To Angle Using Motor Controller", m_subsystem.getName()));
-			addRequirements(m_subsystem);
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void initialize() {
-			m_subsystem.setMotorPosition(m_position);
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			m_subsystem.stopMotor();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return AngleUtility.minDifference(m_subsystem.getMotorRotations(), m_position) < m_tolerance;
 		}
 	}
 

@@ -12,35 +12,6 @@ import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Shooter;
 
 public class ShooterCommands {
-	public static class RunAtStaticRPM extends Command {
-		private double m_rpm;
-
-		/** Creates a new runShooter. */
-		public RunAtStaticRPM(double rpm) {
-			m_rpm = rpm;
-			setName("Run Shooter At Static RPM");
-			addRequirements(Shooter.getShooter());
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			Shooter.setVoltage(m_rpm / Shooter.getRPMperVolt());
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			Shooter.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return false;
-		}
-	}
-
 	public static class SetRPM extends Command {
 		private double m_rpm;
 
@@ -127,35 +98,6 @@ public class ShooterCommands {
 		@Override
 		public void end(boolean interrupted) {
 			Shooter.stop();
-		}
-	}
-
-	public static class RunAtDynamicRPM extends Command {
-		private double m_rpm;
-
-		/** Creates a new runShooter. */
-		public RunAtDynamicRPM(double rpm) {
-			m_rpm = rpm;
-			setName("Run Shooter At Dynamic RPM");
-			addRequirements(Shooter.getShooter());
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			Shooter.setRPM(m_rpm);
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			Shooter.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return false;
 		}
 	}
 

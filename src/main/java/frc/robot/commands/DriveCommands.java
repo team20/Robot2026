@@ -20,7 +20,6 @@ import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Vision.FieldPoseEstimator;
 
 public class DriveCommands {
-
 	/**
 	 * Creates a {@code Command} to drive the robot with joystick input.
 	 *

@@ -4,7 +4,6 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class TurretCommands {
 
@@ -24,41 +23,6 @@ public class TurretCommands {
 
 	public static Command getTurnToAngleSoftwareCommand(double angle) {
 		return new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), angle, Turret.getConstants());
-	}
-
-	public static class TurretAimAtTag extends Command {
-		private final AngleDistanceEstimator m_estimator;
-
-		public TurretAimAtTag(AngleDistanceEstimator estimator) {
-			m_estimator = estimator;
-			setName("Turret Aim At Tag");
-
-			addRequirements(Turret.getTurret());
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void initialize() {
-			double rotationNeededTicks = Turret.getAngleToTicks(m_estimator.getAngle());
-			if (rotationNeededTicks == 0)
-				return;
-
-			double currentTurretAngle = Turret.getTurret().getPosition();
-			double newTurretAngle = currentTurretAngle + rotationNeededTicks;
-
-			Turret.getTurret().moveToPosition(newTurretAngle);
-		}
-
-		// Called once the command ends or is interrupted.
-		// @Override
-		// public void end(boolean interrupted) {
-		// Turret.getTurret().stop();
-		// }
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return true;
-		}
 	}
 
 	public static class GradualAim extends Command {
