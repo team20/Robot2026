@@ -15,12 +15,13 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -52,13 +53,15 @@ public class Drive extends SubsystemBase {
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
-	private final SwerveDriveOdometry m_odometry;
+	private final Odometry2 m_odometry;
 	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 	private final SimDouble m_gyroSim;
 	private final SysIdRoutine m_sysidRoutine;
 
 	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
+	private final StructPublisher<Translation2d> m_velocityPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Velocity", Translation2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> m_currentChassisSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Chassis Speeds", ChassisSpeeds.struct).publish();
 	private final StructArrayPublisher<SwerveModuleState> m_targetModuleStatePublisher = NetworkTableInstance
@@ -96,7 +99,7 @@ public class Drive extends SubsystemBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		m_odometry = new SwerveDriveOdometry(m_kinematics, getHeading(), getModulePositions());
+		m_odometry = new Odometry2(m_kinematics, getHeading(), getModulePositions());
 		if (RobotBase.isSimulation()) {
 			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
 		} else {
@@ -205,7 +208,9 @@ public class Drive extends SubsystemBase {
 			m_gyroSim.set(
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
-		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
+		Pair<Pose2d, Translation2d> update = m_odometry.updateWithVelocity(getHeading(), getModulePositions());
+		m_posePublisher.set(update.getFirst());
+		m_velocityPublisher.set(update.getSecond());
 		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
 	}
 
