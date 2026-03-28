@@ -19,6 +19,8 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Aim;
@@ -30,6 +32,7 @@ public class Vision extends SubsystemBase {
 	private final PhotonCamera m_camera;
 	private final FieldPoseEstimator m_hubEstimator;
 	private final MidpointEstimator m_midpointEstimator;
+	private final PowerDistribution m_pdh = new PowerDistribution(62, ModuleType.kRev);
 
 	public interface AngleDistanceEstimator {
 		public double getAngle();
@@ -174,6 +177,7 @@ public class Vision extends SubsystemBase {
 
 	public void periodic() {
 		List<PhotonPipelineResult> results = m_camera.getAllUnreadResults();
+		m_pdh.setSwitchableChannel(!results.isEmpty());
 		if (results.isEmpty()) {
 			return;
 		}
