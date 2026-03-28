@@ -55,13 +55,13 @@ public class Constants {
 		}
 
 		public static final class IntakeConstants {
-			public static final int kIntakeWheelsPort = 56; // TODO: Update CAN IDs, these are placeholder values
+			public static final int kIntakeWheelsPort = 54;
 			public static final int kIntakeArmPort = 1;
 			public static final double kArmConversionFactor = 0.01;
 
-			public static final int kWheelSmartCurrentLimit = 10;
-			public static final int kWheelSecondaryCurrentLimit = 20;
-			public static final boolean kWheelInvert = false;
+			public static final int kWheelSmartCurrentLimit = 25;
+			public static final int kWheelSecondaryCurrentLimit = 35;
+			public static final boolean kWheelInvert = true;
 
 			public static final int kArmSmartCurrentLimit = 10;
 			public static final int kArmSecondaryCurrentLimit = 20;

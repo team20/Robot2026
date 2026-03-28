@@ -11,7 +11,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Intake;
 
 public class Robot extends TimedRobot {
 	public static boolean isCompBot = false;
@@ -27,10 +29,11 @@ public class Robot extends TimedRobot {
 		new Drive();
 		/*
 		 * new Shooter();
-		 * new Intake();
 		 * Turret.create();
 		 * Hood.create();
 		 */
+
+		new Intake();
 	}
 
 	public Robot() {
@@ -43,6 +46,10 @@ public class Robot extends TimedRobot {
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
 						() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
 						m_driverController.getHID()::getCreateButton));
+		m_driverController.options().debounce(.1).onTrue(new DriveCommands.ResetHeading());
+
+		m_driverController.L1().whileTrue(new IntakeCommands.SpinIntake(1.0));
+		m_driverController.R1().whileTrue(new IntakeCommands.StopIntake());
 		/*
 		 * Turret.getTurret().setDefaultCommand(
 		 * new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
