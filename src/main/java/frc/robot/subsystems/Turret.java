@@ -23,7 +23,7 @@ public class Turret extends AngularPositionSubsystem {
 
 	public double getRobotRelativeAngle() {
 		double fromCenterPosition = getPosition() - TurretConstants.kStraightAheadAngle;
-		return fromCenterPosition * TurretConstants.kAngleToTicksFactor;
+		return fromCenterPosition / TurretConstants.kAngleToTicksFactor + 180;
 	}
 
 	public static void create() {
