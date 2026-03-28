@@ -26,26 +26,25 @@ public class SensorFusion {
 	public void update(double accurateValue, double consistentValue) {
 		m_accurateSignal.addFirst(accurateValue);
 		m_consistentSignal.addFirst(consistentValue);
-		SimpleMatrix systemCoefficients = new SimpleMatrix(m_size, 3);
-		SimpleMatrix consistent = new SimpleMatrix(m_size, 1);
-		for (int i = 0; i < m_size; i++) {
-			systemCoefficients.setRow(i, 0, i * i, i, 1);
-			consistent.set(i, 0, m_consistentSignal.get(i));
+		if (m_accurateSignal.size() == m_size) {
+			SimpleMatrix systemCoefficients = new SimpleMatrix(m_size, 3);
+			SimpleMatrix consistent = new SimpleMatrix(m_size, 1);
+			for (int i = 0; i < m_size; i++) {
+				systemCoefficients.setRow(i, 0, i * i, i, 1);
+				consistent.set(i, 0, m_consistentSignal.get(i));
+			}
+			SimpleMatrix quadraticCoefficients = systemCoefficients.solve(consistent);
+			SimpleMatrix consistentFiltered = systemCoefficients.mult(quadraticCoefficients);
+			systemCoefficients = new SimpleMatrix(m_size, 2);
+			SimpleMatrix accurate = new SimpleMatrix(m_size, 1);
+			for (int i = 0; i < m_size; i++) {
+				systemCoefficients.setRow(i, 0, consistentFiltered.get(i, 0), 1);
+				accurate.set(i, 0, m_accurateSignal.get(i));
+			}
+			SimpleMatrix linearCoefficients = systemCoefficients.solve(accurate);
+			m_value = linearCoefficients.get(0, 0) * quadraticCoefficients.get(2, 0) + linearCoefficients.get(1, 0);
+			m_derivative = -linearCoefficients.get(0, 0) * quadraticCoefficients.get(1, 0) / m_dt;
 		}
-		SimpleMatrix transpose = systemCoefficients.transpose();
-		SimpleMatrix quadraticCoefficients = transpose.mult(systemCoefficients).invert().mult(transpose)
-				.mult(consistent);
-		SimpleMatrix consistentFiltered = systemCoefficients.mult(quadraticCoefficients);
-		systemCoefficients = new SimpleMatrix(m_size, 2);
-		SimpleMatrix accurate = new SimpleMatrix(m_size, 1);
-		for (int i = 0; i < m_size; i++) {
-			systemCoefficients.setRow(i, 0, consistentFiltered.get(i, 0), 1);
-			accurate.set(i, 0, m_accurateSignal.get(i));
-		}
-		transpose = systemCoefficients.transpose();
-		SimpleMatrix linearCoefficients = transpose.mult(systemCoefficients).invert().mult(transpose).mult(accurate);
-		m_value = linearCoefficients.get(0, 0) * quadraticCoefficients.get(2, 0) + linearCoefficients.get(1, 0);
-		m_derivative = linearCoefficients.get(0, 0) * quadraticCoefficients.get(1, 0) / m_dt;
 	}
 
 	public double getDerivative() {
