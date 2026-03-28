@@ -111,6 +111,9 @@ public class Robot extends TimedRobot {
 			m_scheduler.schedule(new DriveCommands.ResetOdometry(pose2));
 		}));
 
+		m_driverController.touchpad().onTrue(m_autoComposer.getVelocityTestCommand());
+		m_operatorController.touchpad().onTrue(m_autoComposer.getVelocityTestCommandReverse());
+
 		{ // Hood bindings
 
 			// m_driverController.cross().whileTrue(

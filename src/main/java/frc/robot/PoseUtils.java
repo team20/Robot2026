@@ -11,9 +11,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.Constants.Subsystems.VisionConstants;
 
 public class PoseUtils {
 	public record PoseResult(Pose2d pose, double xStdDev, double yStdDev, double thetaStdDev) {
@@ -144,17 +141,5 @@ public class PoseUtils {
 			total += difference / Math.hypot(difference, k);
 		}
 		return total;
-	}
-
-	/**
-	 * Use this method to the the Pose2d of the hub for the alliance you are on.
-	 * 
-	 * @return the {@code Pose2d} of the current hub
-	 */
-	public static Pose2d getHub() {
-		return switch (DriverStation.getAlliance().orElse(Alliance.Red)) {
-			case Blue -> VisionConstants.kBlueHub;
-			case Red -> VisionConstants.kRedHub;
-		};
 	}
 }

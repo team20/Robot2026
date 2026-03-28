@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.subsystems.Agitator;
+import frc.robot.subsystems.Shooter;
 
 public class TransportCommands {
 	public static Command getTimedShoot(double time) {
@@ -55,8 +56,12 @@ public class TransportCommands {
 
 		// Called when the command is initially scheduled.
 		@Override
-		public void initialize() {
-			Agitator.setPower(m_power);
+		public void execute() {
+			if (Shooter.getRPM() > 1776) {
+				Agitator.setPower(m_power);
+			} else {
+				Agitator.stop();
+			}
 		}
 
 		// Returns true when the command should end.

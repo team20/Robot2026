@@ -19,6 +19,11 @@ import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class AimCommands {
+	private static double s_airtime;
+
+	public static double getAirtime() {
+		return s_airtime;
+	}
 
 	// This command uses the {@code MidpointEstimator} to estimate angle and
 	// distance to hub, and sets turret, hood, and flywheel accordingly
@@ -41,7 +46,7 @@ public class AimCommands {
 			double newTurretAngle = currentTurretAngle + rotationNeeded;
 
 			double distance = m_estimator.getDistance().in(Feet);
-
+			s_airtime = m_aim.getShotAirtime(distance);
 			Hood.getHood().moveToPosition(m_aim.getHoodAngle(distance));
 			Shooter.setRPM(m_aim.getShooterVelocity(distance));
 			// Set hardware setpoint - the controller will continue to track setpoint even

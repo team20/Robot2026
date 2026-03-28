@@ -3,18 +3,22 @@ package frc.robot.autos;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AimCommands.AdjustAim;
+import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
+import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 
 public class AutoComposer {
@@ -101,6 +105,29 @@ public class AutoComposer {
 				// addition
 
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto front of bump");
+	}
+
+	public Command getVelocityTestCommand() {
+		return Commands.sequence(
+				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 1),
+				Commands.parallel(
+						Commands.sequence(
+								new AngularPositionCommands.SetAngleHardware(Turret.getTurret(), 135),
+								new AngularPositionCommands.SettleAngle(Turret.getTurret(), 10),
+								Commands.race(
+										new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower),
+										Commands.repeatingSequence(
+												new AimCommands.HubAimCommand(
+														Vision.getVision().getFieldPoseEstimator())))),
+						Commands.sequence(
+								new DriveCommands.DrivePowerAndTime(.07, .07, 0, 8))));
+	}
+
+	public Command getVelocityTestCommandReverse() {
+		return Commands.sequence(
+				HoodCommands.getHoodDownCommand(),
+				new DriveCommands.DrivePowerAndTime(-.3, -.3, 0, 1.2),
+				new DriveCommands.DrivePowerAndTime(-.2, 0, 0, 1));
 	}
 
 	public Command getRightTwoShootAutoWithIntake() {
