@@ -102,7 +102,7 @@ public class Robot extends TimedRobot {
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
 						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(), // L2 rotates left,
 						// R2 rotates right
-						m_driverController.getHID()::getCreateButton));
+						() -> false));
 		m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
 
 		{ // Hood bindings
@@ -155,9 +155,9 @@ public class Robot extends TimedRobot {
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntake());
-			// IntakeWheels.getIntakeWheels().setDefaultCommand(
-			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
-			// m_operatorController.L1()));
+			IntakeWheels.getIntakeWheels().setDefaultCommand(
+					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
+							m_operatorController.L1()));
 			// m_operatorController.create().whileTrue(new
 			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
