@@ -70,7 +70,7 @@ public class Vision extends SubsystemBase {
 								"Robot Relative Angle from Turret",
 								Turret.getTurret().getRobotRelativeAngle());
 
-				Translation2d difference = PoseUtils.getHub().minus(pose.pose()).getTranslation();
+				Translation2d difference = Drive.getHub().minus(pose.pose()).getTranslation();
 				m_angleFilter.calculate(-difference.getAngle().getDegrees());
 				m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
 				m_angle = m_angleFilter.lastValue();

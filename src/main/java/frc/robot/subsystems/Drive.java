@@ -19,6 +19,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -28,6 +29,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
@@ -37,7 +40,9 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
+import frc.robot.commands.AimCommands;
 
 public class Drive extends SubsystemBase {
 	private static Drive s_theDrive;
@@ -60,6 +65,10 @@ public class Drive extends SubsystemBase {
 
 	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
+	private final StructPublisher<Pose2d> m_aimPosePublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Aim Pose", Pose2d.struct).publish();
+	private final StructPublisher<Pose2d> m_aimPoseCompensatedPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Aim Pose Compensated", Pose2d.struct).publish();
 	private final StructPublisher<Translation2d> m_velocityPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Velocity", Translation2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> m_currentChassisSpeedsPublisher = NetworkTableInstance.getDefault()
@@ -70,6 +79,8 @@ public class Drive extends SubsystemBase {
 	private final StructArrayPublisher<SwerveModuleState> m_currentModuleStatePublisher = NetworkTableInstance
 			.getDefault().getStructArrayTopic("/SmartDashboard/Current Swerve Modules States", SwerveModuleState.struct)
 			.publish();
+
+	private Translation2d m_velocity;
 
 	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
 
@@ -209,9 +220,27 @@ public class Drive extends SubsystemBase {
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
 		Pair<Pose2d, Translation2d> update = m_odometry.updateWithVelocity(getHeading(), getModulePositions());
+		m_velocity = update.getSecond();
 		m_posePublisher.set(update.getFirst());
-		m_velocityPublisher.set(update.getSecond());
+		m_velocityPublisher.set(m_velocity);
 		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
+	}
+
+	/**
+	 * Use this method to the the Pose2d of the hub for the alliance you are on.
+	 * 
+	 * @return the {@code Pose2d} of the current hub
+	 */
+	public static Pose2d getHub() {
+		Pose2d hub = switch (DriverStation.getAlliance().orElse(Alliance.Red)) {
+			case Blue -> VisionConstants.kBlueHub;
+			case Red -> VisionConstants.kRedHub;
+		};
+		Pose2d compensated = hub
+				.plus(new Transform2d(s_theDrive.m_velocity.times(-AimCommands.getAirtime()), Rotation2d.kZero));
+		s_theDrive.m_aimPosePublisher.accept(hub);
+		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
+		return compensated;
 	}
 
 	public static void toggleCoastMode() {
