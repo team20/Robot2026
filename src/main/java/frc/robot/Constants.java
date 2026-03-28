@@ -182,7 +182,7 @@ public class Constants {
 			kDriveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 			kDriveConfig.CurrentLimits.StatorCurrentLimit = 80; // Output current (proportional to acceleration)
 			kDriveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-			kDriveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+			kDriveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 		}
 
 		public static final TalonFXConfiguration kSteerConfig = new TalonFXConfiguration();

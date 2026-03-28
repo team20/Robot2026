@@ -114,7 +114,7 @@ public class Drive extends SubsystemBase {
 	 * @return The heading
 	 */
 	public static Rotation2d getHeading() {
-		return s_theDrive.m_gyro.getRotation2d().rotateBy(Rotation2d.k180deg); // Flipped due to auto start
+		return s_theDrive.m_gyro.getRotation2d();// .rotateBy(Rotation2d.k180deg); // Flipped due to auto start
 		// .rotateBy((AutoConstants.isBackwardsAtStart) ? Rotation2d.k180deg :
 		// Rotation2d.kZero);
 	}
@@ -236,6 +236,7 @@ public class Drive extends SubsystemBase {
 	 */
 	public static void resetHeading() {
 		s_theDrive.m_gyro.zeroYaw();
+		s_theDrive.m_gyro.setAngleAdjustment(180.0);
 	}
 
 	public static void resetOdometry(Pose2d pose) {
