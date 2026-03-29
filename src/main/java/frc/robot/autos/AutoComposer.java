@@ -107,6 +107,10 @@ public class AutoComposer {
 				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto front of bump");
 	}
 
+	public Command getVelocity1Testcommand() {
+		return new DriveCommands.DrivePowerAndTime(-0.3, 0, 0, 5);
+	}
+
 	public Command getVelocityTestCommand() {
 		return Commands.sequence(
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 1),

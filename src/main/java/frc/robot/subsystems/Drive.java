@@ -15,8 +15,10 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -35,6 +37,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,7 +47,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
-import frc.robot.commands.AimCommands;
 
 public class Drive extends SubsystemBase {
 	private static Drive s_theDrive;
@@ -64,7 +66,8 @@ public class Drive extends SubsystemBase {
 	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 	private final SimDouble m_gyroSim;
 	private final SysIdRoutine m_sysidRoutine;
-	private final CircularBuffer<SwerveModulePosition[]> m_moduleStates = new CircularBuffer<>(2);
+	private final CircularBuffer<Pair<SwerveModulePosition[], Double>> m_modulePositions = new CircularBuffer<>(2);
+	private final Timer periodicTimer = new Timer();
 
 	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
@@ -74,6 +77,8 @@ public class Drive extends SubsystemBase {
 			.getStructTopic("/SmartDashboard/Aim Pose Compensated", Pose2d.struct).publish();
 	private final StructPublisher<Translation2d> m_velocityPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Velocity", Translation2d.struct).publish();
+	private final StructPublisher<Translation2d> m_filteredVelocityPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Filtered Velocity", Translation2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> m_currentChassisSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Chassis Speeds", ChassisSpeeds.struct).publish();
 	private final StructArrayPublisher<SwerveModuleState> m_targetModuleStatePublisher = NetworkTableInstance
@@ -84,6 +89,9 @@ public class Drive extends SubsystemBase {
 			.publish();
 
 	private Translation2d m_velocity;
+	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(8);
+	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(8);
+	private Translation2d m_filteredVelocity;
 
 	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
 
@@ -119,6 +127,8 @@ public class Drive extends SubsystemBase {
 		} else {
 			m_gyroSim = null;
 		}
+
+		periodicTimer.start();
 	}
 
 	public static Drive getDrive() {
@@ -214,19 +224,42 @@ public class Drive extends SubsystemBase {
 	 */
 	@Override
 	public void periodic() {
+		double timestamp = periodicTimer.get();
+
+		// Get and publish each swerve module's state
 		SwerveModuleState[] states = doModuleX(SwerveModule::getModuleState, SwerveModuleState[]::new);
 		m_currentModuleStatePublisher.set(states);
+
+		// Find and publish chassis speeds (in terms of voltage, 0.0 to 12.0)
 		var speeds = m_kinematics.toChassisSpeeds(states);
 		m_currentChassisSpeedsPublisher.set(speeds);
+
+		// Simulate the gyro
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
 			m_gyroSim.set(
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
-		m_moduleStates.addFirst(getModulePositions());
-		m_posePublisher.set(m_odometry.update(getHeading(), m_moduleStates.getFirst()));
-		Twist2d twist = m_kinematics.toTwist2d(m_moduleStates.getLast(), m_moduleStates.getFirst());
-		m_velocity = new Translation2d(twist.dx / .02, twist.dy / .02);
+
+		// Update current module positions & odometry pose
+		// m_moduleStates stores last (current) and second to last module positions
+		m_modulePositions.addFirst(new Pair<SwerveModulePosition[], Double>(getModulePositions(), timestamp));
+		m_posePublisher.set(m_odometry.update(getHeading(), m_modulePositions.getFirst().getFirst()));
+
+		// Calculate difference between last and second to last module states
+		// Find x and y velocity by taking the derivative / calculating slope
+		// (change in module positions over 20 ms)
+		Twist2d twist = m_kinematics
+				.toTwist2d(m_modulePositions.getLast().getFirst(), m_modulePositions.getFirst().getFirst());
+		double dt = m_modulePositions.getFirst().getSecond() - m_modulePositions.getLast().getSecond();
+		m_velocity = new Translation2d(twist.dx / dt, twist.dy / dt);
+
+		// Filter velocity (use every 8th value to avoid noise)
+		m_filteredVelocity = new Translation2d(m_velocityXFilter.calculate(m_velocity.getX()),
+				m_velocityYFilter.calculate(m_velocity.getY()));
+
+		// Publish velocities and pose angle
 		m_velocityPublisher.set(m_velocity);
+		m_filteredVelocityPublisher.set(m_filteredVelocity);
 		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
 	}
 
@@ -250,8 +283,12 @@ public class Drive extends SubsystemBase {
 			case Blue -> VisionConstants.kBlueHub;
 			case Red -> VisionConstants.kRedHub;
 		};
+
 		Pose2d compensated = hub
-				.plus(new Transform2d(s_theDrive.m_velocity.times(-AimCommands.getAirtime()), Rotation2d.kZero));
+				.plus(new Transform2d(0, 2, Rotation2d.kZero));
+		// new
+		// Transform2d(s_theDrive.m_filteredVelocity.times(-AimCommands.getAirtime()),
+		// Rotation2d.kZero));
 		s_theDrive.m_aimPosePublisher.accept(hub);
 		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
 		return compensated;
