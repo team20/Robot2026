@@ -91,6 +91,9 @@ public class Robot extends TimedRobot {
 		m_autoChooser
 				.setDefaultOption(
 						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser
+				.setDefaultOption(
+						"Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
 		m_isInPit.addOption("Is in pit", true);
 		m_isInPit.setDefaultOption("Not in pit", false);
 	}
