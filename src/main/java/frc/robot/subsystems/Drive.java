@@ -15,12 +15,13 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.SimDouble;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -29,6 +30,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.util.CircularBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -58,10 +60,11 @@ public class Drive extends SubsystemBase {
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
-	private final Odometry2 m_odometry;
+	private final SwerveDrivePoseEstimator m_odometry;
 	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 	private final SimDouble m_gyroSim;
 	private final SysIdRoutine m_sysidRoutine;
+	private final CircularBuffer<SwerveModulePosition[]> m_moduleStates = new CircularBuffer<>(2);
 
 	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
@@ -110,7 +113,7 @@ public class Drive extends SubsystemBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		m_odometry = new Odometry2(m_kinematics, getHeading(), getModulePositions());
+		m_odometry = new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), Pose2d.kZero);
 		if (RobotBase.isSimulation()) {
 			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
 		} else {
@@ -146,7 +149,7 @@ public class Drive extends SubsystemBase {
 	 * @return The pose of the robot.
 	 */
 	public static Pose2d getPose() {
-		return s_theDrive.m_odometry.getPoseMeters();
+		return s_theDrive.m_odometry.getEstimatedPosition();
 	}
 
 	/**
@@ -219,9 +222,10 @@ public class Drive extends SubsystemBase {
 			m_gyroSim.set(
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
-		Pair<Pose2d, Translation2d> update = m_odometry.updateWithVelocity(getHeading(), getModulePositions());
-		m_velocity = update.getSecond();
-		m_posePublisher.set(update.getFirst());
+		m_moduleStates.addFirst(getModulePositions());
+		m_posePublisher.set(m_odometry.update(getHeading(), m_moduleStates.getFirst()));
+		Twist2d twist = m_kinematics.toTwist2d(m_moduleStates.getLast(), m_moduleStates.getFirst());
+		m_velocity = new Translation2d(twist.dx / .02, twist.dy / .02);
 		m_velocityPublisher.set(m_velocity);
 		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
 	}
@@ -231,8 +235,18 @@ public class Drive extends SubsystemBase {
 	 * 
 	 * @return the {@code Pose2d} of the current hub
 	 */
-	public static Pose2d getHub() {
-		Pose2d hub = switch (DriverStation.getAlliance().orElse(Alliance.Red)) {
+	public static Pose2d getAimTarget() {
+		Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+		Pose2d pose = getPose();
+		if (pose.getX() > VisionConstants.kBlueNeutralZoneStart && pose.getX() < VisionConstants.kRedNeutralZoneStart) {
+			Pose2d target = new Pose2d(switch (alliance) {
+				case Blue -> 1;
+				case Red -> 13.5;
+			}, pose.getY(), getHeading());
+			s_theDrive.m_aimPosePublisher.accept(target);
+			return target;
+		}
+		Pose2d hub = switch (alliance) {
 			case Blue -> VisionConstants.kBlueHub;
 			case Red -> VisionConstants.kRedHub;
 		};
@@ -241,6 +255,10 @@ public class Drive extends SubsystemBase {
 		s_theDrive.m_aimPosePublisher.accept(hub);
 		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
 		return compensated;
+	}
+
+	public static SwerveDrivePoseEstimator getEstimator() {
+		return s_theDrive.m_odometry;
 	}
 
 	public static void toggleCoastMode() {
