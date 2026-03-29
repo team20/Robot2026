@@ -21,6 +21,29 @@ import frc.robot.subsystems.Vision.FieldPoseEstimator;
 
 public class DriveCommands {
 
+	public enum Tolerances {
+		COARSE(0.25, 10),
+		FINE_TRANSLATION(0.1, 10),
+		FINE_ROTATION(0.25, 2.5),
+		FINEST(0.1, 2.5);
+
+		private double m_translation;
+		private double m_rotation;
+
+		private Tolerances(double translation, double rotation) {
+			translation = m_translation;
+			rotation = m_rotation;
+		}
+
+		public double getTranslation() {
+			return m_translation;
+		}
+
+		public double getRotation() {
+			return m_rotation;
+		}
+	}
+
 	/**
 	 * Creates a {@code Command} to drive the robot with joystick input.
 	 *
@@ -111,6 +134,82 @@ public class DriveCommands {
 		@Override
 		public boolean isFinished() {
 			return m_time > 0 && m_timer.hasElapsed(m_time);
+		}
+
+	}
+
+	public static class VisionDrivePose extends Command {
+		private Pose2d m_targetPose;
+		private final Tolerances m_tolerance;
+
+		public VisionDrivePose(Pose2d pose, Tolerances tolerance) {
+			m_targetPose = pose;
+			m_tolerance = tolerance;
+			setName("Drive For A Distance");
+			addRequirements(Drive.getDrive());
+		}
+
+		public VisionDrivePose(Pose2d pose) {
+			this(pose, Tolerances.FINE_TRANSLATION);
+		}
+
+		public double[] getError() {
+			Pose2d currentPos = Drive.getPose();
+			return new double[] {
+					currentPos.getX() - m_targetPose.getX(), // X error
+					currentPos.getY() - m_targetPose.getY(), // Y error
+					currentPos.getRotation().getDegrees() - m_targetPose.getRotation().getDegrees() }; // Theta error
+		}
+
+		@Override
+		public void execute() {
+			double speedX, speedY, rotation;
+			{
+				double error = getError()[0];
+				double minPower = .05;
+				double maxPower = .3;
+				double maxErr = .5; // When to start slowing down!!
+				speedX = -ClampedP.clampedP(
+						error, minPower, maxPower, maxErr,
+						m_tolerance.getTranslation());
+			}
+			{
+				double errorY = getError()[1];
+				double minPower = .05;
+				double maxPower = .3;
+				double maxErr = .5; // When to start slowing down!!
+				speedY = -ClampedP.clampedP(errorY, minPower, maxPower, maxErr, m_tolerance.getTranslation());
+			}
+
+			{
+				double errorTheta = getError()[2];
+				double minPower = .1;
+				double maxPower = .3;
+				double maxErr = 20; // When to start slowing down!!
+				rotation = ClampedP.clampedP(errorTheta, minPower, maxPower, maxErr, m_tolerance.getRotation());
+			}
+
+			SmartDashboard.putNumber("Drive Command/X Error", getError()[0]);
+			SmartDashboard.putNumber("Drive Command/Y Error", getError()[1]);
+			SmartDashboard.putNumber("Drive Command/Theta Error", getError()[2]);
+
+			// rotation = .03;
+			Drive.drive(speedX, speedY, rotation, false);
+		}
+
+		// Called once the command ends or is interrupted.
+		@Override
+		public void end(boolean interrupted) {
+			Drive.stop();
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			// return (Math.abs(distanceY - Math.abs(m_distanceY)) < m_tolerance);
+			return Math.abs(getError()[0]) < m_tolerance.getTranslation()
+					&& Math.abs(getError()[1]) < m_tolerance.getTranslation() &&
+					Math.abs(getError()[2]) < m_tolerance.getRotation();
 		}
 
 	}
@@ -249,21 +348,35 @@ public class DriveCommands {
 		private final Pose2d m_pose;
 		private final double m_translationSpeed;
 		private final double m_rotationSpeed;
+		private final Tolerances m_tolerance;
 
-		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed) {
+		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, Tolerances tolerance) {
 			m_pose = pose;
 			m_translationSpeed = translationSpeed;
 			m_rotationSpeed = rotationSpeed;
+			m_tolerance = tolerance;
 			setName("Drive To A Pose");
 			addRequirements(Drive.getDrive());
 		}
 
+		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed) {
+			this(pose, translationSpeed, rotationSpeed, Tolerances.FINE_TRANSLATION);
+		}
+
+		public NinjaStar(Pose2d pose) {
+			this(pose, 0.3, 0.3);
+		}
+
 		@Override
 		public void execute() {
-			Transform2d error = Drive.getPose().minus(m_pose);
-			double speedX = ClampedP.clampedP(error.getX(), 0.05, m_translationSpeed, 1, 0.01);
-			double speedY = ClampedP.clampedP(error.getY(), 0.05, m_translationSpeed, 1, 0.01);
-			double speedTheta = ClampedP.clampedP(error.getRotation().getDegrees(), 0.05, m_rotationSpeed, 45, 5);
+			Transform2d error = m_pose.minus(Drive.getPose());
+			SmartDashboard.putNumber("NinjaStar/X Error", -error.getX());
+			SmartDashboard.putNumber("NinjaStar/Y Error", -error.getY());
+			SmartDashboard.putNumber("NinjaStar/θ Error", -error.getRotation().getDegrees());
+			double speedX = ClampedP.clampedP(-error.getX(), 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
+			double speedY = ClampedP.clampedP(-error.getY(), 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
+			double speedTheta = ClampedP
+					.clampedP(-error.getRotation().getDegrees(), 0.01, m_rotationSpeed, 45, m_tolerance.getRotation());
 			Drive.drive(speedX, speedY, speedTheta, true);
 		}
 
@@ -277,7 +390,8 @@ public class DriveCommands {
 		@Override
 		public boolean isFinished() {
 			Transform2d error = Drive.getPose().minus(m_pose);
-			return error.getTranslation().getNorm() < 0.01 && Math.abs(error.getRotation().getDegrees()) < 5;
+			return error.getTranslation().getNorm() < m_tolerance.getTranslation()
+					&& Math.abs(error.getRotation().getDegrees()) < m_tolerance.getRotation();
 		}
 	}
 

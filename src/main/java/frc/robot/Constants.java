@@ -17,10 +17,14 @@ public class Constants {
 
 	public static final class Subsystems {
 		public static final class VisionConstants {
+
 			// 3 red, 3 blue
 			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5, 18, 21, 24, 25, 26, 27);
 			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.kZero);
 			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.kZero);
+
+			public static final double kRedNeutralZoneStart = 11.1;
+			public static final double kBlueNeutralZoneStart = 5.2;
 		}
 
 		public static final class TurretConstants {
