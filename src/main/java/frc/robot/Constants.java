@@ -122,7 +122,7 @@ public class Constants {
 			public static final int kSecondaryCurrentLimit = 60;
 			public static final boolean kInvert = false;
 			public static final double kGearRatio = 81.0 / 1.0;
-			public static final double kClimbPosition = 29000; // TODO: Find actual positions
+			public static final double kClimbPosition = 31053; // TODO: Find actual positions
 			public static final double kRetractPosition = 0;
 			public static final double kP = 0.2;
 		}
@@ -182,7 +182,7 @@ public class Constants {
 			kDriveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 			kDriveConfig.CurrentLimits.StatorCurrentLimit = 80; // Output current (proportional to acceleration)
 			kDriveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-			kDriveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+			kDriveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 		}
 
 		public static final TalonFXConfiguration kSteerConfig = new TalonFXConfiguration();

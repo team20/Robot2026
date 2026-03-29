@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -100,10 +102,14 @@ public class Robot extends TimedRobot {
 		Drive.getDrive().setDefaultCommand(
 				new DriveCommands.JoystickDrive(
 						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(), // L2 rotates left,
-						// R2 rotates right
-						m_driverController.getHID()::getCreateButton));
+						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
+						() -> false));
 		m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
+		m_driverController.create().onTrue(Commands.runOnce(() -> {
+			Pose2d pose1 = Vision.getVision().getFieldPoseEstimator().getPose();
+			Pose2d pose2 = new Pose2d(pose1.getTranslation(), Rotation2d.kZero);
+			m_scheduler.schedule(new DriveCommands.ResetOdometry(pose2));
+		}));
 
 		{ // Hood bindings
 
@@ -155,9 +161,9 @@ public class Robot extends TimedRobot {
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntake());
-			// IntakeWheels.getIntakeWheels().setDefaultCommand(
-			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
-			// m_operatorController.L1()));
+			IntakeWheels.getIntakeWheels().setDefaultCommand(
+					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
+							m_operatorController.L1()));
 			// m_operatorController.create().whileTrue(new
 			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
 		}
@@ -304,3 +310,5 @@ public class Robot extends TimedRobot {
 		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
 	}
 }
+
+//
