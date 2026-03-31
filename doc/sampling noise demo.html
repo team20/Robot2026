@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sampling noise</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"></script>
+  <style>
+    body{margin:40px;font-family:sans-serif}
+    canvas{max-width:700px;max-height:400px}
+    .controls{display:flex;gap:20px;margin:10px 0;align-items:center;flex-wrap:wrap}
+    .controls label{font-size:14px;font-weight:bold}
+    .controls input{width:80px;padding:4px 6px;font-size:14px}
+    .controls button{padding:6px 16px;font-size:14px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h2>Sampling Noise Demo</h2>
+  <h3 id="h-encoder"></h3>
+  <h3>Distance(t) is actual Robot displacement at time t</h3>
+  <h3>lastEncoder(t) is the last encoder value sent as of time (t)</h3>
+  <h3 id="h-velocity"></h3>
+  <div class="controls">
+    <label>velocity: <input id="in-vel" type="number" step="0.1"></label>
+    <label>encoder hz: <input id="in-enc" type="number" step="1"></label>
+    <label>velocity hz: <input id="in-vhz" type="number" step="1"></label>
+    <label>jitter (ms): <input id="in-jit" type="number" step="1"></label>
+    <button id="btn-update">Update</button>
+  </div>
+  <canvas id="chart"></canvas>
+  <script>
+    let targetVelocity = 1;
+    let encoderHz = 50;
+    let velocityHz = 50;
+    let jitter = 2;
+
+    const inVel = document.getElementById('in-vel');
+    const inEnc = document.getElementById('in-enc');
+    const inVhz = document.getElementById('in-vhz');
+    const inJit = document.getElementById('in-jit');
+    inVel.value = targetVelocity;
+    inEnc.value = encoderHz;
+    inVhz.value = velocityHz;
+    inJit.value = jitter;
+
+    function updateHeadings() {
+      document.getElementById('h-encoder').textContent =
+        `Robot is moving at v=${targetVelocity} and sends encoder values at ${encoderHz}hz (${1000/encoderHz}ms)`;
+      document.getElementById('h-velocity').textContent =
+        `velocity(t) is calculated at ${velocityHz}hz, with ${jitter}ms of jitter`;
+    }
+    updateHeadings();
+
+    function distance(t) {
+      return t * targetVelocity;
+    }
+    function lastEncoderDistance(t) { 
+      let period = 1000/encoderHz;
+      return distance(Math.floor(t/period)*period)
+    }
+    function velocity(t1, t2) {
+      let d1 = lastEncoderDistance(t1);
+      let d2 = lastEncoderDistance(t2);      
+      return (d2 - d1) / (t2 - t1)
+    }
+    function generateData() {
+      let dSeries = [];
+      let sampledSeries = [];
+      let vSeries = [];
+      let nextV = 0;
+      for (let t = 0; t < 5000; ++t) {
+        dSeries.push({x: t, y: distance(t)})
+        sampledSeries.push({x: t, y: lastEncoderDistance(t)});
+      }
+      
+      let t = 0;
+      let lastT = 0;
+      while (t < 5000) {
+        let nominalPeriod = 1000/velocityHz;
+        let actualPeriod = nominalPeriod + Math.floor(Math.random()*(jitter+1))
+       
+        let t1 = t;
+        let t2 = t + actualPeriod;
+        let d1 = lastEncoderDistance(t1);
+        let d2 = lastEncoderDistance(t2);
+        let v = (d2 - d1)/actualPeriod;
+        vSeries.push({x: t2, y: v, label: `sampledV(${t1}, ${t2}) = (${d2.toFixed(2)} - ${d1.toFixed(2)}) / ${actualPeriod} = ${v.toFixed(4)}`})
+
+        t = t2;
+      }
+
+      return [
+        { title: 'distance(t)', data: dSeries },
+        { title: 'last encoder(t)', data: sampledSeries },
+        { title: 'sampled v(t)', data: vSeries }
+      ];
+    }
+
+    const [fSeries, gSeries, hSeries] = generateData();
+
+    function rescaleY(chart) {
+      const xMin = chart.scales.x.min;
+      const xMax = chart.scales.x.max;
+      let yMin = Infinity, yMax = -Infinity;
+      let y2Min = Infinity, y2Max = -Infinity;
+      chart.data.datasets.forEach(ds => {
+        const isY2 = ds.yAxisID === 'y2';
+        ds.data.forEach(p => {
+          if (p.x >= xMin && p.x <= xMax) {
+            if (isY2) { y2Min = Math.min(y2Min, p.y); y2Max = Math.max(y2Max, p.y); }
+            else { yMin = Math.min(yMin, p.y); yMax = Math.max(yMax, p.y); }
+          }
+        });
+      });
+      const pad = 0.05;
+      if (yMin !== Infinity) {
+        const r = yMax - yMin || 1;
+        chart.scales.y.options.min = yMin - r * pad;
+        chart.scales.y.options.max = yMax + r * pad;
+      }
+      if (y2Min !== Infinity) {
+        const r = y2Max - y2Min || 1;
+        chart.scales.y2.options.min = y2Min - r * pad;
+        chart.scales.y2.options.max = y2Max + r * pad;
+      }
+      chart.update('none');
+    }
+
+    const myChart = new Chart(document.getElementById('chart'), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: fSeries.title,
+          data: fSeries.data,
+          pointRadius: 0.5,
+          pointBackgroundColor: 'red',
+          showLine: true,
+          borderColor: 'red',
+          backgroundColor: 'red',
+          borderWidth: 1
+        }, {
+          label: gSeries.title,
+          data: gSeries.data,
+          pointRadius: 1.5,
+          pointBackgroundColor: 'green',
+          showLine: true,
+          borderColor: 'green',
+          backgroundColor: 'green',
+          borderWidth: 1,
+          order: 0
+        }, {
+          label: hSeries.title,
+          data: hSeries.data,
+          pointRadius: 2,
+          pointBackgroundColor: 'blue',
+          showLine: true,
+          borderColor: 'blue',
+          backgroundColor: 'blue',
+          borderWidth: 1,
+          order: 0,
+          yAxisID: 'y2'
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 't' },
+            ticks: { stepSize: 20 },
+            grid: { tickLength: 8 }
+          },
+          y: { position: 'left', title: { display: true, text: 'Distance' } },
+          y2: { position: 'right', title: { display: true, text: 'Velocity' }, grid: { drawOnChartArea: false } }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.raw.label ?? `${ctx.dataset.label}: ${ctx.raw.y.toFixed(2)}`
+            }
+          },
+          legend: { display: true },
+          zoom: {
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: 'x'
+            },
+            pan: {
+              enabled: true,
+              mode: 'x'
+            },
+            limits: {
+              x: { min: 0, max: 5000 }
+            },
+            onZoomComplete: ({chart}) => rescaleY(chart),
+            onPanComplete: ({chart}) => rescaleY(chart)
+          }
+        }
+      }
+    });
+    document.getElementById('btn-update').addEventListener('click', () => {
+      targetVelocity = parseFloat(inVel.value);
+      encoderHz = parseFloat(inEnc.value);
+      velocityHz = parseFloat(inVhz.value);
+      jitter = parseFloat(inJit.value);
+      updateHeadings();
+
+      const [f, g, h] = generateData();
+      myChart.data.datasets[0].data = f.data;
+      myChart.data.datasets[1].data = g.data;
+      myChart.data.datasets[2].data = h.data;
+      myChart.resetZoom();
+      myChart.update();
+    });
+  </script>
+</body>
+</html>
