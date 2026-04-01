@@ -8,6 +8,8 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,6 +23,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Aim;
@@ -65,12 +68,15 @@ public class Vision extends SubsystemBase {
 				m_botPose = m_pose.transformBy(
 						new Transform2d(0, 0,
 								Rotation2d.fromDegrees(Turret.getTurret().getRobotRelativeAngle())));
+				Drive.getEstimator().addVisionMeasurement(
+						m_botPose, RobotController.getFPGATime() * 1e-6,
+						MatBuilder.fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(), pose.thetaStdDev()));
 				SmartDashboard
 						.putNumber(
 								"Robot Relative Angle from Turret",
 								Turret.getTurret().getRobotRelativeAngle());
 
-				Translation2d difference = PoseUtils.getHub().minus(pose.pose()).getTranslation();
+				Translation2d difference = Drive.getAimTarget().minus(pose.pose()).getTranslation();
 				m_angleFilter.calculate(-difference.getAngle().getDegrees());
 				m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
 				m_angle = m_angleFilter.lastValue();

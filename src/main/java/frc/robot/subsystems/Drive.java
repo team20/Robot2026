@@ -15,20 +15,29 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.util.CircularBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
 
 public class Drive extends SubsystemBase {
@@ -52,13 +62,23 @@ public class Drive extends SubsystemBase {
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
-	private final SwerveDriveOdometry m_odometry;
+	private final SwerveDrivePoseEstimator m_odometry;
 	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 	private final SimDouble m_gyroSim;
 	private final SysIdRoutine m_sysidRoutine;
+	private final CircularBuffer<Pair<SwerveModulePosition[], Double>> m_modulePositions = new CircularBuffer<>(2);
+	private final Timer periodicTimer = new Timer();
 
 	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
+	private final StructPublisher<Pose2d> m_aimPosePublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Aim Pose", Pose2d.struct).publish();
+	private final StructPublisher<Pose2d> m_aimPoseCompensatedPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Aim Pose Compensated", Pose2d.struct).publish();
+	private final StructPublisher<Translation2d> m_velocityPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Velocity", Translation2d.struct).publish();
+	private final StructPublisher<Translation2d> m_filteredVelocityPublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("/SmartDashboard/Filtered Velocity", Translation2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> m_currentChassisSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("/SmartDashboard/Chassis Speeds", ChassisSpeeds.struct).publish();
 	private final StructArrayPublisher<SwerveModuleState> m_targetModuleStatePublisher = NetworkTableInstance
@@ -67,6 +87,11 @@ public class Drive extends SubsystemBase {
 	private final StructArrayPublisher<SwerveModuleState> m_currentModuleStatePublisher = NetworkTableInstance
 			.getDefault().getStructArrayTopic("/SmartDashboard/Current Swerve Modules States", SwerveModuleState.struct)
 			.publish();
+
+	private Translation2d m_velocity;
+	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(8);
+	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(8);
+	private Translation2d m_filteredVelocity;
 
 	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
 
@@ -96,12 +121,14 @@ public class Drive extends SubsystemBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		m_odometry = new SwerveDriveOdometry(m_kinematics, getHeading(), getModulePositions());
+		m_odometry = new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), Pose2d.kZero);
 		if (RobotBase.isSimulation()) {
 			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
 		} else {
 			m_gyroSim = null;
 		}
+
+		periodicTimer.start();
 	}
 
 	public static Drive getDrive() {
@@ -132,7 +159,7 @@ public class Drive extends SubsystemBase {
 	 * @return The pose of the robot.
 	 */
 	public static Pose2d getPose() {
-		return s_theDrive.m_odometry.getPoseMeters();
+		return s_theDrive.m_odometry.getEstimatedPosition();
 	}
 
 	/**
@@ -197,16 +224,78 @@ public class Drive extends SubsystemBase {
 	 */
 	@Override
 	public void periodic() {
+		double timestamp = periodicTimer.get();
+
+		// Get and publish each swerve module's state
 		SwerveModuleState[] states = doModuleX(SwerveModule::getModuleState, SwerveModuleState[]::new);
 		m_currentModuleStatePublisher.set(states);
+
+		// Find and publish chassis speeds (in terms of voltage, 0.0 to 12.0)
 		var speeds = m_kinematics.toChassisSpeeds(states);
 		m_currentChassisSpeedsPublisher.set(speeds);
+
+		// Simulate the gyro
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
 			m_gyroSim.set(
 					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
 							+ getHeading().getDegrees());
-		m_posePublisher.set(m_odometry.update(getHeading(), getModulePositions()));
+
+		// Update current module positions & odometry pose
+		// m_moduleStates stores last (current) and second to last module positions
+		m_modulePositions.addFirst(new Pair<SwerveModulePosition[], Double>(getModulePositions(), timestamp));
+		m_posePublisher.set(m_odometry.update(getHeading(), m_modulePositions.getFirst().getFirst()));
+
+		// Calculate difference between last and second to last module states
+		// Find x and y velocity by taking the derivative / calculating slope
+		// (change in module positions over 20 ms)
+		Twist2d twist = m_kinematics
+				.toTwist2d(m_modulePositions.getLast().getFirst(), m_modulePositions.getFirst().getFirst());
+		double dt = m_modulePositions.getFirst().getSecond() - m_modulePositions.getLast().getSecond();
+		m_velocity = new Translation2d(twist.dx / dt, twist.dy / dt);
+
+		// Filter velocity (use every 8th value to avoid noise)
+		m_filteredVelocity = new Translation2d(m_velocityXFilter.calculate(m_velocity.getX()),
+				m_velocityYFilter.calculate(m_velocity.getY()));
+
+		// Publish velocities and pose angle
+		m_velocityPublisher.set(m_velocity);
+		m_filteredVelocityPublisher.set(m_filteredVelocity);
 		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
+	}
+
+	/**
+	 * Use this method to the the Pose2d of the hub for the alliance you are on.
+	 * 
+	 * @return the {@code Pose2d} of the current hub
+	 */
+	public static Pose2d getAimTarget() {
+		Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+		Pose2d pose = getPose();
+		if (pose.getX() > VisionConstants.kBlueNeutralZoneStart && pose.getX() < VisionConstants.kRedNeutralZoneStart) {
+			Pose2d target = new Pose2d(switch (alliance) {
+				case Blue -> 1;
+				case Red -> 13.5;
+			}, pose.getY(), getHeading());
+			s_theDrive.m_aimPosePublisher.accept(target);
+			return target;
+		}
+		Pose2d hub = switch (alliance) {
+			case Blue -> VisionConstants.kBlueHub;
+			case Red -> VisionConstants.kRedHub;
+		};
+
+		Pose2d compensated = hub
+				.plus(new Transform2d(0, 2, Rotation2d.kZero));
+		// new
+		// Transform2d(s_theDrive.m_filteredVelocity.times(-AimCommands.getAirtime()),
+		// Rotation2d.kZero));
+		s_theDrive.m_aimPosePublisher.accept(hub);
+		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
+		return compensated;
+	}
+
+	public static SwerveDrivePoseEstimator getEstimator() {
+		return s_theDrive.m_odometry;
 	}
 
 	public static void toggleCoastMode() {
