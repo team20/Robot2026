@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.IntakeArm;
+import frc.robot.subsystems.IntakeExtraArm;
 import frc.robot.subsystems.IntakeWheels;
 
 public class IntakeCommands {
@@ -88,13 +89,16 @@ public class IntakeCommands {
 	public static Command getArmOutCombinedCommand() {
 		return Commands.parallel(
 				getArmOutCommand(),
-				new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
+				new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
+				new PositionControlCommands.SetMotorPower(IntakeExtraArm.getExtraIntakeArm(), 0.25));
 	}
 
 	public static Command getArmInCombinedCommand() {
 		return Commands.sequence(
 				new IntakeCommands.StopIntake(),
-				IntakeCommands.getInCommand());
+				Commands.parallel(
+						IntakeCommands.getInCommand(),
+						new PositionControlCommands.SetMotorPower(IntakeExtraArm.getExtraIntakeArm(), 0)));
 	}
 
 	public static Command getInCommand() {

@@ -67,6 +67,33 @@ public class PositionControlCommands {
 		}
 	}
 
+	public static class SetMotorPower extends Command {
+		private double m_speed;
+		private PositionControlSubsystem m_subsystem;
+
+		public SetMotorPower(PositionControlSubsystem subsystem, double speed) {
+			setName("Spin at Power for Time");
+			addRequirements(subsystem);
+			m_speed = speed;
+			m_subsystem = subsystem;
+		}
+
+		@Override
+		public void initialize() {
+			m_subsystem.setMotorPower(m_speed);
+		}
+
+		@Override
+		public void end(boolean interrupted) {
+
+		}
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
+	}
+
 	public static class MoveMotorToPosition extends Command {
 		private double m_position;
 		private PositionControlSubsystem m_subsystem;

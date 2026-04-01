@@ -86,6 +86,7 @@ public class Constants {
 		public static final class IntakeConstants {
 			public static final int kIntakeWheelsPort = 54;
 			public static final int kIntakeArmPort = 53;
+			public static final int kIntakeExtraArmPort = 56;
 			public static final double kArmConversionFactor = 0.01;
 
 			public static final int kWheelSmartCurrentLimit = 20;
@@ -102,14 +103,6 @@ public class Constants {
 			public static final double kInPosition = 10;
 			public static final double kP = 0.1;
 			public static final double kWheelPower = 1;
-		}
-
-		public static final class KickerConstants {
-			public static final double kTeleopPower = .4;
-			public static final int kKickerPort = 56;
-			public static final int kKickerSmartCurrentLimit = 20;
-			public static final int kKickerSecondaryCurrentLimit = 30;
-			public static final boolean kKickerInvert = true;
 		}
 
 		public static final class AgitatorConstants {
