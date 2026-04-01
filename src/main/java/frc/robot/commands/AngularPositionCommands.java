@@ -1,8 +1,5 @@
 package frc.robot.commands;
 
-import java.util.function.DoubleSupplier;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -11,7 +8,6 @@ import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.subsystems.AngularPositionSubsystem;
 
 public class AngularPositionCommands {
-
 	public static Command RunToAngleHardware(AngularPositionSubsystem subsystem, double angle, double tolerance) {
 		return new SequentialCommandGroup(
 				new SetAngleHardware(subsystem, angle),
@@ -155,38 +151,6 @@ public class AngularPositionCommands {
 		@Override
 		public boolean isFinished() {
 			return m_time > 0 && m_timer.hasElapsed(m_time);
-		}
-	}
-
-	public static class RunAtPowerSignal extends Command {
-		private final DoubleSupplier m_speed;
-		private final AngularPositionSubsystem m_subsystem;
-		private final ClampedPConstants m_constants;
-
-		public RunAtPowerSignal(AngularPositionSubsystem subsystem, DoubleSupplier speed, ClampedPConstants constants) {
-			m_subsystem = subsystem;
-			m_speed = speed;
-			m_constants = constants;
-			setName(String.format("Run %s At Power From Trigger", m_subsystem.getName()));
-			addRequirements(m_subsystem);
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void execute() {
-			m_subsystem.runAtDutyCycle(MathUtil.applyDeadband(m_speed.getAsDouble(), m_constants.tolerance()));
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			m_subsystem.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return false;
 		}
 	}
 }
