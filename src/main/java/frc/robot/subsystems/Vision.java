@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Aim;
@@ -99,6 +100,17 @@ public class Vision extends SubsystemBase {
 						pose.thetaStdDev());
 				SmartDashboard.putNumber(
 						"Vision/FieldPose/Estimated Airtime", m_aim.getShotAirtime(Units.metersToFeet(m_distance)));
+
+				// Adds vision measurements to the SwerveDrivePoseEstimator to merge vision and
+				// velocity
+				double xDiff = Math.abs(Drive.getEstimator().getEstimatedPosition().getX() - m_botPose.getX());
+				double yDiff = Math.abs(Drive.getEstimator().getEstimatedPosition().getY() - m_botPose.getY());
+				double thetaDiff = Math.abs(
+						Drive.getEstimator().getEstimatedPosition().getRotation().getDegrees()
+								- m_botPose.getRotation().getDegrees());
+				if (xDiff < 1 && yDiff < 1 && thetaDiff < 15) {
+					Drive.getEstimator().addVisionMeasurement(m_botPose, Timer.getFPGATimestamp());
+				}
 			});
 		}
 
