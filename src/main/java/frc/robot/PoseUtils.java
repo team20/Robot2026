@@ -3,7 +3,9 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.ToDoubleFunction;
 
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -11,6 +13,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 
 public class PoseUtils {
 	public record PoseResult(Pose2d pose, double xStdDev, double yStdDev, double thetaStdDev) {
@@ -20,6 +23,18 @@ public class PoseUtils {
 	}
 
 	private static AprilTagFieldLayout s_layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+
+	public static List<Pose2d> extractAllPoses(List<PhotonTrackedTarget> targets, Transform2d transform) {
+		int maxResults = targets.size();
+		List<Pose2d> poses = new ArrayList<>(maxResults);
+		for (PhotonTrackedTarget target : targets) {
+			s_layout.getTagPose(target.getFiducialId()).ifPresent(pose -> {
+				Pose2d camera = pose.transformBy(target.getBestCameraToTarget().inverse()).toPose2d();
+				poses.add(camera.transformBy(transform));
+			});
+		}
+		return poses;
+	}
 
 	/**
 	 * Estimate the pose of the robot, including the standard deviations for each
@@ -31,32 +46,32 @@ public class PoseUtils {
 	 * @return a {@code PoseResult} which contains the {@code Pose2d} of the robot
 	 *         and the standard deviations
 	 */
-	public static Optional<PoseResult> estimateCamPoseStdDev(List<PhotonTrackedTarget> targets) {
-		int maxResults = targets.size();
-		List<Double> data = new ArrayList<>(maxResults * 4);
-		for (PhotonTrackedTarget target : targets) {
-			s_layout.getTagPose(target.getFiducialId()).ifPresent(pose -> {
-				Pose2d camera = pose.transformBy(target.getBestCameraToTarget().inverse()).toPose2d();
-				data.add(camera.getX());
-				data.add(camera.getY());
-				data.add(camera.getRotation().getSin());
-				data.add(camera.getRotation().getCos());
-			});
-		}
-		int count = data.size() / 4;
-		if (count == 0) {
+	public static Optional<PoseResult> estimateCamPoseStdDev(List<Pose2d> poses) {
+		if (poses.isEmpty()) {
 			return Optional.empty();
 		}
-		double x = findCenterOfData(index -> data.get(index * 4), count);
-		double y = findCenterOfData(index -> data.get(index * 4 + 1), count);
-		double sin = findCenterOfData(index -> data.get(index * 4 + 2), count);
-		double cos = findCenterOfData(index -> data.get(index * 4 + 3), count);
-		Pose2d pose = new Pose2d(x, y, Rotation2d.fromRadians(Math.atan2(sin, cos)));
-		double xStdDev = findStdDevOfData(index -> data.get(index * 4), count, x);
-		double yStdDev = findStdDevOfData(index -> data.get(index * 4 + 1), count, y);
-		double sinStdDev = findStdDevOfData(index -> data.get(index * 4 + 2), count, sin);
-		double cosStdDev = findStdDevOfData(index -> data.get(index * 4 + 3), count, cos);
+		int count = poses.size();
+		double[] position = findCenterOfData2d(poses::get, Pose2d::getX, Pose2d::getY, count);
+		double[] heading = findCenterOfData2d(
+				index -> poses.get(index).getRotation(), Rotation2d::getCos, Rotation2d::getSin, count);
+		Pose2d pose = new Pose2d(position[0], position[1], Rotation2d.fromRadians(Math.atan2(heading[1], heading[0])));
+		double xStdDev = findStdDevOfData(poses::get, Pose2d::getX, count, position[0]);
+		double yStdDev = findStdDevOfData(poses::get, Pose2d::getY, count, position[1]);
+		double sinStdDev = findStdDevOfData(
+				index -> poses.get(index).getRotation(), Rotation2d::getSin, count, heading[1]);
+		double cosStdDev = findStdDevOfData(
+				index -> poses.get(index).getRotation(), Rotation2d::getCos, count, heading[0]);
 		return Optional.of(new PoseResult(pose, xStdDev, yStdDev, Math.hypot(sinStdDev, cosStdDev)));
+	}
+
+	public static <T> double[] findCenterOfData2d(IntFunction<T> itemGetter, ToDoubleFunction<T> xGetter,
+			ToDoubleFunction<T> yGetter, int count) {
+
+	}
+
+	public static <T> double[] findCenterOfData2d(IntFunction<T> itemGetter, ToDoubleFunction<T> xGetter,
+			ToDoubleFunction<T> yGetter, int count, double meanZone) {
+
 	}
 
 	/**
@@ -70,7 +85,8 @@ public class PoseUtils {
 	 * @param center the center of the data
 	 * @return the standard deviation of the data
 	 */
-	public static double findStdDevOfData(IntToDoubleFunction data, int size, double center) {
+	public static <T> double findStdDevOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size,
+			double center) {
 		double deviation = 0;
 		for (int i = 0; i < size; i++) {
 			deviation += Math.abs(data.applyAsDouble(i) - center);
@@ -86,7 +102,7 @@ public class PoseUtils {
 	 * @param size how many data points you have
 	 * @return the best center of the data
 	 */
-	public static double findCenterOfData(IntToDoubleFunction data, int size) {
+	public static <T> double findCenterOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size) {
 		return findCenterOfData(data, size, 5);
 	}
 
@@ -102,7 +118,8 @@ public class PoseUtils {
 	 *        favored
 	 * @return the best center of the data
 	 */
-	public static double findCenterOfData(IntToDoubleFunction data, int size, double outlierRejectionAbility) {
+	public static <T> double findCenterOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size,
+			double outlierRejectionAbility) {
 		double min = data.applyAsDouble(0), max = min;
 		for (int i = 1; i < size; i++) {
 			double point = data.applyAsDouble(i);
@@ -141,5 +158,13 @@ public class PoseUtils {
 			total += difference / Math.hypot(difference, k);
 		}
 		return total;
+	}
+
+	private static double[] optimize(IntToDoubleFunction[] data) {
+		double[] coordinate = new double[data.length];
+	}
+
+	private static double[] slope(double[] coordinate, IntToDoubleFunction[] data) {
+
 	}
 }
