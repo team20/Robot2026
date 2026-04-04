@@ -3,8 +3,8 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
+import frc.robot.DataUtils;
 import frc.robot.subsystems.PositionControlSubsystem;
 
 public class PositionControlCommands {
@@ -138,7 +138,7 @@ public class PositionControlCommands {
 		// Returns true when the command should end.
 		@Override
 		public boolean isFinished() {
-			return AngleUtility.minDifference(m_subsystem.getMotorRotations(), m_position) < m_tolerance;
+			return DataUtils.minAngularDifference(m_subsystem.getMotorRotations(), m_position) < m_tolerance;
 		}
 	}
 

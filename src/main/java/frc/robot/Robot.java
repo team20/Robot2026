@@ -110,7 +110,7 @@ public class Robot extends TimedRobot {
 						() -> false));
 		m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
 		m_driverController.create().onTrue(Commands.runOnce(() -> {
-			Pose2d pose1 = Vision.getVision().getFieldPoseEstimator().getPose();
+			Pose2d pose1 = Vision.getVision().getFieldPoseEstimator().getBotPose();
 			Pose2d pose2 = new Pose2d(pose1.getTranslation(), Rotation2d.kZero);
 			m_scheduler.schedule(new DriveCommands.ResetOdometry(pose2));
 		}));

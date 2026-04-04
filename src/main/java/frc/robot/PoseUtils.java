@@ -3,9 +3,7 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.IntFunction;
-import java.util.function.IntToDoubleFunction;
-import java.util.function.ToDoubleFunction;
+import java.util.function.DoubleUnaryOperator;
 
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -19,10 +17,10 @@ public class PoseUtils {
 	public record PoseResult(Pose2d pose, double xStdDev, double yStdDev, double thetaStdDev) {
 	}
 
-	public record AimResult(double setpoint, double feedforward) {
-	}
-
-	private static AprilTagFieldLayout s_layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+	private static final AprilTagFieldLayout s_layout = AprilTagFieldLayout
+			.loadField(AprilTagFields.k2026RebuiltWelded);
+	private static final double TRANSLATION_MEAN_RADIUS = 0.1; // 0.1 meters (+/- 4 inch deviation expected)
+	private static final double ROTATION_MEAN_RADIUS = 0.1; // 0.1 radians (+/- 6 degree deviation expected)
 
 	public static List<Pose2d> extractAllPoses(List<PhotonTrackedTarget> targets, Transform2d transform) {
 		int maxResults = targets.size();
@@ -46,125 +44,25 @@ public class PoseUtils {
 	 * @return a {@code PoseResult} which contains the {@code Pose2d} of the robot
 	 *         and the standard deviations
 	 */
+	@SuppressWarnings("unchecked")
 	public static Optional<PoseResult> estimateCamPoseStdDev(List<Pose2d> poses) {
 		if (poses.isEmpty()) {
 			return Optional.empty();
 		}
 		int count = poses.size();
-		double[] position = findCenterOfData2d(poses::get, Pose2d::getX, Pose2d::getY, count);
-		double[] heading = findCenterOfData2d(
-				index -> poses.get(index).getRotation(), Rotation2d::getCos, Rotation2d::getSin, count);
+		DoubleUnaryOperator wFunction = DataUtils.standardWFunction(TRANSLATION_MEAN_RADIUS);
+		double[] position = DataUtils
+				.findMultidimensionalCenter(count, wFunction, poses::get, Pose2d::getX, Pose2d::getY);
+		wFunction = DataUtils.standardWFunction(ROTATION_MEAN_RADIUS);
+		double[] heading = DataUtils.findMultidimensionalCenter(
+				count, wFunction, index -> poses.get(index).getRotation(), Rotation2d::getCos, Rotation2d::getSin);
 		Pose2d pose = new Pose2d(position[0], position[1], Rotation2d.fromRadians(Math.atan2(heading[1], heading[0])));
-		double xStdDev = findStdDevOfData(poses::get, Pose2d::getX, count, position[0]);
-		double yStdDev = findStdDevOfData(poses::get, Pose2d::getY, count, position[1]);
-		double sinStdDev = findStdDevOfData(
-				index -> poses.get(index).getRotation(), Rotation2d::getSin, count, heading[1]);
-		double cosStdDev = findStdDevOfData(
-				index -> poses.get(index).getRotation(), Rotation2d::getCos, count, heading[0]);
-		return Optional.of(new PoseResult(pose, xStdDev, yStdDev, Math.hypot(sinStdDev, cosStdDev)));
-	}
-
-	public static <T> double[] findCenterOfData2d(IntFunction<T> itemGetter, ToDoubleFunction<T> xGetter,
-			ToDoubleFunction<T> yGetter, int count) {
-
-	}
-
-	public static <T> double[] findCenterOfData2d(IntFunction<T> itemGetter, ToDoubleFunction<T> xGetter,
-			ToDoubleFunction<T> yGetter, int count, double meanZone) {
-
-	}
-
-	/**
-	 * Finds the standard deviation of a set of data. This function actually
-	 * computes the average absolute deviation, but they are essentially the same
-	 * for our purposes and standard deviation doesn't work well when there are many
-	 * outliers.
-	 * 
-	 * @param data a way to get the data
-	 * @param size how many data points you have
-	 * @param center the center of the data
-	 * @return the standard deviation of the data
-	 */
-	public static <T> double findStdDevOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size,
-			double center) {
-		double deviation = 0;
-		for (int i = 0; i < size; i++) {
-			deviation += Math.abs(data.applyAsDouble(i) - center);
-		}
-		return deviation / size * Math.sqrt(Math.PI / 2);
-	}
-
-	/**
-	 * Finds the center of a set of data. Internally this function uses a
-	 * bisection algorithm to find the best center.
-	 * 
-	 * @param data a way to get the data
-	 * @param size how many data points you have
-	 * @return the best center of the data
-	 */
-	public static <T> double findCenterOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size) {
-		return findCenterOfData(data, size, 5);
-	}
-
-	/**
-	 * Finds the center of a set of data. It has a data-independent tunable
-	 * parameter called {@code outlierRejectionAbility} which determines whether the
-	 * center is closer to the mean or the median. Internally this function uses a
-	 * bisection algorithm to find the best center.
-	 * 
-	 * @param data a way to get the data
-	 * @param size how many data points you have
-	 * @param outlierRejectionAbility a parameter to tune what types of centers are
-	 *        favored
-	 * @return the best center of the data
-	 */
-	public static <T> double findCenterOfData(IntFunction<T> itemGetter, ToDoubleFunction<T> valueGetter, int size,
-			double outlierRejectionAbility) {
-		double min = data.applyAsDouble(0), max = min;
-		for (int i = 1; i < size; i++) {
-			double point = data.applyAsDouble(i);
-			max = Math.max(max, point);
-			min = Math.min(min, point);
-		}
-		double k = Math.exp(-outlierRejectionAbility) * (max - min);
-		double high = max, low = min, loss;
-		do {
-			double bisector = (low + high) / 2;
-			loss = loss(data, size, bisector, k);
-			if (loss < 0) {
-				low = bisector;
-			} else {
-				high = bisector;
-			}
-		} while (Math.abs(loss) > 0.001);
-		return (low + high) / 2;
-	}
-
-	/**
-	 * Calculates how good of a center the chosen center is for a given set of data.
-	 * When k is increased, the function favors the median. When k is decreased, the
-	 * function favors the mean.
-	 * 
-	 * @param data a way to get the data
-	 * @param size how many data points you have
-	 * @param center a proposed center for the data
-	 * @param k a parameter to tune what types of centers are favored
-	 * @return how good the center is
-	 */
-	private static double loss(IntToDoubleFunction data, int size, double center, double k) {
-		double total = 0;
-		for (int i = 0; i < size; i++) {
-			double difference = center - data.applyAsDouble(i);
-			total += difference / Math.hypot(difference, k);
-		}
-		return total;
-	}
-
-	private static double[] optimize(IntToDoubleFunction[] data) {
-		double[] coordinate = new double[data.length];
-	}
-
-	private static double[] slope(double[] coordinate, IntToDoubleFunction[] data) {
-
+		double[] positionStdDev = DataUtils
+				.findAverageAbsoluteDeviation(count, position, poses::get, Pose2d::getX, Pose2d::getY);
+		double[] headingStdDev = DataUtils.findAverageAbsoluteDeviation(
+				count, heading, index -> poses.get(index).getRotation(), Rotation2d::getCos, Rotation2d::getSin);
+		return Optional.of(
+				new PoseResult(pose, positionStdDev[0], positionStdDev[1],
+						Math.hypot(headingStdDev[0], headingStdDev[1])));
 	}
 }

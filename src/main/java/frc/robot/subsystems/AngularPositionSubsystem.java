@@ -13,8 +13,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.AngleUtility;
 import frc.robot.Constants;
+import frc.robot.DataUtils;
 
 /**
  * An angular position subsystem is a motor controlled by a spark max attached
@@ -109,8 +109,8 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		if (position < m_maxAngle && position > m_minAngle) {
 			return false;
 		}
-		double distanceToMax = AngleUtility.minDifference(position, m_maxAngle);
-		double distanceToMin = AngleUtility.minDifference(position, m_minAngle);
+		double distanceToMax = DataUtils.minAngularDifference(position, m_maxAngle);
+		double distanceToMin = DataUtils.minAngularDifference(position, m_minAngle);
 		if (distanceToMin < distanceToMax) {
 			return m_dutyCycle < 0; // We overshot the minimum, no negative power
 		} else {

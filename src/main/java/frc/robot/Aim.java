@@ -36,10 +36,6 @@ public abstract class Aim {
 				18.0, new ShooterPreset(137, 2850, 1.4),
 				500.0, new ShooterPreset(137, 3000, 1.4)));
 
-		private static double interpolate(double a, double b, double t) {
-			return (1 - t) * a + t * b;
-		}
-
 		private static int getIndex(double distance) {
 			List<Double> distances = s_presets.keySet().stream().toList();
 			for (int i = 0; i < distances.size() - 1; i++) {
@@ -61,7 +57,7 @@ public abstract class Aim {
 				double b = list.get(index + 1);
 				double delta = distances.get(index + 1) - distances.get(index);
 				double t = (distance - distances.get(index)) / delta;
-				return interpolate(a, b, t);
+				return DataUtils.linearInterpolation(a, b, t);
 			}
 		}
 
