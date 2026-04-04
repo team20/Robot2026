@@ -97,9 +97,13 @@ public class Constants {
 			public static final int kArmSecondaryCurrentLimit = 20;
 			public static final boolean kArmInvert = true;
 
+			public static final int kExtraArmSmartCurrentLimit = 7;
+			public static final int kExtraArmSecondaryCurrentLimit = 15;
+			public static final boolean kExtraArmInvert = false;
+
 			public static final double kArmPower = 0.5;
 
-			public static final double kOutPosition = 145;
+			public static final double kOutPosition = 220; // 145;
 			public static final double kInPosition = 10;
 			public static final double kP = 0.1;
 			public static final double kWheelPower = 1;
