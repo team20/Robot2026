@@ -33,7 +33,6 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.IntakeArm;
-import frc.robot.subsystems.IntakeExtraArm;
 import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
@@ -54,9 +53,8 @@ public class Robot extends TimedRobot {
 	{ // Here are the individual subsystems
 		new Drive();
 		new Shooter();
-		new IntakeExtraArm();
-		new IntakeArm();
 		new IntakeWheels();
+		new IntakeArm();
 		new Climber();
 		new Agitator();
 		new Vision();
@@ -69,7 +67,6 @@ public class Robot extends TimedRobot {
 		Climber.getClimber().stopMotor();
 		IntakeArm.getIntakeArm().stopMotor();
 		IntakeWheels.stopWheel();
-		IntakeExtraArm.stopMotor();
 		Agitator.stop();
 		Shooter.stop();
 	}
@@ -211,7 +208,7 @@ public class Robot extends TimedRobot {
 
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
+			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntake());
 			IntakeWheels.getIntakeWheels().setDefaultCommand(
 					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
 							m_operatorController.L1()));
@@ -240,7 +237,7 @@ public class Robot extends TimedRobot {
 									.and(m_operatorController.create()))
 					.whileTrue(
 							new RepeatCommand(
-									new AimCommands.HubAimCommand(Vision.getVision().getMidpointEstimator())));
+									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
 			// m_operatorController.triangle().debounce(0.1).onTrue(
 			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
 			// m_operatorController.povLeft()));

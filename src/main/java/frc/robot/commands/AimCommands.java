@@ -14,7 +14,7 @@ import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class AimCommands {
-	private static double s_airtime;
+	private static double s_airtime = 1.2;
 
 	public static double getAirtime() {
 		return s_airtime;

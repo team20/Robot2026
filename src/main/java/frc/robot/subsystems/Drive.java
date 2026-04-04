@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
+import frc.robot.commands.AimCommands;
 
 public class Drive extends SubsystemBase {
 	private static Drive s_theDrive;
@@ -285,10 +286,9 @@ public class Drive extends SubsystemBase {
 		};
 
 		Pose2d compensated = hub
-				.plus(new Transform2d(0, 2, Rotation2d.kZero));
-		// new
-		// Transform2d(s_theDrive.m_filteredVelocity.times(-AimCommands.getAirtime()),
-		// Rotation2d.kZero));
+				.plus(// new Transform2d(0, 2, Rotation2d.kZero));
+						new Transform2d(s_theDrive.m_filteredVelocity.times(-AimCommands.getAirtime()),
+								Rotation2d.kZero));
 		s_theDrive.m_aimPosePublisher.accept(hub);
 		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
 		return compensated;
