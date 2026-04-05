@@ -33,6 +33,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.IntakeArm;
+import frc.robot.subsystems.IntakeExtraArm;
 import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
@@ -54,6 +55,7 @@ public class Robot extends TimedRobot {
 		new Drive();
 		new Shooter();
 		new IntakeWheels();
+		new IntakeExtraArm();
 		new IntakeArm();
 		new Climber();
 		new Agitator();
@@ -66,9 +68,11 @@ public class Robot extends TimedRobot {
 		Hood.getHood().stop();
 		Climber.getClimber().stopMotor();
 		IntakeArm.getIntakeArm().stopMotor();
+		IntakeExtraArm.stopMotor();
 		IntakeWheels.stopWheel();
 		Agitator.stop();
 		Shooter.stop();
+		Drive.resetHeading();
 	}
 
 	public Robot() {
@@ -194,21 +198,15 @@ public class Robot extends TimedRobot {
 		// *************** OPERATOR BINDINGS ***************
 
 		{ // Turret bindings
-			// m_operatorController.L2().whileTrue(
-			// new AngularPositionCommands.RunAtPower(Turret.getTurret(), -.2, 0)); //
-			// Rotates
-			// left/counterclockwise
-			// m_operatorController.R2().whileTrue(new
-			// AngularPositionCommands.RunAtPower(Turret.getTurret(), .2, 0));// Rotates
-			// right/clockwise
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.0, 0.2, 0.025, m_operatorController::getL2Axis,
+					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
+							m_operatorController::getL2Axis,
 							m_operatorController::getR2Axis));
 		}
 
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntake());
+			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
 			IntakeWheels.getIntakeWheels().setDefaultCommand(
 					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
 							m_operatorController.L1()));
@@ -238,9 +236,6 @@ public class Robot extends TimedRobot {
 					.whileTrue(
 							new RepeatCommand(
 									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
-			// m_operatorController.triangle().debounce(0.1).onTrue(
-			// new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
-			// m_operatorController.povLeft()));
 
 			absolute = false;
 			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
@@ -308,6 +303,7 @@ public class Robot extends TimedRobot {
 		{ // climber test bindings
 			m_driverController.triangle().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
 			m_driverController.circle().whileTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
+			m_driverController.options().debounce(.1).onTrue(ClimberCommands.getResetCommand());
 		}
 
 		{ // intake test bindings
@@ -358,5 +354,3 @@ public class Robot extends TimedRobot {
 		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
 	}
 }
-
-//

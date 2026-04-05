@@ -21,7 +21,6 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -44,10 +43,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Aim;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
-import frc.robot.commands.AimCommands;
 
 public class Drive extends SubsystemBase {
 	private static Drive s_theDrive;
@@ -90,8 +89,8 @@ public class Drive extends SubsystemBase {
 			.publish();
 
 	private Translation2d m_velocity;
-	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(8);
-	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(8);
+	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(6);
+	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(6);
 	private Translation2d m_filteredVelocity;
 
 	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
@@ -285,13 +284,27 @@ public class Drive extends SubsystemBase {
 			case Red -> VisionConstants.kRedHub;
 		};
 
-		Pose2d compensated = hub
-				.plus(// new Transform2d(0, 2, Rotation2d.kZero));
-						new Transform2d(s_theDrive.m_filteredVelocity.times(-AimCommands.getAirtime()),
-								Rotation2d.kZero));
+		Rotation2d robotAngle = Drive.getPose().getRotation();
+		Translation2d rotatedVelocity = s_theDrive.m_filteredVelocity.rotateBy(robotAngle);
+
+		Translation2d difference = hub.minus(Drive.getPose()).getTranslation();
+		double distance = difference.getNorm();
+		double time = Aim.getShotAirtime(distance);
+		Translation2d offset = rotatedVelocity.times(-time);
+		Pose2d aimTarget = new Pose2d(hub.getX() + offset.getX(),
+				hub.getY() + offset.getY(), Rotation2d.kZero);
+
+		for (int i = 0; i < 5; i++) {// 5
+			difference = aimTarget.minus(Drive.getPose()).getTranslation();
+			distance = difference.getNorm();
+			time = Aim.getShotAirtime(distance);
+			offset = rotatedVelocity.times(-time);
+			aimTarget = new Pose2d(hub.getX() + offset.getX(), hub.getY() + offset.getY(), Rotation2d.kZero);
+		}
+
 		s_theDrive.m_aimPosePublisher.accept(hub);
-		s_theDrive.m_aimPoseCompensatedPublisher.accept(compensated);
-		return compensated;
+		s_theDrive.m_aimPoseCompensatedPublisher.accept(aimTarget);
+		return aimTarget;
 	}
 
 	public static SwerveDrivePoseEstimator getEstimator() {

@@ -29,6 +29,6 @@ public class ClimberCommands {
 	public static Command getRetractCommand() {
 		return new PositionControlCommands.MoveMotorToPosition(Climber.getClimber(), ClimberConstants.kRetractPosition,
 				0.3,
-				.9, 3000, 1000, false);
+				.9, 3000, 500, false);
 	}
 }

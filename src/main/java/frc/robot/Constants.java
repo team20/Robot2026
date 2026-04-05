@@ -31,12 +31,12 @@ public class Constants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
-			public static final double kMaxDutyCycle = .2; // extra limit for test safety
+			public static final double kMaxDutyCycle = .09; // extra limit for test safety
 			public static final double kMinPower = 0.04;
 			public static final double kMaxPower = kMaxDutyCycle;
 			public static final double kMaxErr = 40; // 25
 			public static final double kTolerance = 1.5;
-			public static final double kP = 0.010;
+			public static final double kP = 0.02;
 			public static final double kI = 0.0000;
 			public static final double kS = kMinPower;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
@@ -44,7 +44,7 @@ public class Constants {
 			public static final int kSmartCurrent = 25;
 			public static final int kCurrent = 30;
 			public static final double kMinAngle = 22; // B
-			public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
+			public static final double kMaxAngle = 180; // A // <-- 183
 
 			public static final double kAngleToTicksFactor = 6.0 / 7.0;
 
@@ -103,7 +103,7 @@ public class Constants {
 
 			public static final double kArmPower = 0.5;
 
-			public static final double kOutPosition = 220; // 145;
+			public static final double kOutPosition = 230; // 145;
 			public static final double kInPosition = 10;
 			public static final double kP = 0.1;
 			public static final double kWheelPower = 1;

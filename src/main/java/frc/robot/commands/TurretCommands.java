@@ -2,7 +2,9 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Turret;
 
 public class TurretCommands {
@@ -23,6 +25,29 @@ public class TurretCommands {
 
 	public static Command getTurnToAngleSoftwareCommand(double angle) {
 		return new AngularPositionCommands.RunToAngleSoftware(Turret.getTurret(), angle, Turret.getConstants());
+	}
+
+	public static class TurnToHubWorld extends Command {
+		private final Turret m_turret;
+		private double m_angle;
+
+		public TurnToHubWorld(double worldAngle) {
+			m_turret = Turret.getTurret();
+			m_angle = worldAngle;
+			addRequirements(Turret.getTurret());
+		}
+
+		@Override
+		public void execute() {
+			Pose2d robotPose = Drive.getPose();
+			double botTicksCentered = Turret.getTurret().getTurretToWorldAngleRotation(robotPose, m_angle);
+			Turret.getTurret().moveToPosition(botTicksCentered);
+		}
+
+		@Override
+		public boolean isFinished() {
+			return true;
+		}
 	}
 
 	public static class GradualAim extends Command {

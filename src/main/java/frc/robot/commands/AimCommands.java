@@ -2,12 +2,14 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
+import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
@@ -24,29 +26,42 @@ public class AimCommands {
 	// distance to hub, and sets turret, hood, and flywheel accordingly
 	public static class HubAimCommand extends Command {
 		private final AngleDistanceEstimator m_estimator;
-		private Aim m_aim = new Aim.Linear();
 
 		public HubAimCommand(AngleDistanceEstimator estimator) {
 			m_estimator = estimator;
 			setName("Auto Aim Shooter and Hood");
-			addRequirements(Shooter.getShooter(), Hood.getHood());
+			addRequirements(Shooter.getShooter(), Hood.getHood(), Turret.getTurret());
 		}
 
 		@Override
 		public void execute() {
-			double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
-			if (rotationNeeded == 0)
-				return;
-			double currentTurretAngle = Turret.getTurret().getPosition();
-			double newTurretAngle = currentTurretAngle + rotationNeeded;
+			// double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
+			// if (rotationNeeded == 0)
+			// return;
+			// double currentTurretAngle = Turret.getTurret().getPosition();
+			// double newTurretAngle = currentTurretAngle + rotationNeeded;
 
-			double distance = m_estimator.getDistance().in(Feet);
-			s_airtime = m_aim.getShotAirtime(distance);
-			Hood.getHood().moveToPosition(m_aim.getHoodAngle(distance));
-			Shooter.setRPM(m_aim.getShooterVelocity(distance));
-			// Set hardware setpoint - the controller will continue to track setpoint even
-			// after the command ends
-			Turret.getTurret().moveToPosition(newTurretAngle);
+			{ // Hood and shooter adjustment
+				double distance = m_estimator.getDistance().in(Feet);
+				s_airtime = Aim.getShotAirtime(distance);
+				Hood.getHood().moveToPosition(Aim.getHoodAngle(distance));
+				Shooter.setRPM(Aim.getShooterVelocity(distance));
+			}
+
+			{ // Turret rotation
+				Pose2d robotPose = Drive.getPose();
+				Pose2d target = Drive.getAimTarget();
+
+				double dx = target.getX() - robotPose.getX();
+				double dy = -target.getY() + robotPose.getY();
+
+				double hubAngle = Math.toDegrees(Math.atan2(dy, dx));
+				double hubTicks = Turret.getTurret().getTurretToWorldAngleRotation(robotPose, hubAngle);
+
+				// Set hardware setpoint - the controller will continue to track setpoint even
+				// after the command ends
+				Turret.getTurret().moveToPosition(hubTicks);
+			}
 		}
 
 		@Override
@@ -68,10 +83,9 @@ public class AimCommands {
 	 * @return
 	 */
 	public static Command getSetAimCommand(double distance) {
-		Aim aim = new Aim.Linear();
 		return new SequentialCommandGroup(
-				HoodCommands.getTurnToAngleCommand(aim.getHoodAngle(distance)),
-				new ShooterCommands.SetRPM(aim.getShooterVelocity(distance)));
+				HoodCommands.getTurnToAngleCommand(Aim.getHoodAngle(distance)),
+				new ShooterCommands.SetRPM(Aim.getShooterVelocity(distance)));
 	}
 
 	public static Command getSettleAimCommand() {
@@ -83,7 +97,6 @@ public class AimCommands {
 		private final boolean m_absolute;
 		private final double m_distance;
 		private final TimedRobot m_robot;
-		private final Aim m_aim = new Aim.Linear();
 
 		/**
 		 * A command to set the setpoints of the hood and shooter for aiming. In
@@ -115,8 +128,8 @@ public class AimCommands {
 			SmartDashboard.putNumber("Aim Distance", s_distance);
 			// ShooterState state = m_aim.getShooterState(s_distance, 0);
 
-			Hood.getHood().moveToPosition(m_aim.getHoodAngle(s_distance));
-			Shooter.setRPM(m_aim.getShooterVelocity(s_distance));
+			Hood.getHood().moveToPosition(Aim.getHoodAngle(s_distance));
+			Shooter.setRPM(Aim.getShooterVelocity(s_distance));
 			// Clearly doable
 		}
 

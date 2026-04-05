@@ -52,7 +52,6 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distanceDerivative;
-		private final Aim.Linear m_aim = new Aim.Linear();
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -106,7 +105,7 @@ public class Vision extends SubsystemBase {
 			SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
 			SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
 			SmartDashboard.putNumber(
-					"Vision/FieldPose/Estimated Airtime", m_aim.getShotAirtime(Units.metersToFeet(m_distance)));
+					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
 
 		}
 

@@ -119,15 +119,17 @@ public class IntakeCommands {
 		// 1);
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
 				IntakeConstants.kOutPosition,
-				0.1, 1.0,
-				25 /* 15 */, .125, false).withTimeout(4);
+				.4, 1.0,
+				25 /* 15 */, 5, false).withTimeout(2.315);
 	}
 
 	public static Command getArmOutCombinedCommand() {
-		return Commands.parallel(
-				getArmOutCommand(),
-				new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
-				new IntakeCommands.SpinExtraIntake(.35));
+		return Commands.sequence(
+				Commands.parallel(
+						getArmOutCommand(),
+						new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
+						new IntakeCommands.SpinExtraIntake(.65)),
+				new IntakeCommands.SpinExtraIntake(.4));
 	}
 
 	public static Command getArmInCombinedCommand() {

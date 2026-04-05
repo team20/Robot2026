@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
 
@@ -28,6 +30,23 @@ public class Turret extends AngularPositionSubsystem {
 	public double getRobotRelativeAngle() {
 		double fromCenterPosition = getPosition() - TurretConstants.kStraightAheadAngle;
 		return fromCenterPosition / TurretConstants.kAngleToTicksFactor + 180;
+	}
+
+	public double getTurretToWorldAngleRotation(Pose2d robotPose, double angle) {
+		double botAngle = angle + robotPose.getRotation().getDegrees() + 180;
+		double botTicks = Turret.getAngleToTicks(botAngle);
+		double botTicksCentered = (botTicks + TurretConstants.kStraightAheadAngle) % Turret.getAngleToTicks(360);
+
+		while (botTicksCentered < 0) {
+			botTicksCentered += Turret.getAngleToTicks(360);
+		}
+
+		SmartDashboard.putNumber("TurnToWorldAngle/worldAngle", angle);
+		SmartDashboard.putNumber("TurnToWorldAngle/botAngle", botAngle);
+		SmartDashboard.putNumber("TurnToWorldAngle/botTicks", botTicks);
+		SmartDashboard.putNumber("TurnToWorldAngle/botTicksCentered", botTicksCentered);
+
+		return botTicksCentered;
 	}
 
 	public static void create() {
