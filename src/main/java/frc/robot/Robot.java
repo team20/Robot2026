@@ -104,15 +104,110 @@ public class Robot extends TimedRobot {
 
 	private void bindCompControls() {
 
+		// ***********************************************
 		// *************** DRIVER BINDINGS ***************
+		// ***********************************************
 
-		// Drive bindings
-		Drive.getDrive().setDefaultCommand(
-				new DriveCommands.JoystickDrive(
-						() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-						() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
-						() -> false));
-		m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
+		{ // Drive bindings
+			Drive.getDrive().setDefaultCommand(
+					new DriveCommands.JoystickDrive(
+							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
+							() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
+							() -> false)); // TODO: fix robot/field-centric toggle
+			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
+		}
+
+		{ // Hood bindings
+			m_driverController.triangle().whileTrue(
+					new AngularPositionCommands.RunAtPower(Hood.getHood(),
+							.2, /* POWER */
+							0)); /* TIME */
+			m_driverController.cross().whileTrue(
+					HoodCommands.getHoodDownCommand()
+							// Overrides all conflicting commands
+							.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
+		}
+
+		{ // Intake bindings
+			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm & spins wheels
+					IntakeCommands.getArmOutCombinedCommand());
+			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm & stops wheels
+					IntakeCommands.getArmInCombinedCommand());
+
+			// Manually drive intake up & down
+			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
+			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
+		}
+
+		{ // Climber bindings
+			// m_driverController.create().debounce(.1).onTrue(ClimberCommands.getResetCommand());
+			m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
+			m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
+		}
+
+		// *************************************************
+		// *************** OPERATOR BINDINGS ***************
+		// *************************************************
+
+		{ // Turret bindings
+			Turret.getTurret().setDefaultCommand(
+					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
+							m_operatorController::getL2Axis,
+							m_operatorController::getR2Axis));
+		}
+
+		{ // Intake bindings
+			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
+			// m_operatorController.L1().debounce(.1).onTrue(new
+			// IntakeCommands.StopIntakeWheels());
+			IntakeWheels.getIntakeWheels().setDefaultCommand(
+					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
+							m_operatorController.L1()));
+		}
+
+		{ // Agitator bindings
+			m_operatorController.R1().whileTrue(
+					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
+			m_operatorController.povLeft()
+					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
+		}
+
+		{ // Shooting bindings
+			// Stop flywheel
+			m_operatorController.square().onTrue(new ShooterCommands.Stop());
+			boolean absolute = true;
+
+			// Presets
+			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
+			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
+
+			// Auto aim
+			m_operatorController.axisLessThan(3, 0.025)
+					.and(
+							m_operatorController.axisLessThan(4, 0.025)
+									.and(m_operatorController.create()))
+					.whileTrue(
+							new RepeatCommand(
+									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
+
+			// Manual distance adjustment
+			absolute = false;
+			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
+			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
+		}
+	}
+
+	private void bindTestControls() {
+
+		if (!m_isInPit.getSelected().booleanValue()) {
+			Drive.getDrive().setDefaultCommand(
+					new DriveCommands.JoystickDrive(
+							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
+							() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
+							m_driverController.getHID()::getCreateButton));
+		}
+
 		m_driverController.create().onTrue(Commands.runOnce(() -> {
 			Pose2d pose1 = Vision.getVision().getFieldPoseEstimator().getPose();
 			Pose2d pose2 = new Pose2d(pose1.getTranslation(), Rotation2d.kZero);
@@ -162,104 +257,6 @@ public class Robot extends TimedRobot {
 		 */
 		// m_driverController.touchpad().onTrue(m_autoComposer.getVelocityTestCommand());
 		// m_operatorController.touchpad().onTrue(m_autoComposer.getVelocityTestCommandReverse());
-
-		{ // Hood bindings
-
-			// m_driverController.cross().whileTrue(
-			// new AngularPositionCommands.RunAtPower(Hood.getHood(),
-			// -.2, /* POWER */
-			// 0).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
-			m_driverController.triangle().whileTrue(
-					new AngularPositionCommands.RunAtPower(Hood.getHood(),
-							.2, /* POWER */
-							0)); /* TIME */
-			m_driverController.cross().whileTrue(
-					HoodCommands.getHoodDownCommand()
-							// Overrides all conflicting commands
-							.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
-		}
-
-		{ // Intake bindings
-			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm
-					IntakeCommands.getArmOutCombinedCommand());
-			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm
-					IntakeCommands.getArmInCombinedCommand());// Retracts arm and stops power TODO: tune position
-
-			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
-			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
-		}
-
-		{ // Climber bindings
-			m_driverController.create().debounce(.1).onTrue(ClimberCommands.getResetCommand());
-			m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
-			m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
-		}
-
-		// *************** OPERATOR BINDINGS ***************
-
-		{ // Turret bindings
-			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
-							m_operatorController::getL2Axis,
-							m_operatorController::getR2Axis));
-		}
-
-		{ // Intake bindings
-			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
-			IntakeWheels.getIntakeWheels().setDefaultCommand(
-					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
-							m_operatorController.L1()));
-			// m_operatorController.create().whileTrue(new
-			// IntakeCommands.Spintake(-IntakeConstants.kWheelPower));
-		}
-
-		{ // Transport bindings
-			m_operatorController.R1().whileTrue( // Runs agitator (for shooting) when pressed on R1
-					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
-			m_operatorController.povLeft()
-					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
-		}
-
-		{ // Shooting bindings
-			m_operatorController.square().onTrue(new ShooterCommands.Stop());
-			boolean absolute = true;
-
-			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
-			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
-			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
-
-			m_operatorController.axisLessThan(3, 0.025)
-					.and(
-							m_operatorController.axisLessThan(4, 0.025)
-									.and(m_operatorController.create()))
-					.whileTrue(
-							new RepeatCommand(
-									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
-
-			absolute = false;
-			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
-			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
-			/*
-			 * m_operatorController.square().toggleOnTrue(
-			 * new AimCommands.RiyaAiming(m_operatorController.povUp(),
-			 * m_operatorController.povDown(), Map.of(
-			 * m_operatorController.cross(), 5.0,
-			 * m_operatorController.circle(), 10.0,
-			 * m_operatorController.triangle(), 15.0)));
-			 */ // TODO: Update command to be close preset
-		}
-	}
-
-	private void bindTestControls() {
-
-		if (!m_isInPit.getSelected().booleanValue()) {
-			Drive.getDrive().setDefaultCommand(
-					new DriveCommands.JoystickDrive(
-							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-							() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
-							m_driverController.getHID()::getCreateButton));
-		}
 
 		m_driverController.cross().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(

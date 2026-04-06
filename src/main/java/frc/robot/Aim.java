@@ -11,7 +11,7 @@ public class Aim {
 	}
 
 	/**
-	 * Mapping from requested distance from the turret the center of the hub ==> to
+	 * Mapping from requested distance (in ft) from turret to center of hub ==> to
 	 * their preset {@code ShooterPreset}. Tree map automatically takes care of
 	 * sorting these by their keys (distances) and when the angles or speeds are
 	 * streamed, they come out in order
@@ -69,7 +69,7 @@ public class Aim {
 
 	public static double getShotAirtime(double distance) {
 		List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
-		return interpolate(distance, airtimes) + .75;
+		return interpolate(distance, airtimes) + .75; // TODO: Update to be a constant once fully tuned
 	}
 
 }

@@ -16,58 +16,65 @@ import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision.AngleDistanceEstimator;
 
 public class AimCommands {
-	private static double s_airtime = 1.2;
+	private static double s_airtime = 1.2; // Set default airtime to 1.2
 
+	// Return updated airtime based on changing distance
 	public static double getAirtime() {
 		return s_airtime;
 	}
 
-	// This command uses the {@code MidpointEstimator} to estimate angle and
-	// distance to hub, and sets turret, hood, and flywheel accordingly
+	// This command uses the {@code AngleDistanceEstimator} - either field
+	// pose or midpoint to estimate angle and distance to hub, and sets
+	// turret, hood, and flywheel accordingly
 	public static class HubAimCommand extends Command {
 		private final AngleDistanceEstimator m_estimator;
 
 		public HubAimCommand(AngleDistanceEstimator estimator) {
 			m_estimator = estimator;
-			setName("Auto Aim Shooter and Hood");
+			setName("Auto Aim Shooter, Hood, and Turret");
 			addRequirements(Shooter.getShooter(), Hood.getHood(), Turret.getTurret());
 		}
 
 		@Override
 		public void execute() {
-			// double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
-			// if (rotationNeeded == 0)
-			// return;
-			// double currentTurretAngle = Turret.getTurret().getPosition();
-			// double newTurretAngle = currentTurretAngle + rotationNeeded;
 
 			{ // Hood and shooter adjustment
 				double distance = m_estimator.getDistance().in(Feet);
-				s_airtime = Aim.getShotAirtime(distance);
+				s_airtime = Aim.getShotAirtime(distance); // Update airtime based on new distance
 				Hood.getHood().moveToPosition(Aim.getHoodAngle(distance));
 				Shooter.setRPM(Aim.getShooterVelocity(distance));
 			}
 
 			{ // Turret rotation
+
+				// double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
+				// if (rotationNeeded == 0)
+				// return;
+				// double currentTurretAngle = Turret.getTurret().getPosition();
+				// double newTurretAngle = currentTurretAngle + rotationNeeded;
+
+				// Get mixed robot pose (odometry + vision) and compensated hub pose
 				Pose2d robotPose = Drive.getPose();
 				Pose2d target = Drive.getAimTarget();
 
+				// Find x and y components of vector from bot to hub
 				double dx = target.getX() - robotPose.getX();
-				double dy = -target.getY() + robotPose.getY();
+				double dy = -target.getY() + robotPose.getY(); // Inverted in coordinate space
 
+				// Calculate vector angle (in world-space) and convert to turret position
 				double hubAngle = Math.toDegrees(Math.atan2(dy, dx));
 				double hubTicks = Turret.getTurret().getTurretToWorldAngleRotation(robotPose, hubAngle);
 
-				// Set hardware setpoint - the controller will continue to track setpoint even
-				// after the command ends
+				// Set hardware setpoint - the controller will continue to
+				// track setpoint even after the command ends
 				Turret.getTurret().moveToPosition(hubTicks);
 			}
 		}
 
 		@Override
 		public boolean isFinished() {
-			// This command just sets the target, controller will continue tracking after
-			// commands end
+			// This command just sets the target, controller will
+			// continue tracking after commands end
 			return true;
 		}
 	}

@@ -89,6 +89,7 @@ public class Drive extends SubsystemBase {
 			.publish();
 
 	private Translation2d m_velocity;
+	// Average velocity over 6 values to reduce input noise
 	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(6);
 	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(6);
 	private Translation2d m_filteredVelocity;
@@ -247,13 +248,13 @@ public class Drive extends SubsystemBase {
 
 		// Calculate difference between last and second to last module states
 		// Find x and y velocity by taking the derivative / calculating slope
-		// (change in module positions over 20 ms)
+		// (change in module positions over 20 ms) = velocity in meters / sec
 		Twist2d twist = m_kinematics
 				.toTwist2d(m_modulePositions.getLast().getFirst(), m_modulePositions.getFirst().getFirst());
 		double dt = m_modulePositions.getFirst().getSecond() - m_modulePositions.getLast().getSecond();
 		m_velocity = new Translation2d(twist.dx / dt, twist.dy / dt);
 
-		// Filter velocity (use every 8th value to avoid noise)
+		// Filter velocity (use every 6th value to avoid noise)
 		m_filteredVelocity = new Translation2d(m_velocityXFilter.calculate(m_velocity.getX()),
 				m_velocityYFilter.calculate(m_velocity.getY()));
 
@@ -264,13 +265,17 @@ public class Drive extends SubsystemBase {
 	}
 
 	/**
-	 * Use this method to the the Pose2d of the hub for the alliance you are on.
+	 * Use this method to get the Pose2d of the hub for the alliance you are on.
 	 * 
 	 * @return the {@code Pose2d} of the current hub
 	 */
 	public static Pose2d getAimTarget() {
+		// Get alliance and robot pose
 		Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 		Pose2d pose = getPose();
+
+		// If robot is in neutral zone, just pass anywhere
+		// within alliance zone colinear to hub
 		if (pose.getX() > VisionConstants.kBlueNeutralZoneStart && pose.getX() < VisionConstants.kRedNeutralZoneStart) {
 			Pose2d target = new Pose2d(switch (alliance) {
 				case Blue -> 1;
@@ -279,29 +284,40 @@ public class Drive extends SubsystemBase {
 			s_theDrive.m_aimPosePublisher.accept(target);
 			return target;
 		}
+
+		// Define exact hub position
 		Pose2d hub = switch (alliance) {
 			case Blue -> VisionConstants.kBlueHub;
 			case Red -> VisionConstants.kRedHub;
 		};
 
-		Rotation2d robotAngle = Drive.getPose().getRotation();
+		// Get bot pose orientation and world-oriented velocity (not robot relative)
+		Rotation2d robotAngle = pose.getRotation();
 		Translation2d rotatedVelocity = s_theDrive.m_filteredVelocity.rotateBy(robotAngle);
 
-		Translation2d difference = hub.minus(Drive.getPose()).getTranslation();
+		// Find vector between bot pose and hub, then calculate shot distance & airtime
+		// Adjust aim target to compensate for changing robot position
+		// (offset calculated using velocity & airtime)
+		Translation2d difference = hub.minus(pose).getTranslation();
 		double distance = difference.getNorm();
-		double time = Aim.getShotAirtime(distance);
+		// Find airtime using distance to target (in feet)
+		double time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
 		Translation2d offset = rotatedVelocity.times(-time);
 		Pose2d aimTarget = new Pose2d(hub.getX() + offset.getX(),
 				hub.getY() + offset.getY(), Rotation2d.kZero);
 
-		for (int i = 0; i < 5; i++) {// 5
-			difference = aimTarget.minus(Drive.getPose()).getTranslation();
+		// Iterate multiple times (5) to account for changing airtime
+		// (as aim target moves to compensate, airtime increases)
+		for (int i = 0; i < 5; i++) {
+			difference = aimTarget.minus(pose).getTranslation();
 			distance = difference.getNorm();
-			time = Aim.getShotAirtime(distance);
+			time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
 			offset = rotatedVelocity.times(-time);
+			// Slightly increment offset with each iteration
 			aimTarget = new Pose2d(hub.getX() + offset.getX(), hub.getY() + offset.getY(), Rotation2d.kZero);
 		}
 
+		// Publish raw & compensated targets and return compensated target
 		s_theDrive.m_aimPosePublisher.accept(hub);
 		s_theDrive.m_aimPoseCompensatedPublisher.accept(aimTarget);
 		return aimTarget;
