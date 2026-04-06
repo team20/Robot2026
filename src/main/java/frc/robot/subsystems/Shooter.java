@@ -24,7 +24,7 @@ public class Shooter extends SubsystemBase {
 		config.CurrentLimits.SupplyCurrentLimit = ShooterConstants.kCurrentLimit;
 		config.CurrentLimits.SupplyCurrentLimitEnable = true;
 		config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-		config.Slot0.kP = 0.8000;
+		config.Slot0.kP = 0.8500;
 		config.Slot0.kI = 0;
 		config.Slot0.kD = 0;
 

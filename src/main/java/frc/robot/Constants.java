@@ -61,7 +61,7 @@ public class Constants {
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
 			public static final double kTolerance = 1;
-			public static final double kP = 0.04;
+			public static final double kP = 0.0525;
 			public static final double kI = 0.0000;
 			public static final double kS = 0.00;
 			public static final double kDeadzone = 0.05;
