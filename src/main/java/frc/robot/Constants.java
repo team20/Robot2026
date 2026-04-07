@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import java.util.Set;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -10,6 +12,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 
 public class Constants {
 	public static final boolean kCompBot = true;
@@ -76,7 +79,7 @@ public class Constants {
 			public static final int kFlywheelPort = 51;
 			public static final double kCurrentLimit = 60;
 			public static final double kV = 480;
-			public static final int kDefaultDistance = 10;
+			public static final Distance kDefaultDistance = Feet.of(10);
 			public static final int kDefaultRPM = 2000;
 			public static final double kRampRate = 10;
 			public static final double kRPMRamp = 250;

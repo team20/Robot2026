@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.function.Function;
@@ -31,6 +32,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.CircularBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -265,9 +267,10 @@ public class Drive extends SubsystemBase {
 	}
 
 	/**
-	 * Use this method to get the Pose2d of the hub for the alliance you are on.
+	 * Use this method to get the Pose2d of the hub for the alliance you are on, or
+	 * your alliance wall if you are currently positioned within the neutral zone
 	 * 
-	 * @return the {@code Pose2d} of the current hub
+	 * @return the {@code Pose2d} of the current hub or alliance wall
 	 */
 	public static Pose2d getAimTarget() {
 		// Get alliance and robot pose
@@ -291,6 +294,15 @@ public class Drive extends SubsystemBase {
 			case Red -> VisionConstants.kRedHub;
 		};
 
+		return hub;
+	}
+
+	public static Pose2d getVelocityCompensatedAimTarget() {
+
+		Pose2d pose = getPose();
+
+		Pose2d uncompensatedAimTarget = getAimTarget();
+
 		// Get bot pose orientation and world-oriented velocity (not robot relative)
 		Rotation2d robotAngle = pose.getRotation();
 		Translation2d rotatedVelocity = s_theDrive.m_filteredVelocity.rotateBy(robotAngle);
@@ -298,27 +310,29 @@ public class Drive extends SubsystemBase {
 		// Find vector between bot pose and hub, then calculate shot distance & airtime
 		// Adjust aim target to compensate for changing robot position
 		// (offset calculated using velocity & airtime)
-		Translation2d difference = hub.minus(pose).getTranslation();
-		double distance = difference.getNorm();
+		Translation2d difference = uncompensatedAimTarget.minus(pose).getTranslation();
+		Distance distance = Meters.of(difference.getNorm());
 		// Find airtime using distance to target (in feet)
-		double time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
+		double time = Aim.getShotAirtime(distance);
 		Translation2d offset = rotatedVelocity.times(-time);
-		Pose2d aimTarget = new Pose2d(hub.getX() + offset.getX(),
-				hub.getY() + offset.getY(), Rotation2d.kZero);
+		Pose2d aimTarget = new Pose2d(uncompensatedAimTarget.getX() + offset.getX(),
+				uncompensatedAimTarget.getY() + offset.getY(), Rotation2d.kZero);
 
 		// Iterate multiple times (5) to account for changing airtime
 		// (as aim target moves to compensate, airtime increases)
 		for (int i = 0; i < 5; i++) {
 			difference = aimTarget.minus(pose).getTranslation();
-			distance = difference.getNorm();
-			time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
+			distance = Meters.of(difference.getNorm());
+			time = Aim.getShotAirtime(distance);
 			offset = rotatedVelocity.times(-time);
 			// Slightly increment offset with each iteration
-			aimTarget = new Pose2d(hub.getX() + offset.getX(), hub.getY() + offset.getY(), Rotation2d.kZero);
+			aimTarget = new Pose2d(uncompensatedAimTarget.getX() + offset.getX(),
+					uncompensatedAimTarget.getY() + offset.getY(),
+					Rotation2d.kZero);
 		}
 
 		// Publish raw & compensated targets and return compensated target
-		s_theDrive.m_aimPosePublisher.accept(hub);
+		s_theDrive.m_aimPosePublisher.accept(uncompensatedAimTarget);
 		s_theDrive.m_aimPoseCompensatedPublisher.accept(aimTarget);
 		return aimTarget;
 	}

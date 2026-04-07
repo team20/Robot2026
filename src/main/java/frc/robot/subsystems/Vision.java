@@ -94,7 +94,7 @@ public class Vision extends SubsystemBase {
 
 			// Calculate angle, distance, & derivatives of both from bot to target
 			// Filter values to reduce noise
-			Translation2d difference = Drive.getAimTarget()
+			Translation2d difference = Drive.getVelocityCompensatedAimTarget()
 					.minus(m_botPose).getTranslation(); // pose.pose()).getTranslation();
 			m_angleFilter.calculate(-difference.getAngle().getDegrees());
 			m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
@@ -111,7 +111,7 @@ public class Vision extends SubsystemBase {
 			SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
 			SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
 			SmartDashboard.putNumber(
-					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
+					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Meters.of(m_distance)));
 
 		}
 

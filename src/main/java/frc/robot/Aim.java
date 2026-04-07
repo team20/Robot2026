@@ -1,8 +1,12 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import edu.wpi.first.units.measure.Distance;
 
 public class Aim {
 
@@ -57,19 +61,19 @@ public class Aim {
 		}
 	}
 
-	public static double getShooterVelocity(double distance) {
+	public static double getShooterVelocity(Distance distance) {
 		List<Double> velocities = s_presets.values().stream().map(p -> p.rpm).toList();
-		return interpolate(distance, velocities);
+		return interpolate(distance.in(Feet), velocities);
 	}
 
-	public static double getHoodAngle(double distance) {
+	public static double getHoodAngle(Distance distance) {
 		List<Double> angles = s_presets.values().stream().map(p -> p.angle).toList();
-		return interpolate(distance, angles);
+		return interpolate(distance.in(Feet), angles);
 	}
 
-	public static double getShotAirtime(double distance) {
+	public static double getShotAirtime(Distance distance) {
 		List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
-		return interpolate(distance, airtimes) + .75; // TODO: Update to be a constant once fully tuned
+		return interpolate(distance.in(Feet), airtimes) + .75; // TODO: Update to be a constant once fully tuned
 	}
 
 }

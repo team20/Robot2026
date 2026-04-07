@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -178,9 +180,10 @@ public class Robot extends TimedRobot {
 			boolean absolute = true;
 
 			// Presets
-			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
-			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
-			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
+			m_operatorController.triangle().debounce(.1)
+					.onTrue(new AimCommands.AdjustAim(absolute, Feet.of(4.5), this));
+			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, Feet.of(11.7), this));
+			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, Feet.of(18), this));
 
 			// Auto aim
 			m_operatorController.axisLessThan(3, 0.025)
@@ -189,12 +192,13 @@ public class Robot extends TimedRobot {
 									.and(m_operatorController.create()))
 					.whileTrue(
 							new RepeatCommand(
-									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
+									new AimCommands.HubAimCommand()));
 
 			// Manual distance adjustment
 			absolute = false;
-			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
-			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
+			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, Feet.of(5), this)); // 5 ft/s
+																											// increasing
+			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, Feet.of(-5), this));
 		}
 	}
 

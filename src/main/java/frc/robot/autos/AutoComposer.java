@@ -1,6 +1,9 @@
 package frc.robot.autos;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,7 +20,6 @@ import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.TransportCommands;
 import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Vision;
 
 public class AutoComposer {
 	private static TimedRobot m_robot;
@@ -26,7 +28,7 @@ public class AutoComposer {
 		m_robot = robot;
 	}
 
-	public Command getShootCommand(double turretAngle, double distance, double shootTime) {
+	public Command getShootCommand(double turretAngle, Distance distance, double shootTime) {
 		return Commands.sequence(
 				AimCommands.getSetAimCommand(distance),
 				TurretCommands.getTurnToAngleSoftwareCommand(turretAngle),
@@ -37,13 +39,13 @@ public class AutoComposer {
 
 	public Command getLeftOneShootAuto() {
 		return Commands.sequence(
-				getShootCommand(92 + (92 - 36), 11.6, 6),
+				getShootCommand(92 + (92 - 36), Feet.of(11.6), 6),
 				HoodCommands.getHoodDownCommand()).withName("Left one shoot auto");
 	}
 
 	public Command getManualRightShootAuto() {
 		return Commands.sequence(
-				new AdjustAim(true, 11.6, m_robot).withTimeout(.5),
+				new AdjustAim(true, Feet.of(11.6), m_robot).withTimeout(.5),
 				Commands.waitSeconds(3), // test changing to 2
 				TransportCommands.getTimedShoot(6),
 				HoodCommands.getHoodDownCommand()).withName("Right one shoot auto");
@@ -51,7 +53,7 @@ public class AutoComposer {
 
 	public Command getRightOneShootAuto() {
 		return Commands.sequence(
-				getShootCommand(45, 11.6, 6)
+				getShootCommand(45, Feet.of(11.6), 6)
 		// ,
 		// new AngularPositionCommands.RunToAngleHardware(Hood.getHood(), 100,
 		// Hood.getConstants())
@@ -60,7 +62,7 @@ public class AutoComposer {
 
 	public Command getRightTwoShootAuto() {
 		return Commands.sequence(
-				getShootCommand(36, 11.6, 6),
+				getShootCommand(36, Feet.of(11.6), 6),
 				HoodCommands.getHoodDownCommand(),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
@@ -70,30 +72,30 @@ public class AutoComposer {
 				IntakeCommands.getArmOutCombinedCommand(),
 				// addition
 
-				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
+				getShootCommand(65 + 2, Feet.of(18), 20)).withName("Right two shoot auto");
 	}
 
 	public Command getRightTwoShootAutoWithVision() {
 		return new SequentialCommandGroup(
-				new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator()),
+				new AimCommands.HubAimCommand(),
 				AimCommands.getSettleAimCommand(),
 				new ParallelRaceGroup(
-						new RepeatCommand(new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())),
+						new RepeatCommand(new AimCommands.HubAimCommand()),
 						TransportCommands.getTimedShoot(3)),
 				// getShootCommand(36, 11.6, 6),
 				HoodCommands.getHoodDownCommand(),
 				new DriveCommands.VisionDriveDistance(Units.feetToMeters(10.25), 0, 0),
 				// IntakeCommands.getArmOutCombinedCommand(),
-				new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator()),
+				new AimCommands.HubAimCommand(),
 				AimCommands.getSettleAimCommand(),
 				new ParallelRaceGroup(
-						new RepeatCommand(new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())),
+						new RepeatCommand(new AimCommands.HubAimCommand()),
 						TransportCommands.getTimedShoot(3)));
 	}
 
 	public Command getRightTwoShootAutoBump() {
 		return Commands.sequence(
-				getShootCommand(36, 9.1, 6),
+				getShootCommand(36, Feet.of(9.1), 6),
 				HoodCommands.getHoodDownCommand(),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1.5),
@@ -102,7 +104,7 @@ public class AutoComposer {
 				IntakeCommands.getArmOutCombinedCommand(),
 				// addition
 
-				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto front of bump");
+				getShootCommand(65 + 2, Feet.of(18), 20)).withName("Right two shoot auto front of bump");
 	}
 
 	public Command getVelocity1Testcommand() {
@@ -119,8 +121,7 @@ public class AutoComposer {
 								Commands.race(
 										new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower),
 										Commands.repeatingSequence(
-												new AimCommands.HubAimCommand(
-														Vision.getVision().getFieldPoseEstimator())))),
+												new AimCommands.HubAimCommand()))),
 						Commands.sequence(
 								new DriveCommands.DrivePowerAndTime(.07, .07, 0, 8))));
 	}
@@ -134,7 +135,7 @@ public class AutoComposer {
 
 	public Command getRightTwoShootAutoWithIntake() {
 		return Commands.sequence(
-				getShootCommand(36, 11.6, 6),
+				getShootCommand(36, Feet.of(11.6), 6),
 				HoodCommands.getHoodDownCommand(),
 				new DriveCommands.DrivePowerAndTime(.2, 0, 0, 3.8),
 				new DriveCommands.DrivePowerAndTime(0, 0.2, 0, 1),
@@ -146,7 +147,7 @@ public class AutoComposer {
 						new IntakeCommands.Spintake(1)),
 				// addition
 
-				getShootCommand(65 + 2, 18, 20)).withName("Right two shoot auto");
+				getShootCommand(65 + 2, Feet.of(18), 20)).withName("Right two shoot auto");
 	}
 
 }
