@@ -9,6 +9,11 @@ import frc.robot.subsystems.IntakeExtraArm;
 import frc.robot.subsystems.IntakeWheels;
 
 public class IntakeCommands {
+	private final static double outInMinPower = 0.1;
+	private final static double outInMaxPower = 1.0;
+	private final static double outInMaxError = 25;
+	private final static double outInTolerance = 0.125;
+
 	public static class Teletake extends Command {
 		private boolean m_on = false;
 		private double m_speed;
@@ -119,17 +124,15 @@ public class IntakeCommands {
 		// 1);
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
 				IntakeConstants.kOutPosition,
-				.4, 1.0,
-				25 /* 15 */, 5, false).withTimeout(2.315);
+				outInMinPower, outInMaxPower,
+				outInMaxError /* 15 */, outInTolerance, false).withTimeout(2);
 	}
 
 	public static Command getArmOutCombinedCommand() {
 		return Commands.sequence(
 				Commands.parallel(
 						getArmOutCommand(),
-						new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
-						new IntakeCommands.SpinExtraIntake(.65)),
-				new IntakeCommands.SpinExtraIntake(.4));
+						new IntakeCommands.Spintake(IntakeConstants.kWheelPower)));
 	}
 
 	public static Command getArmInCombinedCommand() {
@@ -147,8 +150,8 @@ public class IntakeCommands {
 		// 1);
 		return new PositionControlCommands.MoveMotorToPosition(IntakeArm.getIntakeArm(),
 				IntakeConstants.kInPosition,
-				0.1, 1.0,
-				25 /* 15 */, .125, false).withTimeout(2);
+				outInMinPower, outInMaxPower,
+				outInMaxError /* 15 */, outInTolerance, false).withTimeout(2);
 	}
 
 	public static Command getRunArmAtPowerCommand(double power) {

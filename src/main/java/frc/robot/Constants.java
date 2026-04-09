@@ -101,7 +101,7 @@ public class Constants {
 			public static final int kExtraArmSecondaryCurrentLimit = 15;
 			public static final boolean kExtraArmInvert = false;
 
-			public static final double kArmPower = 0.5;
+			public static final double kArmMaxPower = 1.0;
 
 			public static final double kOutPosition = 230; // 145;
 			public static final double kInPosition = 10;
