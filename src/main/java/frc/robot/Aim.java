@@ -23,7 +23,7 @@ public class Aim {
 			-500.0, new ShooterPreset(99, 2000, 1.1),
 			3.17, new ShooterPreset(99, 2000, 1.1),
 			6.23, new ShooterPreset(113, 2100, 1.1),
-			9.1, new ShooterPreset(122, 2300, 1.2),
+			9.1, new ShooterPreset(128, 2440, 1.2),
 			13.1, new ShooterPreset(137, 2535, 1.4),
 			18.0, new ShooterPreset(137, 2850, 1.4),
 			500.0, new ShooterPreset(137, 3000, 1.4)));
@@ -69,7 +69,7 @@ public class Aim {
 
 	public static double getShotAirtime(double distance) {
 		List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
-		return interpolate(distance, airtimes) + .75; // TODO: Update to be a constant once fully tuned
+		return interpolate(distance, airtimes);// + .75; // TODO: Update to be a constant once fully tuned
 	}
 
 }
