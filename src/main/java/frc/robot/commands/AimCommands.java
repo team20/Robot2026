@@ -40,6 +40,7 @@ public class AimCommands {
 
 			{ // Hood and shooter adjustment
 				double distance = m_estimator.getDistance().in(Feet);
+				SmartDashboard.putNumber("Vision/AIM DISTANCE", distance);
 				s_airtime = Aim.getShotAirtime(distance); // Update airtime based on new distance
 				Hood.getHood().moveToPosition(Aim.getHoodAngle(distance));
 				Shooter.setRPM(Aim.getShooterVelocity(distance));
