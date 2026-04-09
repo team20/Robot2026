@@ -108,6 +108,34 @@ public class Robot extends TimedRobot {
 		// *************** DRIVER BINDINGS ***************
 		// ***********************************************
 
+		m_operatorController.touchpad().onTrue(
+				Commands.sequence(
+						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
+								Tolerances.FINE_TRANSLATION),
+						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+								Tolerances.FINE_TRANSLATION),
+						Commands.print("Before arm out"),
+						IntakeCommands.getArmOutCommand(),
+						Commands.print("After arm out"),
+						Commands.race(
+								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
+										Tolerances.COARSE),
+								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+
+		m_driverController.touchpad().onTrue(
+				Commands.sequence(
+						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
+								Tolerances.FINE_TRANSLATION),
+						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+								Tolerances.FINE_TRANSLATION),
+						Commands.print("Before arm out"),
+						IntakeCommands.getArmOutCommand(),
+						Commands.print("After arm out"),
+						Commands.race(
+								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
+										Tolerances.COARSE),
+								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+
 		{ // Drive bindings
 			Drive.getDrive().setDefaultCommand(
 					new DriveCommands.JoystickDrive(
