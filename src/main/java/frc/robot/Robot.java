@@ -194,8 +194,29 @@ public class Robot extends TimedRobot {
 		}
 
 		{ // Agitator bindings
+			// m_operatorController.R1().whileTrue(
+			// new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
+
 			m_operatorController.R1().whileTrue(
-					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
+					Commands.parallel(
+							new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
+							Commands.sequence(
+									Commands.parallel(
+											Commands.repeatingSequence(
+
+													new TransportCommands.RunAgitatorAtPower(
+															AgitatorConstants.kTeleopPower)
+																	.withTimeout(1.5),
+													new TransportCommands.RunAgitatorAtPower(
+															-AgitatorConstants.kTeleopPower)
+																	.withTimeout(.25)),
+
+											Commands.repeatingSequence(
+													IntakeCommands.getRunArmAtPowerCommand(-1).withTimeout(1.75 / 2.0),
+													IntakeCommands.getRunArmAtPowerCommand(1)
+															.withTimeout(1.75 / 2.0))))))
+					.onFalse(IntakeCommands.getArmOutCombinedCommand());
+
 			m_operatorController.povLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 		}
