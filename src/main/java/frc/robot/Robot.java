@@ -114,8 +114,6 @@ public class Robot extends TimedRobot {
 
 	private void bindCompControls() {
 
-		USBSerialSubsystem.get().setDefaultCommand(new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN));
-
 		// ***********************************************
 		// *************** DRIVER BINDINGS ***************
 		// ***********************************************
@@ -191,11 +189,9 @@ public class Robot extends TimedRobot {
 
 		{ // Turret bindings
 			Turret.getTurret().setDefaultCommand(
-					ledCommand(
-							LightPattern.TURRET_MANUAL,
-							new TurretCommands.GradualAim(0.0, 0.2, 0.025,
-									m_operatorController::getL2Axis,
-									m_operatorController::getR2Axis)));
+					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
+							m_operatorController::getL2Axis,
+							m_operatorController::getR2Axis));
 		}
 
 		{ // Intake bindings
@@ -245,6 +241,7 @@ public class Robot extends TimedRobot {
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			// Auto aim
+
 			m_operatorController.axisLessThan(3, 0.025)
 					.and(
 							m_operatorController.axisLessThan(4, 0.025)
@@ -407,6 +404,20 @@ public class Robot extends TimedRobot {
 			bindTestControls();
 		}
 
+		m_scheduler.schedule(
+				Commands.sequence(
+						new WaitCommand(5), // 7
+						new USBSerialSubsystem.SetHubShiftCommand(),
+						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN),
+						new WaitCommand(5), // 22
+						new USBSerialSubsystem.SetHubShiftCommand(),
+						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN)));
+
+	}
+
+	@Override
+	public void disabledInit() {
+		USBSerialSubsystem.get().setLightPattern(LightPattern.DEFAULT_GREEN);
 	}
 
 	@Override
