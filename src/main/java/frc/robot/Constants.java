@@ -31,12 +31,12 @@ public class Constants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
-			public static final double kMaxDutyCycle = .2; // extra limit for test safety
+			public static final double kMaxDutyCycle = .09; // extra limit for test safety
 			public static final double kMinPower = 0.04;
 			public static final double kMaxPower = kMaxDutyCycle;
 			public static final double kMaxErr = 40; // 25
 			public static final double kTolerance = 1.5;
-			public static final double kP = 0.010;
+			public static final double kP = 0.02;
 			public static final double kI = 0.0000;
 			public static final double kS = kMinPower;
 			public static final double kLargeDeadzone = 0.5; // For the X/Y joystick control
@@ -44,7 +44,7 @@ public class Constants {
 			public static final int kSmartCurrent = 25;
 			public static final int kCurrent = 30;
 			public static final double kMinAngle = 22; // B
-			public static final double kMaxAngle = 183; // A // <-- 190 <-- 220
+			public static final double kMaxAngle = 180; // A // <-- 183
 
 			public static final double kAngleToTicksFactor = 6.0 / 7.0;
 
@@ -61,7 +61,7 @@ public class Constants {
 			public static final double kMaxPower = 0.25;
 			public static final double kMaxErr = 25;
 			public static final double kTolerance = 1;
-			public static final double kP = 0.04;
+			public static final double kP = 0.0525;
 			public static final double kI = 0.0000;
 			public static final double kS = 0.00;
 			public static final double kDeadzone = 0.05;
@@ -86,6 +86,7 @@ public class Constants {
 		public static final class IntakeConstants {
 			public static final int kIntakeWheelsPort = 54;
 			public static final int kIntakeArmPort = 53;
+			public static final int kIntakeExtraArmPort = 56;
 			public static final double kArmConversionFactor = 0.01;
 
 			public static final int kWheelSmartCurrentLimit = 20;
@@ -96,20 +97,16 @@ public class Constants {
 			public static final int kArmSecondaryCurrentLimit = 20;
 			public static final boolean kArmInvert = true;
 
-			public static final double kArmPower = 0.5;
+			public static final int kExtraArmSmartCurrentLimit = 7;
+			public static final int kExtraArmSecondaryCurrentLimit = 15;
+			public static final boolean kExtraArmInvert = false;
 
-			public static final double kOutPosition = 145;
+			public static final double kArmMaxPower = 1.0;
+
+			public static final double kOutPosition = 230; // 145;
 			public static final double kInPosition = 10;
 			public static final double kP = 0.1;
 			public static final double kWheelPower = 1;
-		}
-
-		public static final class KickerConstants {
-			public static final double kTeleopPower = .4;
-			public static final int kKickerPort = 56;
-			public static final int kKickerSmartCurrentLimit = 20;
-			public static final int kKickerSecondaryCurrentLimit = 30;
-			public static final boolean kKickerInvert = true;
 		}
 
 		public static final class AgitatorConstants {

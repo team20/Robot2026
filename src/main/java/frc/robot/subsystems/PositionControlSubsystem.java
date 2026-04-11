@@ -32,7 +32,11 @@ public class PositionControlSubsystem extends SubsystemBase {
 	}
 
 	public void setMotorPower(double power) {
-		m_motor.set(Math.min(m_maxPower, power));
+		// Clamp power between (-m_maxPower, m_maxPower)
+		if (Math.abs(power) > m_maxPower) {
+			power = Math.signum(power) * m_maxPower;
+		}
+		m_motor.set(power);
 	}
 
 	public double getMotorRotations() {
@@ -58,5 +62,9 @@ public class PositionControlSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		SmartDashboard.putNumber(getClass().getName() + "/Motor Position", getMotorRotations());
+		SmartDashboard.putNumber(getClass().getName() + "/Motor Speed", m_motor.get());
+		SmartDashboard.putNumber(
+				getClass().getName() + "/Error",
+				m_motor.getEncoder().getPosition() - m_motor.getClosedLoopController().getSetpoint());
 	}
 }

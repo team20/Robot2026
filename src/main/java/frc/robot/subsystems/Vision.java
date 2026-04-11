@@ -51,8 +51,7 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_distanceFilter = LinearFilter.movingAverage(5);
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
-		private double m_distantDerivative;
-		private final Aim.Linear m_aim = new Aim.Linear();
+		private double m_distanceDerivative;
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -61,45 +60,59 @@ public class Vision extends SubsystemBase {
 				.publish();
 
 		public void update(List<PhotonTrackedTarget> targets) {
-			PoseUtils.estimateCamPoseStdDev(targets).ifPresent(pose -> {
+
+			// Use vision-based pose if April Tags are present
+			PoseUtils.estimateCamPoseStdDev(targets).ifPresentOrElse(pose -> {
 				// save the camera's pose
 				m_pose = pose.pose();
 				// turn camera pose into bot pose
 				m_botPose = m_pose.transformBy(
 						new Transform2d(0, 0,
 								Rotation2d.fromDegrees(Turret.getTurret().getRobotRelativeAngle())));
+
+				// Update pose with vision
 				Drive.getEstimator().addVisionMeasurement(
 						m_botPose, RobotController.getFPGATime() * 1e-6,
 						MatBuilder.fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(), pose.thetaStdDev()));
-				SmartDashboard
-						.putNumber(
-								"Robot Relative Angle from Turret",
-								Turret.getTurret().getRobotRelativeAngle());
 
-				Translation2d difference = Drive.getAimTarget().minus(pose.pose()).getTranslation();
-				m_angleFilter.calculate(-difference.getAngle().getDegrees());
-				m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
-				m_angle = m_angleFilter.lastValue();
-				m_distanceFilter.calculate(difference.getNorm());
-				m_distantDerivative = (m_distanceFilter.lastValue() - m_distance) / 0.02;
-				m_distance = m_distanceFilter.lastValue();
+				// Publish vision pose and values
 				m_estimatedPoseTopic.accept(pose.pose());
-				m_estimatedBotPoseTopic.accept(m_botPose);
-
-				SmartDashboard.putNumber(
-						"Vision/FieldPose/Estimated Pose Angle",
-						m_botPose.getRotation().getDegrees());
-
-				SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
-				SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
 				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
 				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
 				SmartDashboard.putNumber(
 						"Vision/FieldPose/Estimate Pose Deviation/theta",
 						pose.thetaStdDev());
-				SmartDashboard.putNumber(
-						"Vision/FieldPose/Estimated Airtime", m_aim.getShotAirtime(Units.metersToFeet(m_distance)));
+			}, () -> { // Use odometry pose if tags not present
+				m_botPose = Drive.getPose();
+				m_estimatedBotPoseTopic.accept(m_botPose);
 			});
+
+			SmartDashboard
+					.putNumber(
+							"Robot Relative Angle from Turret",
+							Turret.getTurret().getRobotRelativeAngle());
+
+			// Calculate angle, distance, & derivatives of both from bot to target
+			// Filter values to reduce noise
+			Translation2d difference = Drive.getAimTarget()
+					.minus(m_botPose).getTranslation(); // pose.pose()).getTranslation();
+			m_angleFilter.calculate(-difference.getAngle().getDegrees());
+			m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
+			m_angle = m_angleFilter.lastValue();
+			m_distanceFilter.calculate(difference.getNorm());
+			m_distanceDerivative = (m_distanceFilter.lastValue() - m_distance) / 0.02;
+			m_distance = m_distanceFilter.lastValue();
+
+			// Publish values
+			SmartDashboard.putNumber(
+					"Vision/FieldPose/Estimated Pose Angle",
+					m_botPose.getRotation().getDegrees());
+
+			SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
+			SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
+			SmartDashboard.putNumber(
+					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
+
 		}
 
 		public Pose2d getPose() {
@@ -115,7 +128,7 @@ public class Vision extends SubsystemBase {
 		}
 
 		public LinearVelocity getDistanceDerivative() {
-			return MetersPerSecond.of(m_distantDerivative);
+			return MetersPerSecond.of(m_distanceDerivative);
 		}
 
 		public AngularVelocity getAngleDerivative() {

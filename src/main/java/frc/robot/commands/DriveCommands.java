@@ -80,6 +80,7 @@ public class DriveCommands {
 			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
 			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
+			SmartDashboard.putNumber("Drive/Rotation Stick", rotationStick);
 			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 
