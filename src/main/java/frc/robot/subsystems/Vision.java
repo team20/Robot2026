@@ -52,6 +52,9 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distanceDerivative;
+
+		private boolean m_hasTargets = false;
+
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -60,9 +63,11 @@ public class Vision extends SubsystemBase {
 				.publish();
 
 		public void update(List<PhotonTrackedTarget> targets) {
-
+			m_hasTargets = false;
 			// Use vision-based pose if April Tags are present
 			PoseUtils.estimateCamPoseStdDev(targets).ifPresentOrElse(pose -> {
+				m_hasTargets = true;
+
 				// save the camera's pose
 				m_pose = pose.pose();
 				// turn camera pose into bot pose
@@ -113,6 +118,10 @@ public class Vision extends SubsystemBase {
 			SmartDashboard.putNumber(
 					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
 
+		}
+
+		public boolean hasTargets() {
+			return m_hasTargets;
 		}
 
 		public Pose2d getPose() {

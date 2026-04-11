@@ -37,6 +37,8 @@ import frc.robot.subsystems.IntakeExtraArm;
 import frc.robot.subsystems.IntakeWheels;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.USBSerialSubsystem;
+import frc.robot.subsystems.USBSerialSubsystem.LightPattern;
 import frc.robot.subsystems.Vision;
 
 public class Robot extends TimedRobot {
@@ -60,6 +62,7 @@ public class Robot extends TimedRobot {
 		new Climber();
 		new Agitator();
 		new Vision();
+		new USBSerialSubsystem();
 		Turret.create();
 		Hood.create();
 	}
@@ -79,6 +82,13 @@ public class Robot extends TimedRobot {
 		m_autoComposer = new AutoComposer(this);
 		m_autoChooser = new SendableChooser<>();
 		bindAutoOptions();
+	}
+
+	public static Command ledCommand(USBSerialSubsystem.LightPattern pattern, Command cmd) {
+		return Commands.parallel(
+				new USBSerialSubsystem.SetLightCommand(pattern),
+				cmd);
+
 	}
 
 	private void bindAutoOptions() {
@@ -103,6 +113,8 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindCompControls() {
+
+		USBSerialSubsystem.get().setDefaultCommand(new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN));
 
 		// ***********************************************
 		// *************** DRIVER BINDINGS ***************
@@ -179,9 +191,11 @@ public class Robot extends TimedRobot {
 
 		{ // Turret bindings
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
-							m_operatorController::getL2Axis,
-							m_operatorController::getR2Axis));
+					ledCommand(
+							LightPattern.TURRET_MANUAL,
+							new TurretCommands.GradualAim(0.0, 0.2, 0.025,
+									m_operatorController::getL2Axis,
+									m_operatorController::getR2Axis)));
 		}
 
 		{ // Intake bindings
@@ -237,7 +251,10 @@ public class Robot extends TimedRobot {
 									.and(m_operatorController.create()))
 					.whileTrue(
 							new RepeatCommand(
-									new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator())));
+									Commands.parallel(
+											new USBSerialSubsystem.SetLightAutoAimStatus(),
+											new AimCommands.HubAimCommand(
+													Vision.getVision().getFieldPoseEstimator()))));
 
 			// Manual distance adjustment
 			absolute = false;
