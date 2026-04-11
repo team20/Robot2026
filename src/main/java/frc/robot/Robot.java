@@ -186,36 +186,35 @@ public class Robot extends TimedRobot {
 
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			// m_operatorController.L1().debounce(.1).onTrue(new
-			// IntakeCommands.StopIntakeWheels());
-			IntakeWheels.getIntakeWheels().setDefaultCommand(
-					new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
-							m_operatorController.L1()));
+			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
+			// IntakeWheels.getIntakeWheels().setDefaultCommand(
+			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
+			// m_operatorController.L1()));
 		}
 
 		{ // Agitator bindings
-			// m_operatorController.R1().whileTrue(
-			// new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
-
 			m_operatorController.R1().whileTrue(
-					Commands.parallel(
-							new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
-							Commands.sequence(
-									Commands.parallel(
-											Commands.repeatingSequence(
+					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
 
-													new TransportCommands.RunAgitatorAtPower(
-															AgitatorConstants.kTeleopPower)
-																	.withTimeout(1.5),
-													new TransportCommands.RunAgitatorAtPower(
-															-AgitatorConstants.kTeleopPower)
-																	.withTimeout(.25)),
-
-											Commands.repeatingSequence(
-													IntakeCommands.getRunArmAtPowerCommand(-1).withTimeout(1.75 / 2.0),
-													IntakeCommands.getRunArmAtPowerCommand(1)
-															.withTimeout(1.75 / 2.0))))))
-					.onFalse(IntakeCommands.getArmOutCombinedCommand());
+			/*
+			 * m_operatorController.R1().whileTrue(
+			 * Commands.parallel(
+			 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
+			 * Commands.sequence(
+			 * Commands.parallel(
+			 * Commands.repeatingSequence(
+			 * new TransportCommands.RunAgitatorAtPower(
+			 * AgitatorConstants.kTeleopPower)
+			 * .withTimeout(1.5),
+			 * new TransportCommands.RunAgitatorAtPower(
+			 * -AgitatorConstants.kTeleopPower)
+			 * .withTimeout(.25)),
+			 * Commands.repeatingSequence(
+			 * IntakeCommands.getRunArmAtPowerCommand(-1).withTimeout(1.75 / 2.0),
+			 * IntakeCommands.getRunArmAtPowerCommand(1)
+			 * .withTimeout(1.75 / 2.0))))))
+			 * .onFalse(IntakeCommands.getArmOutCombinedCommand());
+			 */
 
 			m_operatorController.povLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
