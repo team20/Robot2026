@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.USBSerialSubsystem;
 
 public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
@@ -21,7 +21,8 @@ public class Robot extends TimedRobot {
 			Constants.ControllerConstants.kOperatorControllerPort);
 
 	{ // Here are the individual subsystems
-		new Vision();
+		// new Vision();
+		new USBSerialSubsystem();
 	}
 
 	public void initSubsystems() {
@@ -48,6 +49,16 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopInit() {
+
+		m_driverController.L1()
+				.onTrue(new USBSerialSubsystem.SetLightCommand(USBSerialSubsystem.LightPattern.DEFAULT_GREEN));
+		m_driverController.L2()
+				.onTrue(new USBSerialSubsystem.SetLightCommand(USBSerialSubsystem.LightPattern.TURRET_MANUAL));
+		m_driverController.R1()
+				.onTrue(new USBSerialSubsystem.SetLightCommand(USBSerialSubsystem.LightPattern.ENDGAME_SHIFT));
+		m_driverController.R2()
+				.onTrue(new USBSerialSubsystem.SetLightCommand(USBSerialSubsystem.LightPattern.HUB_SHIFT));
+
 		initSubsystems();
 		m_scheduler.cancelAll();
 
