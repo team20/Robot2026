@@ -59,17 +59,17 @@ public class Aim {
 
 	public static double getShooterVelocity(double distance) {
 		List<Double> velocities = s_presets.values().stream().map(p -> p.rpm).toList();
-		return interpolate(distance, velocities);
+		return interpolate(distance - 8.25 / 12, velocities);
 	}
 
 	public static double getHoodAngle(double distance) {
 		List<Double> angles = s_presets.values().stream().map(p -> p.angle).toList();
-		return interpolate(distance, angles);
+		return interpolate(distance - 8.25 / 12, angles);
 	}
 
 	public static double getShotAirtime(double distance) {
 		List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
-		return interpolate(distance, airtimes);// + .75; // TODO: Update to be a constant once fully tuned
+		return interpolate(distance - 8.25 / 12, airtimes);// + .75; // TODO: Update to be a constant once fully tuned
 	}
 
 }

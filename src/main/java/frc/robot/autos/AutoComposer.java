@@ -1,5 +1,14 @@
 package frc.robot.autos;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import choreo.Choreo;
+import choreo.trajectory.Trajectory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,6 +33,60 @@ public class AutoComposer {
 
 	public AutoComposer(TimedRobot robot) {
 		m_robot = robot;
+	}
+
+	public Command shoot() {
+		return Commands.sequence(
+				new RepeatCommand(new AimCommands.HubAimCommand(
+						Vision.getVision().getFieldPoseEstimator())).withTimeout(1.5),
+				TransportCommands.getTimedShoot(5));
+	}
+
+	public static Command getChildTrajectory(Trajectory<?> trajectory) {
+		List<Pose2d> jelly = new ArrayList<>(Arrays.asList(trajectory.getPoses()));
+		Pose2d start = jelly.remove(0);
+		Pose2d end = jelly.remove(jelly.size() - 1);
+		return Commands.parallel(
+				Commands.repeatingSequence(new AimCommands.HubLookCommand()),
+				Commands.sequence(
+						new DriveCommands.NinjaStar(start, false),
+						Commands.sequence(
+								jelly.stream().map(DriveCommands.YOLONinjaStar::new).toArray(Command[]::new)),
+						new DriveCommands.NinjaStar(end, true)));
+	}
+
+	public Command getDriveTrajectory(String filename, List<Command> jellies) {
+		try {
+			Trajectory<?> trajectory = Choreo.loadTrajectory(filename).orElseThrow();
+			System.out.println(trajectory.getPoses().length);
+			List<Command> splits = trajectory.splits().stream().map(trajectory::getSplit).map(Optional::get)
+					.map(AutoComposer::getChildTrajectory).toList();
+			List<Command> commands = new ArrayList<>();
+			System.out.println(trajectory.splits());
+			System.out.printf("%d; %d%n", splits.size(), jellies.size());
+			for (int i = 0; i < Math.max(splits.size(), jellies.size()); i++) {
+				if (jellies.size() > i) {
+					commands.add(jellies.get(i));
+				}
+				if (splits.size() > i) {
+					commands.add(splits.get(i));
+				}
+			}
+			return Commands.sequence(commands.toArray(Command[]::new));
+		} catch (NoSuchElementException e) {
+			return Commands.print(e.toString());
+		}
+
+	}
+
+	public Command getSingleTrajectory(String filename) {
+		try {
+			Trajectory<?> trajectory = Choreo.loadTrajectory(filename).orElseThrow();
+			return getChildTrajectory(trajectory);
+		} catch (NoSuchElementException e) {
+			return Commands.print(e.toString());
+		}
+
 	}
 
 	public Command getShootCommand(double turretAngle, double distance, double shootTime) {

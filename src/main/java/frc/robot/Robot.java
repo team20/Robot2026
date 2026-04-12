@@ -118,33 +118,49 @@ public class Robot extends TimedRobot {
 		// *************** DRIVER BINDINGS ***************
 		// ***********************************************
 
-		m_operatorController.touchpad().onTrue(
-				Commands.sequence(
-						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
-						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
-						Commands.print("Before arm out"),
-						IntakeCommands.getArmOutCommand(),
-						Commands.print("After arm out"),
-						Commands.race(
-								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
-										Tolerances.COARSE),
-								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		m_driverController.touchpad().whileTrue(
+				Commands.parallel(
+						IntakeCommands.getArmOutCombinedCommand(),
+						Commands.sequence(
+								m_autoComposer.shoot(),
+								HoodCommands.getHoodDownCommand(),
+								m_autoComposer.getSingleTrajectory("sweep_outpost").withTimeout(14),
+								m_autoComposer.shoot(),
+								m_autoComposer.getSingleTrajectory("sweep_outpost2").withTimeout(3),
+								m_autoComposer.shoot())));
 
-		m_driverController.touchpad().onTrue(
-				Commands.sequence(
-						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
-						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
-						Commands.print("Before arm out"),
-						IntakeCommands.getArmOutCommand(),
-						Commands.print("After arm out"),
-						Commands.race(
-								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
-										Tolerances.COARSE),
-								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		/*
+		 * m_operatorController.touchpad().onTrue(
+		 * Commands.sequence(
+		 * new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3,
+		 * .3,
+		 * Tolerances.FINE_TRANSLATION),
+		 * new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+		 * Tolerances.FINE_TRANSLATION),
+		 * Commands.print("Before arm out"),
+		 * IntakeCommands.getArmOutCommand(),
+		 * Commands.print("After arm out"),
+		 * Commands.race(
+		 * new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
+		 * 0.3, .3,
+		 * Tolerances.COARSE),
+		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		 * m_driverController.touchpad().onTrue(
+		 * Commands.sequence(
+		 * new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3,
+		 * .3,
+		 * Tolerances.FINE_TRANSLATION),
+		 * new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+		 * Tolerances.FINE_TRANSLATION),
+		 * Commands.print("Before arm out"),
+		 * IntakeCommands.getArmOutCommand(),
+		 * Commands.print("After arm out"),
+		 * Commands.race(
+		 * new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
+		 * 0.3, .3,
+		 * Tolerances.COARSE),
+		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		 */
 
 		{ // Drive bindings
 			Drive.getDrive().setDefaultCommand(
@@ -179,8 +195,11 @@ public class Robot extends TimedRobot {
 
 		{ // Climber bindings
 			// m_driverController.create().debounce(.1).onTrue(ClimberCommands.getResetCommand());
-			m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
-			m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
+			// m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
+			// m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
+
+			m_driverController.povUp().whileTrue(ClimberCommands.getRunAtPowerCommand(.75));
+			m_driverController.povDown().whileTrue(ClimberCommands.getRunAtPowerCommand(-.75));
 		}
 
 		// *************************************************
@@ -189,7 +208,7 @@ public class Robot extends TimedRobot {
 
 		{ // Turret bindings
 			Turret.getTurret().setDefaultCommand(
-					new TurretCommands.GradualAim(0.0, 0.2, 0.025,
+					new TurretCommands.GradualAim(0.1, 0.45, 0.025,
 							m_operatorController::getL2Axis,
 							m_operatorController::getR2Axis));
 		}
@@ -302,15 +321,15 @@ public class Robot extends TimedRobot {
 		m_operatorController.touchpad().onTrue(
 				Commands.sequence(
 						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
+								Tolerances.FINE_TRANSLATION, true),
 						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION),
+								Tolerances.FINE_TRANSLATION, true),
 						Commands.print("Before arm out"),
 						IntakeCommands.getArmOutCommand(),
 						Commands.print("After arm out"),
 						Commands.race(
 								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
-										Tolerances.COARSE),
+										Tolerances.COARSE, true),
 								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
 		/*
 		 * m_operatorController.touchpad()
@@ -406,10 +425,19 @@ public class Robot extends TimedRobot {
 
 		m_scheduler.schedule(
 				Commands.sequence(
-						new WaitCommand(5), // 7
+						new WaitCommand(7),
 						new USBSerialSubsystem.SetHubShiftCommand(),
 						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN),
-						new WaitCommand(5), // 22
+						new WaitCommand(22),
+						new USBSerialSubsystem.SetHubShiftCommand(),
+						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN),
+						new WaitCommand(22),
+						new USBSerialSubsystem.SetHubShiftCommand(),
+						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN),
+						new WaitCommand(22),
+						new USBSerialSubsystem.SetHubShiftCommand(),
+						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN),
+						new WaitCommand(22),
 						new USBSerialSubsystem.SetHubShiftCommand(),
 						new USBSerialSubsystem.SetLightCommand(LightPattern.DEFAULT_GREEN)));
 
