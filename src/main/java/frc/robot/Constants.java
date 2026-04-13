@@ -123,7 +123,7 @@ public class Constants {
 			public static final int kSecondaryCurrentLimit = 60;
 			public static final boolean kInvert = false;
 			public static final double kGearRatio = 81.0 / 1.0;
-			public static final double kClimbPosition = 31053; // TODO: Find actual positions
+			public static final double kClimbPosition = 31053;
 			public static final double kRetractPosition = 0;
 			public static final double kP = 0.2;
 		}
@@ -150,7 +150,6 @@ public class Constants {
 		public static final int kBackRightCANCoderPort = 22;
 		public static final int kBackLeftCANCoderPort = 32;
 
-		// TODO: Make sure these are tuned (can do with SysId)
 		public static final double kP = 0.01;
 		public static final double kI = 0;
 		public static final double kD = 0;
@@ -158,7 +157,7 @@ public class Constants {
 		public static final double kA = 0.009;
 
 		public static final double kDriveGearRatio = 6.75;
-		public static final double kSteerGearRatio = 150.0 / 7; // TODO: Change value for 5i's
+		public static final double kSteerGearRatio = 150.0 / 7;
 		public static final double kWheelDiameter = Units.inchesToMeters(4);
 		public static final double kWheelCircumference = Math.PI * kWheelDiameter;
 

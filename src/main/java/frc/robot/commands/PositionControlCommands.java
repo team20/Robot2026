@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.AngleUtility;
-import frc.robot.ClampedP;
+import frc.robot.ControlUtils.ClampedP;
 import frc.robot.subsystems.PositionControlSubsystem;
 
 public class PositionControlCommands {

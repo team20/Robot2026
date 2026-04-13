@@ -2,8 +2,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
+import frc.robot.ControlUtils.ClampedP;
 
 public class Turret extends AngularPositionSubsystem {
 	private static Turret s_theTurret;
@@ -93,8 +93,8 @@ public class Turret extends AngularPositionSubsystem {
 		return s_theTurret;
 	}
 
-	public static ClampedPConstants getConstants() {
-		return new ClampedPConstants(TurretConstants.kMinPower, TurretConstants.kMaxPower, TurretConstants.kMaxErr,
+	public static ClampedP.Constants getConstants() {
+		return new ClampedP.Constants(TurretConstants.kMinPower, TurretConstants.kMaxPower, TurretConstants.kMaxErr,
 				TurretConstants.kTolerance);
 	}
 }

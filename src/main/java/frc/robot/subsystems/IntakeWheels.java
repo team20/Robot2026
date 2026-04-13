@@ -22,7 +22,6 @@ public class IntakeWheels extends SubsystemBase {
 		m_intakeWheels = new SparkMax(IntakeConstants.kIntakeWheelsPort, MotorType.kBrushless);
 		m_wheelConfig = new SparkMaxConfig();
 
-		// TODO: Check configuration of motors
 		m_wheelConfig.smartCurrentLimit(IntakeConstants.kWheelSmartCurrentLimit);
 		m_wheelConfig.secondaryCurrentLimit(IntakeConstants.kWheelSecondaryCurrentLimit);
 		m_wheelConfig.idleMode(IdleMode.kBrake);

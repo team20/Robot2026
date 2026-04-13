@@ -5,7 +5,7 @@ import frc.robot.Constants.Subsystems.ClimberConstants;
 import frc.robot.subsystems.Climber;
 
 public class ClimberCommands {
-	public static Command getZeroCommand() { // TODO: Find actual power and time needed
+	public static Command getZeroCommand() {
 		return PositionControlCommands.getZeroCommand(
 				Climber.getClimber(),
 				-.3 /* POWER */,

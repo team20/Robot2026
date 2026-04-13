@@ -160,7 +160,7 @@ public class IntakeCommands {
 		return new PositionControlCommands.SpinMotorPower(IntakeArm.getIntakeArm(), power);
 	}
 
-	public static Command getArmZeroCommand() { // TODO: Find actual power and time needed
+	public static Command getArmZeroCommand() {
 		return PositionControlCommands.getZeroCommand(
 				IntakeArm.getIntakeArm(),
 				-.15 /* POWER */,

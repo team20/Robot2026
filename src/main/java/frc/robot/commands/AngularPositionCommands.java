@@ -3,8 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.ClampedP;
-import frc.robot.ClampedP.ClampedPConstants;
+import frc.robot.ControlUtils.ClampedP;
 import frc.robot.subsystems.AngularPositionSubsystem;
 
 public class AngularPositionCommands {
@@ -76,10 +75,10 @@ public class AngularPositionCommands {
 
 	public static class RunToAngleSoftware extends Command {
 		private final AngularPositionSubsystem m_subsystem;
-		private final ClampedPConstants m_constants;
+		private final ClampedP.Constants m_constants;
 		private final double m_angle;
 
-		public RunToAngleSoftware(AngularPositionSubsystem subsytem, double angle, ClampedPConstants constants) {
+		public RunToAngleSoftware(AngularPositionSubsystem subsytem, double angle, ClampedP.Constants constants) {
 			m_subsystem = subsytem;
 			m_angle = angle;
 			m_constants = constants;
@@ -96,10 +95,7 @@ public class AngularPositionCommands {
 		@Override
 		public void execute() {
 			double error = m_subsystem.getPosition() - m_angle;
-			double power = ClampedP.clampedP(
-					error, m_constants.minPower(), m_constants.maxPower(), m_constants.maxErr(),
-					m_constants.tolerance());
-			m_subsystem.runAtDutyCycle(power);
+			m_subsystem.runAtDutyCycle(ClampedP.clampedP(error, m_constants));
 		}
 
 		// Called once the command ends or is interrupted.
@@ -112,8 +108,6 @@ public class AngularPositionCommands {
 		@Override
 		public boolean isFinished() {
 			return m_subsystem.isSettled(m_constants.tolerance());
-			// return AngleUtility.minDifference(m_subsystem.getPosition(), m_angle) <
-			// m_constants.tolerance();
 		}
 	}
 

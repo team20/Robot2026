@@ -12,7 +12,7 @@ public class Climber extends PositionControlSubsystem {
 	public static Climber s_theClimber;
 
 	public Climber() {
-		super(ClimberConstants.kClimberPort, false, 1.0); // TODO change max power
+		super(ClimberConstants.kClimberPort, false, 1.0);
 
 		SparkMaxConfig config = new SparkMaxConfig();
 

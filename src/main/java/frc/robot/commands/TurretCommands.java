@@ -30,11 +30,9 @@ public class TurretCommands {
 	}
 
 	public static class TurnToHubWorld extends Command {
-		private final Turret m_turret;
 		private double m_angle;
 
 		public TurnToHubWorld(double worldAngle) {
-			m_turret = Turret.getTurret();
 			m_angle = worldAngle;
 			addRequirements(Turret.getTurret());
 		}

@@ -22,7 +22,6 @@ public class IntakeExtraArm extends SubsystemBase {
 		m_intakeExtraArm = new SparkMax(IntakeConstants.kIntakeExtraArmPort, MotorType.kBrushless);
 		m_armConfig = new SparkMaxConfig();
 
-		// TODO: Check configuration of motors
 		m_armConfig.smartCurrentLimit(IntakeConstants.kExtraArmSmartCurrentLimit);
 		m_armConfig.secondaryCurrentLimit(IntakeConstants.kExtraArmSecondaryCurrentLimit);
 		m_armConfig.idleMode(IdleMode.kCoast);

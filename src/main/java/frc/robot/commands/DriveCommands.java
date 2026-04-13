@@ -16,10 +16,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AngleUtility;
-import frc.robot.ClampedP;
+import frc.robot.ControlUtils.ClampedP;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.Vision.FieldPoseEstimator;
 
 public class DriveCommands {
 
@@ -257,7 +256,6 @@ public class DriveCommands {
 
 		@Override
 		public void execute() {
-			Pose2d pose = ((FieldPoseEstimator) Vision.getVision().getFieldPoseEstimator()).getPose(); // Drive.getPose().minus(m_initialPose);
 			double speedX, speedY, rotation;
 			{
 				double error = getError()[0];

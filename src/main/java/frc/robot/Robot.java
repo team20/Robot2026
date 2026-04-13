@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
+import frc.robot.ControlUtils.ClampedP;
 import frc.robot.autos.AutoComposer;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AngularPositionCommands;
@@ -167,7 +168,7 @@ public class Robot extends TimedRobot {
 					new DriveCommands.JoystickDrive(
 							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
 							() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
-							() -> false)); // TODO: fix robot/field-centric toggle
+							() -> false));
 			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
 		}
 

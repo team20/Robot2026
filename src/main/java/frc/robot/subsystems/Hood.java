@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
-import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.HoodConstants;
+import frc.robot.ControlUtils.ClampedP;
 
 public class Hood extends AngularPositionSubsystem {
 	private static AngularPositionSubsystem s_theHood;
@@ -30,8 +30,8 @@ public class Hood extends AngularPositionSubsystem {
 		return s_theHood;
 	}
 
-	public static ClampedPConstants getConstants() {
-		return new ClampedPConstants(HoodConstants.kMinPower, HoodConstants.kMaxPower, HoodConstants.kMaxErr,
+	public static ClampedP.Constants getConstants() {
+		return new ClampedP.Constants(HoodConstants.kMinPower, HoodConstants.kMaxPower, HoodConstants.kMaxErr,
 				HoodConstants.kTolerance);
 	}
 }

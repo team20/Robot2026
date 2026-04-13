@@ -69,7 +69,7 @@ public class Aim {
 
 	public static double getShotAirtime(double distance) {
 		List<Double> airtimes = s_presets.values().stream().map(p -> p.airtime).toList();
-		return interpolate(distance - 8.25 / 12, airtimes);// + .75; // TODO: Update to be a constant once fully tuned
+		return interpolate(distance - 8.25 / 12, airtimes);
 	}
 
 }
