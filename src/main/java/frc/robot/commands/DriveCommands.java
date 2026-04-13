@@ -76,7 +76,6 @@ public class DriveCommands {
 		@Override
 		public void execute() {
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			m_joystick.update();
 			Drive.drive(m_joystick.getX(), m_joystick.getY(), rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 

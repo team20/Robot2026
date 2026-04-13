@@ -8,12 +8,31 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class ControlUtils {
 	public static class ScaledJoystick {
+		public enum IntensityPresets {
+			INTENSE(-0.5),
+			STANDARD(0),
+			SMOOTH(1),
+			TESTING(5);
+
+			private final double m_smoothness;
+
+			private IntensityPresets(double smoothness) {
+				m_smoothness = smoothness;
+			}
+
+			public double getSmoothness() {
+				return m_smoothness;
+			}
+		}
+
 		private final DoubleSupplier m_xSupplier;
 		private final DoubleSupplier m_ySupplier;
 		private final double m_deadzone;
-		private final double m_intensity;
+		private final double m_smoothness;
 		private double m_x;
 		private double m_y;
+		private boolean m_staleX = true;
+		private boolean m_staleY = true;
 
 		/**
 		 * Applies a deadzone and scales joystick input to make it smoother.
@@ -23,7 +42,7 @@ public class ControlUtils {
 		 * @param deadzone the size of the deadzone
 		 */
 		public ScaledJoystick(DoubleSupplier x, DoubleSupplier y, double deadzone) {
-			this(x, y, deadzone, 1);
+			this(x, y, deadzone, IntensityPresets.STANDARD);
 		}
 
 		/**
@@ -32,29 +51,49 @@ public class ControlUtils {
 		 * @param x a supplier of the raw joystick x value
 		 * @param y a supplier of the raw joystick y value
 		 * @param deadzone the size of the deadzone
-		 * @param intensity a number from 0 to 1 of how sensitive the joystick is
+		 * @param smoothness an intensity preset
 		 */
-		public ScaledJoystick(DoubleSupplier x, DoubleSupplier y, double deadzone, double intensity) {
+		public ScaledJoystick(DoubleSupplier x, DoubleSupplier y, double deadzone, IntensityPresets preset) {
 			m_xSupplier = x;
 			m_ySupplier = y;
 			m_deadzone = deadzone;
-			m_intensity = intensity;
+			m_smoothness = preset.getSmoothness();
+		}
+
+		/**
+		 * Applies a deadzone and scales joystick input to make it smoother.
+		 * 
+		 * @param x a supplier of the raw joystick x value
+		 * @param y a supplier of the raw joystick y value
+		 * @param deadzone the size of the deadzone
+		 * @param smoothness a number from -1 to infinity of how sensitive the joystick
+		 *        is
+		 */
+		public ScaledJoystick(DoubleSupplier x, DoubleSupplier y, double deadzone, double smoothness) {
+			m_xSupplier = x;
+			m_ySupplier = y;
+			m_deadzone = deadzone;
+			m_smoothness = smoothness;
 		}
 
 		/**
 		 * Update the current x and y output
 		 */
-		public void update() {
+		private void update() {
+			m_staleX = m_staleY = false;
 			double x = m_xSupplier.getAsDouble();
 			double y = m_ySupplier.getAsDouble();
 			double magnitude = Math.min(Math.hypot(x, y), 1);
-			double direction = Math.atan2(y, x);
-			double deadzoned = magnitude <= m_deadzone ? 0 : magnitude;
-			double intense = 2 * Math.asin(deadzoned) / Math.PI;
-			double smooth = deadzoned * deadzoned * deadzoned;
-			magnitude = m_intensity * intense + (1 - m_intensity) * smooth;
-			m_x = magnitude * Math.cos(direction);
-			m_y = magnitude * Math.sin(direction);
+			if (magnitude <= m_deadzone) {
+				m_x = 0;
+				m_y = 0;
+			} else {
+				double intense = 0.857956 * Math.asin(0.91901 * magnitude);
+				double smooth = magnitude * magnitude;
+				double scaled_magnitude = intense * Math.pow(smooth / intense, m_smoothness);
+				m_x = x / magnitude * scaled_magnitude;
+				m_y = y / magnitude * scaled_magnitude;
+			}
 		}
 
 		/**
@@ -63,6 +102,10 @@ public class ControlUtils {
 		 * @return x value
 		 */
 		public double getX() {
+			if (m_staleX) {
+				update();
+			}
+			m_staleX = true;
 			return m_x;
 		}
 
@@ -72,6 +115,10 @@ public class ControlUtils {
 		 * @return y value
 		 */
 		public double getY() {
+			if (m_staleY) {
+				update();
+			}
+			m_staleY = true;
 			return m_y;
 		}
 
