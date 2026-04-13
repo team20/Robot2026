@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.ControlUtils.ClampedP;
+import frc.robot.ControlUtils.ScaledJoystick;
 import frc.robot.autos.AutoComposer;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AngularPositionCommands;
@@ -453,6 +454,6 @@ public class Robot extends TimedRobot {
 	public void testInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));
+		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), ScaledJoystick.testCommand()));
 	}
 }

@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AngleUtility;
 import frc.robot.ControlUtils.ClampedP;
+import frc.robot.ControlUtils.ScaledJoystick;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
 
@@ -58,15 +59,13 @@ public class DriveCommands {
 	 *         input
 	 */
 	public static class JoystickDrive extends Command {
-		private final DoubleSupplier m_forwardSpeed;
-		private final DoubleSupplier m_strafeSpeed;
+		private final ScaledJoystick m_joystick;
 		private final DoubleSupplier m_rotation;
 		private final BooleanSupplier m_isRobotRelative;
 
 		public JoystickDrive(DoubleSupplier forwardSpeed, DoubleSupplier strafeSpeed,
 				DoubleSupplier rotation, BooleanSupplier isRobotRelative) {
-			m_forwardSpeed = forwardSpeed;
-			m_strafeSpeed = strafeSpeed;
+			m_joystick = new ScaledJoystick(forwardSpeed, strafeSpeed, kDeadzone);
 			m_rotation = rotation;
 			m_isRobotRelative = isRobotRelative;
 			setName("Drive With Joysticks");
@@ -76,13 +75,9 @@ public class DriveCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			double forwardStick = MathUtil.applyDeadband(m_forwardSpeed.getAsDouble(), kDeadzone);
-			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI;
-			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
-			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			SmartDashboard.putNumber("Drive/Rotation Stick", rotationStick);
-			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
+			m_joystick.update();
+			Drive.drive(m_joystick.getX(), m_joystick.getY(), rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 
 		// Called once the command ends or is interrupted.
