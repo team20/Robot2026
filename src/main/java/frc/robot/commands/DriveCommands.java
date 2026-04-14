@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
@@ -410,6 +411,120 @@ public class DriveCommands {
 			// Transform2d error = m_pose.minus(Drive.getPose());
 			// return error.getTranslation().getNorm() < m_tolerance.getTranslation()
 			// && Math.abs(error.getRotation().getDegrees()) < m_tolerance.getRotation();
+		}
+	}
+
+	public static class CombinedNinjaStar extends Command {
+		private static final double kMaxSpeedMetersPerSecond = 4.5;
+		private final Pose2d[] m_poses;
+		private final double m_maxTranslationSpeed;
+		private final double m_minTranslationSpeed;
+		private final double m_acceleration;
+		private final double m_rotationSpeed;
+		private final Tolerances m_tolerance;
+		private double m_currentSpeed;
+		private double m_currentSpeedX;
+		private double m_currentSpeedY;
+		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
+				.getStructTopic("/SmartDashboard/Desired Pose YOLO", Pose2d.struct).publish();
+
+		public CombinedNinjaStar(Pose2d[] poses, double maxTranslationSpeed, double minTranslationSpeed,
+				double rampTime, double rotationSpeed, Tolerances tolerance) {
+			m_poses = poses;
+			m_minTranslationSpeed = minTranslationSpeed;
+			m_maxTranslationSpeed = maxTranslationSpeed;
+			m_rotationSpeed = rotationSpeed;
+			m_tolerance = tolerance;
+			m_acceleration = (m_maxTranslationSpeed - m_minTranslationSpeed) / rampTime;
+			setName("Drive To A Pose");
+			addRequirements(Drive.getDrive());
+		}
+
+		public CombinedNinjaStar(Pose2d[] poses, double maxTranslationSpeed, double minTranslationSpeed,
+				double rampTime, double rotationSpeed) {
+			this(poses, maxTranslationSpeed, minTranslationSpeed, rampTime, rotationSpeed, Tolerances.FINE_TRANSLATION);
+		}
+
+		public CombinedNinjaStar(Pose2d[] poses) {
+			this(poses, 0.5, 0.05, 5, 1);
+		}
+
+		private double computeTimeLeft(double distance) {
+			double maxMetersPerSecond = kMaxSpeedMetersPerSecond * m_maxTranslationSpeed;
+			double guess = 2 * distance / maxMetersPerSecond;
+			for (int i = 0; i < 10; i++) {
+				double derivative = maxMetersPerSecond
+						* Math.pow(Math.sin(m_acceleration * guess / m_maxTranslationSpeed), 2);
+				double value = maxMetersPerSecond * (guess / 2 - m_maxTranslationSpeed / (4 * m_acceleration)
+						* Math.sin(2 * m_acceleration * guess / m_maxTranslationSpeed)) - distance;
+				guess -= value / derivative;
+			}
+			return guess;
+		}
+
+		private Pose2d determineTarget(Pose2d current) {
+			double max = 0;
+			Pose2d target = current;
+			for (int i = 1; i < m_poses.length; i++) {
+				Translation2d reference = m_poses[i - 1].getTranslation();
+				Translation2d trajectory = m_poses[i].getTranslation().minus(reference);
+				Translation2d robot = current.getTranslation().minus(reference);
+				double score = trajectory.dot(robot) / (trajectory.getSquaredNorm() * robot.getSquaredNorm());
+				if (score > max) {
+					max = score;
+					target = m_poses[i - 1];
+				}
+			}
+			return target;
+		}
+
+		private double calculateNewSpeed(Pose2d current) {
+			Pose2d end = m_poses[m_poses.length - 1];
+			double distance = current.getTranslation().getDistance(end.getTranslation());
+			double timeLeft = computeTimeLeft(distance);
+			double maxSpeed = m_maxTranslationSpeed
+					* Math.pow(Math.sin(m_acceleration * timeLeft / m_maxTranslationSpeed), 2);
+			double acceleration = m_acceleration
+					* Math.sqrt(Math.max(1 - Math.pow(2 * m_currentSpeed / m_maxTranslationSpeed - 1, 2), 0));
+			return Math.min(m_currentSpeed + acceleration * 0.02, maxSpeed);
+		}
+
+		@Override
+		public void initialize() {
+			m_currentSpeed = m_minTranslationSpeed;
+		}
+
+		@Override
+		public void execute() {
+			Pose2d current = Drive.getPose();
+			m_currentSpeed = calculateNewSpeed(current);
+			Pose2d target = determineTarget(current);
+			m_posePublisher.accept(target);
+			double errorX = current.getX() - target.getX();
+			double errorY = current.getY() - target.getY();
+			double errorHypot = Math.hypot(errorX, errorY);
+			if (errorHypot > 0.01) {
+				m_currentSpeedX = m_currentSpeed * errorX / errorHypot;
+				m_currentSpeedY = m_currentSpeed * errorY / errorHypot;
+			}
+			SmartDashboard.putNumber("CombinedNinjaStar/X Speed", m_currentSpeedX);
+			SmartDashboard.putNumber("CombinedNinjaStar/Y Speed", m_currentSpeedY);
+			double errorTheta = Drive.getPose().getRotation().getDegrees() - target.getRotation().getDegrees();
+			SmartDashboard.putNumber("CombinedNinjaStar/X Error", errorX);
+			SmartDashboard.putNumber("CombinedNinjaStar/Y Error", errorY);
+			SmartDashboard.putNumber("CombinedNinjaStar/θ Error", errorTheta);
+			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, 0);
+			Drive.drive(m_currentSpeedX, m_currentSpeedY, speedTheta, false);
+		}
+
+		// Returns true when the command should end.
+		@Override
+		public boolean isFinished() {
+			Pose2d end = m_poses[m_poses.length - 1];
+			Pose2d current = Drive.getPose();
+			double errorX = Math.abs(end.getX() - current.getX());
+			double errorY = Math.abs(end.getY() - current.getY());
+			return Math.max(errorX, errorY) < m_tolerance.getTranslation();
 		}
 	}
 
