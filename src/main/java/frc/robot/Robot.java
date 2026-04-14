@@ -454,6 +454,7 @@ public class Robot extends TimedRobot {
 	public void testInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
-		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand(), ScaledJoystick.testCommand()));
+		m_scheduler.schedule(
+				Commands.sequence(ClampedP.testCommand(), ScaledJoystick.testCommand(), Filter.testCommand()));
 	}
 }

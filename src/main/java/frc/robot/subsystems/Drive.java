@@ -18,7 +18,6 @@ import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -46,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Aim;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
+import frc.robot.Filter.RejectionFilter;
 import frc.robot.SwerveModule;
 
 public class Drive extends SubsystemBase {
@@ -90,8 +90,8 @@ public class Drive extends SubsystemBase {
 
 	private Translation2d m_velocity;
 	// Average velocity over 6 values to reduce input noise
-	private LinearFilter m_velocityXFilter = LinearFilter.movingAverage(6);
-	private LinearFilter m_velocityYFilter = LinearFilter.movingAverage(6);
+	private RejectionFilter m_velocityXFilter = new RejectionFilter(0.05, 0.05);
+	private RejectionFilter m_velocityYFilter = new RejectionFilter(0.05, 0.05);
 	private Translation2d m_filteredVelocity;
 
 	private final PIDController m_orientationController = new PIDController(kP, kI, kD);
