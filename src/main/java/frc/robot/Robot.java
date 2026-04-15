@@ -24,7 +24,6 @@ import frc.robot.commands.AimCommands;
 import frc.robot.commands.AngularPositionCommands;
 import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.DriveCommands.Tolerances;
 import frc.robot.commands.HoodCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
@@ -309,30 +308,35 @@ public class Robot extends TimedRobot {
 		 * .onTrue(new DriveCommands.NinjaStar(new Pose2d(14, 3.9, Rotation2d.kZero),
 		 * .3, .3, Tolerances.FINEST));
 		 */
-		m_driverController.touchpad().onTrue(
-				Commands.sequence(
-						new DriveCommands.VisionDrivePose(new Pose2d(12.15, 0.83, Rotation2d.kZero),
-								Tolerances.FINE_TRANSLATION),
-						new DriveCommands.VisionDrivePose(new Pose2d(10.1, 0.75, Rotation2d.kZero),
-								Tolerances.FINE_TRANSLATION),
-						IntakeCommands.getArmOutCommand(),
-						Commands.race(
-								new DriveCommands.VisionDrivePose(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
-										Tolerances.COARSE),
-								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
-		m_operatorController.touchpad().onTrue(
-				Commands.sequence(
-						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION, true),
-						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-								Tolerances.FINE_TRANSLATION, true),
-						Commands.print("Before arm out"),
-						IntakeCommands.getArmOutCommand(),
-						Commands.print("After arm out"),
-						Commands.race(
-								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
-										Tolerances.COARSE, true),
-								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		/*
+		 * m_driverController.touchpad().onTrue(
+		 * Commands.sequence(
+		 * new DriveCommands.VisionDrivePose(new Pose2d(12.15, 0.83, Rotation2d.kZero),
+		 * Tolerances.FINE_TRANSLATION),
+		 * new DriveCommands.VisionDrivePose(new Pose2d(10.1, 0.75, Rotation2d.kZero),
+		 * Tolerances.FINE_TRANSLATION),
+		 * IntakeCommands.getArmOutCommand(),
+		 * Commands.race(
+		 * new DriveCommands.VisionDrivePose(new Pose2d(8.64, 1.54,
+		 * Rotation2d.kCCW_90deg),
+		 * Tolerances.COARSE),
+		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		 * m_operatorController.touchpad().onTrue(
+		 * Commands.sequence(
+		 * new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3,
+		 * .3,
+		 * Tolerances.FINE_TRANSLATION, true),
+		 * new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+		 * Tolerances.FINE_TRANSLATION, true),
+		 * Commands.print("Before arm out"),
+		 * IntakeCommands.getArmOutCommand(),
+		 * Commands.print("After arm out"),
+		 * Commands.race(
+		 * new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
+		 * 0.3, .3,
+		 * Tolerances.COARSE, true),
+		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
+		 */
 		/*
 		 * m_operatorController.touchpad()
 		 * .onTrue(new DriveCommands.VisionDrivePose(new Pose2d(14, 3.9,

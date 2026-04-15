@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AngleUtility;
 import frc.robot.ControlUtils.ClampedP;
 import frc.robot.ControlUtils.ScaledJoystick;
+import frc.robot.Filter.RejectionFilter;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
 
@@ -131,82 +132,6 @@ public class DriveCommands {
 		@Override
 		public boolean isFinished() {
 			return m_time > 0 && m_timer.hasElapsed(m_time);
-		}
-
-	}
-
-	public static class VisionDrivePose extends Command {
-		private Pose2d m_targetPose;
-		private final Tolerances m_tolerance;
-
-		public VisionDrivePose(Pose2d pose, Tolerances tolerance) {
-			m_targetPose = pose;
-			m_tolerance = tolerance;
-			setName("Drive For A Distance");
-			addRequirements(Drive.getDrive());
-		}
-
-		public VisionDrivePose(Pose2d pose) {
-			this(pose, Tolerances.FINE_TRANSLATION);
-		}
-
-		public double[] getError() {
-			Pose2d currentPos = Drive.getPose();
-			return new double[] {
-					currentPos.getX() - m_targetPose.getX(), // X error
-					currentPos.getY() - m_targetPose.getY(), // Y error
-					currentPos.getRotation().getDegrees() - m_targetPose.getRotation().getDegrees() }; // Theta error
-		}
-
-		@Override
-		public void execute() {
-			double speedX, speedY, rotation;
-			{
-				double error = getError()[0];
-				double minPower = .05;
-				double maxPower = .3;
-				double maxErr = .5; // When to start slowing down!!
-				speedX = -ClampedP.clampedP(
-						error, minPower, maxPower, maxErr,
-						m_tolerance.getTranslation());
-			}
-			{
-				double errorY = getError()[1];
-				double minPower = .05;
-				double maxPower = .3;
-				double maxErr = .5; // When to start slowing down!!
-				speedY = -ClampedP.clampedP(errorY, minPower, maxPower, maxErr, m_tolerance.getTranslation());
-			}
-
-			{
-				double errorTheta = getError()[2];
-				double minPower = .1;
-				double maxPower = .3;
-				double maxErr = 20; // When to start slowing down!!
-				rotation = ClampedP.clampedP(errorTheta, minPower, maxPower, maxErr, m_tolerance.getRotation());
-			}
-
-			SmartDashboard.putNumber("Drive Command/X Error", getError()[0]);
-			SmartDashboard.putNumber("Drive Command/Y Error", getError()[1]);
-			SmartDashboard.putNumber("Drive Command/Theta Error", getError()[2]);
-
-			// rotation = .03;
-			Drive.drive(speedX, speedY, rotation, false);
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			Drive.stop();
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			// return (Math.abs(distanceY - Math.abs(m_distanceY)) < m_tolerance);
-			return Math.abs(getError()[0]) < m_tolerance.getTranslation()
-					&& Math.abs(getError()[1]) < m_tolerance.getTranslation() &&
-					Math.abs(getError()[2]) < m_tolerance.getRotation();
 		}
 
 	}
@@ -340,82 +265,10 @@ public class DriveCommands {
 		}
 	}
 
-	public static class NinjaStar extends Command {
-		private final Pose2d m_pose;
-		private final double m_translationSpeed;
-		private final double m_rotationSpeed;
-		private final Tolerances m_tolerance;
-		private final boolean m_stop;
-		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
-				.getStructTopic("/SmartDashboard/Desired Pose", Pose2d.struct).publish();
-
-		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, Tolerances tolerance,
-				boolean stop) {
-			m_pose = pose;
-			m_translationSpeed = translationSpeed;
-			m_rotationSpeed = rotationSpeed;
-			m_tolerance = tolerance;
-			m_stop = stop;
-			setName("Drive To A Pose");
-			addRequirements(Drive.getDrive());
-		}
-
-		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, boolean stop) {
-			this(pose, translationSpeed, rotationSpeed, Tolerances.FINE_TRANSLATION, stop);
-		}
-
-		public NinjaStar(Pose2d pose, boolean stop) {
-			this(pose, 0.3, 0.3, stop);
-		}
-
-		@Override
-		public void initialize() {
-			m_posePublisher.accept(m_pose);
-		}
-
-		@Override
-		public void execute() {
-			// Transform2d error = m_pose.minus(Drive.getPose());
-			double errorX = m_pose.getX() - Drive.getPose().getX();
-			double errorY = m_pose.getY() - Drive.getPose().getY();
-			// double errorHypot = Math.hypot()
-			// double errorTheta =
-			double errorTheta = Drive.getPose().getRotation().getDegrees() - m_pose.getRotation().getDegrees();
-			SmartDashboard.putNumber("NinjaStar/X Error", errorX);
-			SmartDashboard.putNumber("NinjaStar/Y Error", errorY);
-			SmartDashboard.putNumber("NinjaStar/θ Error", errorTheta);
-			double speedX = ClampedP.clampedP(errorX, 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
-			double speedY = ClampedP.clampedP(errorY, 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
-			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, m_tolerance.getRotation());
-			Drive.drive(speedX, speedY, speedTheta, false);
-		}
-
-		// Called once the command ends or is interrupted.
-		@Override
-		public void end(boolean interrupted) {
-			if (m_stop) {
-				Drive.stop();
-			}
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			double errorX = Math.abs(m_pose.getX() - Drive.getPose().getX());
-			double errorY = Math.abs(m_pose.getY() - Drive.getPose().getY());
-			double errorTheta = AngleUtility
-					.minDifference(m_pose.getRotation().getDegrees(), Drive.getPose().getRotation().getDegrees());
-			// System.out.printf("%f; %f%n", m_tolerance.getTranslation(),
-			// m_tolerance.getRotation());
-			return Math.max(errorX, errorY) < m_tolerance.getTranslation() && errorTheta < m_tolerance.getRotation();
-			// Transform2d error = m_pose.minus(Drive.getPose());
-			// return error.getTranslation().getNorm() < m_tolerance.getTranslation()
-			// && Math.abs(error.getRotation().getDegrees()) < m_tolerance.getRotation();
-		}
-	}
-
 	public static class CombinedNinjaStar extends Command {
 		private static final double kMaxSpeedMetersPerSecond = 4.5;
+		private static final double kLookAhead = 0.5;
+		private static final double kFilter = 0.05;
 		private final Pose2d[] m_poses;
 		private final double m_maxTranslationSpeed;
 		private final double m_minTranslationSpeed;
@@ -427,6 +280,7 @@ public class DriveCommands {
 		private double m_currentSpeedY;
 		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
 				.getStructTopic("/SmartDashboard/Desired Pose YOLO", Pose2d.struct).publish();
+		private final RejectionFilter m_filter = new RejectionFilter(kFilter, kFilter);
 
 		public CombinedNinjaStar(Pose2d[] poses, double maxTranslationSpeed, double minTranslationSpeed,
 				double rampTime, double rotationSpeed, Tolerances tolerance) {
@@ -462,17 +316,18 @@ public class DriveCommands {
 			return guess;
 		}
 
-		private Pose2d determineTarget(Pose2d current) {
+		private double determineTargetIndex(Pose2d current) {
 			double max = 0;
-			Pose2d target = current;
+			double target = -1;
 			for (int i = 1; i < m_poses.length; i++) {
-				Translation2d reference = m_poses[i - 1].getTranslation();
-				Translation2d trajectory = m_poses[i].getTranslation().minus(reference);
-				Translation2d robot = current.getTranslation().minus(reference);
-				double score = trajectory.dot(robot) / (trajectory.getSquaredNorm() * robot.getSquaredNorm());
+				Translation2d trajectory = m_poses[i].getTranslation().minus(m_poses[i - 1].getTranslation());
+				Translation2d first = current.getTranslation().minus(m_poses[i - 1].getTranslation());
+				Translation2d last = m_poses[i].getTranslation().minus(current.getTranslation());
+				double score = Math.exp(1 - (first.getNorm() + last.getNorm()) / trajectory.getNorm());
 				if (score > max) {
+					Translation2d parallel = first.rotateBy(trajectory.getAngle().unaryMinus());
 					max = score;
-					target = m_poses[i - 1];
+					target = i - 1 + parallel.getX() / trajectory.getNorm();
 				}
 			}
 			return target;
@@ -498,7 +353,10 @@ public class DriveCommands {
 		public void execute() {
 			Pose2d current = Drive.getPose();
 			m_currentSpeed = calculateNewSpeed(current);
-			Pose2d target = determineTarget(current);
+			double trueTarget = m_filter.calculate(determineTargetIndex(current));
+			int nextTarget = (int) Math.ceil(trueTarget);
+			Pose2d target = m_poses[nextTarget - 1]
+					.interpolate(m_poses[nextTarget], (1 - kLookAhead) * trueTarget + kLookAhead * nextTarget);
 			m_posePublisher.accept(target);
 			double errorX = current.getX() - target.getX();
 			double errorY = current.getY() - target.getY();
@@ -509,7 +367,7 @@ public class DriveCommands {
 			}
 			SmartDashboard.putNumber("CombinedNinjaStar/X Speed", m_currentSpeedX);
 			SmartDashboard.putNumber("CombinedNinjaStar/Y Speed", m_currentSpeedY);
-			double errorTheta = Drive.getPose().getRotation().getDegrees() - target.getRotation().getDegrees();
+			double errorTheta = current.getRotation().getDegrees() - target.getRotation().getDegrees();
 			SmartDashboard.putNumber("CombinedNinjaStar/X Error", errorX);
 			SmartDashboard.putNumber("CombinedNinjaStar/Y Error", errorY);
 			SmartDashboard.putNumber("CombinedNinjaStar/θ Error", errorTheta);
@@ -524,64 +382,9 @@ public class DriveCommands {
 			Pose2d current = Drive.getPose();
 			double errorX = Math.abs(end.getX() - current.getX());
 			double errorY = Math.abs(end.getY() - current.getY());
-			return Math.max(errorX, errorY) < m_tolerance.getTranslation();
-		}
-	}
-
-	public static class YOLONinjaStar extends Command {
-		private final Pose2d m_pose;
-		private final double m_translationSpeed;
-		private final double m_rotationSpeed;
-		private final Tolerances m_tolerance;
-		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
-				.getStructTopic("/SmartDashboard/Desired Pose YOLO", Pose2d.struct).publish();
-
-		public YOLONinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, Tolerances tolerance) {
-			m_pose = pose;
-			m_translationSpeed = translationSpeed;
-			m_rotationSpeed = rotationSpeed;
-			m_tolerance = tolerance;
-			setName("Drive To A Pose");
-			addRequirements(Drive.getDrive());
-		}
-
-		public YOLONinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed) {
-			this(pose, translationSpeed, rotationSpeed, Tolerances.FINE_TRANSLATION);
-		}
-
-		public YOLONinjaStar(Pose2d pose) {
-			this(pose, 0.3, 1);
-		}
-
-		@Override
-		public void initialize() {
-			m_posePublisher.accept(m_pose);
-		}
-
-		@Override
-		public void execute() {
-			// Transform2d error = m_pose.minus(Drive.getPose());
-			double errorX = Drive.getPose().getX() - m_pose.getX();
-			double errorY = Drive.getPose().getY() - m_pose.getY();
-			double errorHypot = Math.hypot(errorX, errorY);
-			double speedX = m_translationSpeed * errorX / errorHypot;
-			double speedY = m_translationSpeed * errorY / errorHypot;
-			SmartDashboard.putNumber("YOLONinjaStar/X Speed", speedX);
-			SmartDashboard.putNumber("YOLONinjaStar/Y Speed", speedY);
-			double errorTheta = Drive.getPose().getRotation().getDegrees() - m_pose.getRotation().getDegrees();
-			SmartDashboard.putNumber("YOLONinjaStar/X Error", errorX);
-			SmartDashboard.putNumber("YOLONinjaStar/Y Error", errorY);
-			SmartDashboard.putNumber("YOLONinjaStar/θ Error", errorTheta);
-			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, 0);
-			Drive.drive(speedX, speedY, speedTheta, false);
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			double errorX = Math.abs(m_pose.getX() - Drive.getPose().getX());
-			double errorY = Math.abs(m_pose.getY() - Drive.getPose().getY());
-			return Math.max(errorX, errorY) < m_tolerance.getTranslation();
+			double errorTheta = AngleUtility
+					.minDifference(current.getRotation().getDegrees(), end.getRotation().getDegrees());
+			return Math.max(errorX, errorY) < m_tolerance.getTranslation() && errorTheta < m_tolerance.getRotation();
 		}
 	}
 
