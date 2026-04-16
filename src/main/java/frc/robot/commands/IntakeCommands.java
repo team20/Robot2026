@@ -130,9 +130,11 @@ public class IntakeCommands {
 
 	public static Command getArmOutCombinedCommand() {
 		return Commands.sequence(
-				Commands.parallel(
+				Commands.race(
 						getArmOutCommand(),
-						new IntakeCommands.Spintake(IntakeConstants.kWheelPower)));
+						new IntakeCommands.SpinExtraIntake(.65),
+						new IntakeCommands.Spintake(IntakeConstants.kWheelPower)),
+				new IntakeCommands.Spintake(IntakeConstants.kWheelPower));
 	}
 
 	public static Command getArmInCombinedCommand() {

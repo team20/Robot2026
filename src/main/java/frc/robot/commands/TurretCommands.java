@@ -6,6 +6,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.USBSerialSubsystem;
+import frc.robot.subsystems.USBSerialSubsystem.LightPattern;
 
 public class TurretCommands {
 
@@ -76,6 +78,7 @@ public class TurretCommands {
 			if (Math.abs(right - left) > m_deadzone) {
 				double value = (m_minSpeed * Math.signum(right - left)) + (right - left) * (m_maxSpeed - m_minSpeed);
 				m_turret.runAtDutyCycle(value);
+				USBSerialSubsystem.get().setLightPattern(LightPattern.TURRET_MANUAL);
 			} else {
 				m_turret.stop();
 			}

@@ -80,6 +80,50 @@ public class AimCommands {
 		}
 	}
 
+	public static class HubLookCommand extends Command {
+
+		public HubLookCommand() {
+			setName("Auto Aim Turret");
+			addRequirements(Turret.getTurret());
+		}
+
+		@Override
+		public void execute() {
+
+			{ // Turret rotation
+
+				// double rotationNeeded = Turret.getAngleToTicks(m_estimator.getAngle());
+				// if (rotationNeeded == 0)
+				// return;
+				// double currentTurretAngle = Turret.getTurret().getPosition();
+				// double newTurretAngle = currentTurretAngle + rotationNeeded;
+
+				// Get mixed robot pose (odometry + vision) and compensated hub pose
+				Pose2d robotPose = Drive.getPose();
+				Pose2d target = Drive.getAimTarget();
+
+				// Find x and y components of vector from bot to hub
+				double dx = target.getX() - robotPose.getX();
+				double dy = -target.getY() + robotPose.getY(); // Inverted in coordinate space
+
+				// Calculate vector angle (in world-space) and convert to turret position
+				double hubAngle = Math.toDegrees(Math.atan2(dy, dx));
+				double hubTicks = Turret.getTurret().getTurretToWorldAngleRotation(robotPose, hubAngle);
+
+				// Set hardware setpoint - the controller will continue to
+				// track setpoint even after the command ends
+				Turret.getTurret().moveToPosition(hubTicks);
+			}
+		}
+
+		@Override
+		public boolean isFinished() {
+			// This command just sets the target, controller will
+			// continue tracking after commands end
+			return true;
+		}
+	}
+
 	public static Command getAimCommand(double distance) {
 		return new SequentialCommandGroup(getSetAimCommand(distance), getSettleAimCommand());
 	}

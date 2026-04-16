@@ -2,7 +2,11 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -52,6 +56,10 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distanceDerivative;
+		private Map<Integer, Long> m_blacklist = new HashMap<>();
+
+		private boolean m_hasTargets = false;
+
 		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
 				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
 				.publish();
@@ -60,32 +68,66 @@ public class Vision extends SubsystemBase {
 				.publish();
 
 		public void update(List<PhotonTrackedTarget> targets) {
-
+			Set<Integer> m_blacklistRemove = new HashSet<>();
+			for (Map.Entry<Integer, Long> tag : m_blacklist.entrySet()) {
+				if (RobotController.getFPGATime() - tag.getValue().longValue() > 1e6) {
+					m_blacklistRemove.add(tag.getKey());
+				}
+			}
+			for (int tag : m_blacklistRemove) {
+				m_blacklist.remove(tag);
+			}
+			for (PhotonTrackedTarget tag : targets) {
+				if (tag.getPoseAmbiguity() > 0.2) {
+					m_blacklist.put(tag.getFiducialId(), RobotController.getFPGATime());
+				}
+			}
+			m_hasTargets = false;
 			// Use vision-based pose if April Tags are present
-			PoseUtils.estimateCamPoseStdDev(targets).ifPresentOrElse(pose -> {
-				// save the camera's pose
-				m_pose = pose.pose();
-				// turn camera pose into bot pose
-				m_botPose = m_pose.transformBy(
-						new Transform2d(0, 0,
-								Rotation2d.fromDegrees(Turret.getTurret().getRobotRelativeAngle())));
+			PoseUtils.estimateCamPoseStdDev(
+					targets.stream().filter(
+							t -> !m_blacklist.containsKey(t.getFiducialId()))
+							.toList())
+					.ifPresentOrElse(pose -> {
+						m_hasTargets = true;
 
-				// Update pose with vision
-				Drive.getEstimator().addVisionMeasurement(
-						m_botPose, RobotController.getFPGATime() * 1e-6,
-						MatBuilder.fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(), pose.thetaStdDev()));
+						// save the camera's pose
+						m_pose = pose.pose();
+						// turn camera pose into bot pose
+						Rotation2d angle = Rotation2d.fromDegrees(Turret.getTurret().getRobotRelativeAngle());
+						Transform2d transform1 = new Transform2d(
+								new Pose2d(Units.inchesToMeters(8.25), 0, Rotation2d.kZero), new Pose2d(0, 0, angle));
+						Transform2d transform2 = new Transform2d(
+								new Pose2d(0, 0, Rotation2d.kZero),
+								new Pose2d(Units.inchesToMeters(5), 0, Rotation2d.kZero));
+						m_botPose = m_pose.transformBy(transform1).transformBy(transform2);
 
-				// Publish vision pose and values
-				m_estimatedPoseTopic.accept(pose.pose());
-				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
-				SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
-				SmartDashboard.putNumber(
-						"Vision/FieldPose/Estimate Pose Deviation/theta",
-						pose.thetaStdDev());
-			}, () -> { // Use odometry pose if tags not present
-				m_botPose = Drive.getPose();
-				m_estimatedBotPoseTopic.accept(m_botPose);
-			});
+						// Update pose with vision
+						Drive.getEstimator().addVisionMeasurement(
+								m_botPose, RobotController.getFPGATime() * 1e-6,
+								MatBuilder.fill(
+										Nat.N3(), Nat.N1(), 2 * pose.xStdDev() + 1, 2 * pose.yStdDev() + 1,
+										2 * pose.thetaStdDev() + 1));
+
+						/*
+						 * Drive.getEstimator().addVisionMeasurement(
+						 * m_botPose, RobotController.getFPGATime() * 1e-6,
+						 * MatBuilder
+						 * .fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(),
+						 * pose.thetaStdDev()));
+						 */
+
+						// Publish vision pose and values
+						m_estimatedPoseTopic.accept(pose.pose());
+						SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
+						SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
+						SmartDashboard.putNumber(
+								"Vision/FieldPose/Estimate Pose Deviation/theta",
+								pose.thetaStdDev());
+					}, () -> { // Use odometry pose if tags not present
+						m_botPose = Drive.getPose();
+						m_estimatedBotPoseTopic.accept(m_botPose);
+					});
 
 			SmartDashboard
 					.putNumber(
@@ -113,6 +155,10 @@ public class Vision extends SubsystemBase {
 			SmartDashboard.putNumber(
 					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
 
+		}
+
+		public boolean hasTargets() {
+			return m_hasTargets;
 		}
 
 		public Pose2d getPose() {
