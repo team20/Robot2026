@@ -9,7 +9,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
@@ -79,8 +78,6 @@ public class Shooter extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		if (Constants.kLogging) {
-			SmartDashboard.putNumber("Shooter/RPM", getRPM());
-		}
+		SmartDashboard.putNumber("Shooter/RPM", getRPM());
 	}
 }

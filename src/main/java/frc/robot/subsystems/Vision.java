@@ -30,7 +30,6 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.PoseUtils;
 
@@ -109,14 +108,6 @@ public class Vision extends SubsystemBase {
 										Nat.N3(), Nat.N1(), 2 * pose.xStdDev() + 1, 2 * pose.yStdDev() + 1,
 										2 * pose.thetaStdDev() + 1));
 
-						/*
-						 * Drive.getEstimator().addVisionMeasurement(
-						 * m_botPose, RobotController.getFPGATime() * 1e-6,
-						 * MatBuilder
-						 * .fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(),
-						 * pose.thetaStdDev()));
-						 */
-
 						// Publish vision pose and values
 						m_estimatedPoseTopic.accept(pose.pose());
 						SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
@@ -129,11 +120,6 @@ public class Vision extends SubsystemBase {
 						m_estimatedBotPoseTopic.accept(m_botPose);
 					});
 
-			SmartDashboard
-					.putNumber(
-							"Robot Relative Angle from Turret",
-							Turret.getTurret().getRobotRelativeAngle());
-
 			// Calculate angle, distance, & derivatives of both from bot to target
 			// Filter values to reduce noise
 			Translation2d difference = Drive.getAimTarget()
@@ -144,17 +130,6 @@ public class Vision extends SubsystemBase {
 			m_distanceFilter.calculate(difference.getNorm());
 			m_distanceDerivative = (m_distanceFilter.lastValue() - m_distance) / 0.02;
 			m_distance = m_distanceFilter.lastValue();
-
-			// Publish values
-			SmartDashboard.putNumber(
-					"Vision/FieldPose/Estimated Pose Angle",
-					m_botPose.getRotation().getDegrees());
-
-			SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
-			SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
-			SmartDashboard.putNumber(
-					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
-
 		}
 
 		public boolean hasTargets() {
@@ -250,8 +225,6 @@ public class Vision extends SubsystemBase {
 		List<PhotonTrackedTarget> targets = latest.getTargets();
 		m_hubEstimator.update(targets);
 		m_midpointEstimator.updateMidpoint(targets);
-		SmartDashboard.putNumber("Angle Derivative", m_hubEstimator.getAngleDerivative().in(DegreesPerSecond));
-		SmartDashboard.putNumber("Distance Derivative", m_hubEstimator.getDistanceDerivative().in(FeetPerSecond));
 	}
 
 	public MidpointEstimator getMidpointEstimator() {

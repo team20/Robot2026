@@ -7,7 +7,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 
@@ -52,12 +51,5 @@ public class IntakeWheels extends SubsystemBase {
 
 	public static void stopWheel() {
 		s_theIntake.m_intakeWheels.stopMotor();
-	}
-
-	@Override
-	public void periodic() {
-		SmartDashboard.putNumber("Wheels/Velocity", s_theIntake.m_intakeWheels.getEncoder().getVelocity());
-		SmartDashboard.putNumber("Wheels/Voltage", s_theIntake.m_intakeWheels.getBusVoltage());
-		SmartDashboard.putNumber("Wheels/Current", s_theIntake.m_intakeWheels.getOutputCurrent());
 	}
 }

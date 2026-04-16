@@ -14,7 +14,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.AngleUtility;
-import frc.robot.Constants;
 
 /**
  * An angular position subsystem is a motor controlled by a spark max attached
@@ -102,9 +101,6 @@ public class AngularPositionSubsystem extends SubsystemBase {
 	}
 
 	private boolean limited() {
-		if (Constants.kLogging) {
-			SmartDashboard.putNumber(String.format("%s current draw (A)", m_name), m_motor.getOutputCurrent());
-		}
 		double position = getPosition();
 		if (position < m_maxAngle && position > m_minAngle) {
 			return false;
@@ -124,11 +120,9 @@ public class AngularPositionSubsystem extends SubsystemBase {
 		if (limited()) {
 			stop();
 		}
-		if (Constants.kLogging) {
-			SmartDashboard.putNumber(String.format("%s/Position", m_name), getPosition());
-			SmartDashboard.putNumber(String.format("%s/Setpoint", m_name), m_setpoint);
-			SmartDashboard.putNumber(String.format("%s/Setpoint Upper Threshold", m_name), m_setpoint + m_tolerance);
-			SmartDashboard.putNumber(String.format("%s/Setpoint Lower Threshold", m_name), m_setpoint - m_tolerance);
-		}
+		SmartDashboard.putNumber(String.format("%s/Position", m_name), getPosition());
+		SmartDashboard.putNumber(String.format("%s/Setpoint", m_name), m_setpoint);
+		SmartDashboard.putNumber(String.format("%s/Setpoint Upper Threshold", m_name), m_setpoint + m_tolerance);
+		SmartDashboard.putNumber(String.format("%s/Setpoint Lower Threshold", m_name), m_setpoint - m_tolerance);
 	}
 }

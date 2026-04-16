@@ -44,7 +44,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Aim;
-import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.SwerveModule;
 
@@ -185,10 +184,8 @@ public class Drive extends SubsystemBase {
 	 * @return The module states, in order of FL, FR, BL, BR
 	 */
 	private static SwerveModuleState[] calculateModuleStates(ChassisSpeeds speeds, boolean isRobotRelative) {
-		if (Constants.kLogging) {
-			SmartDashboard.putNumber("Drive/Heading", getHeading().getDegrees());
-			SmartDashboard.putBoolean("Drive/Robot Relative", isRobotRelative);
-		}
+		SmartDashboard.putNumber("Drive/Heading", getHeading().getDegrees());
+		SmartDashboard.putBoolean("Drive/Robot Relative", isRobotRelative);
 		if (!isRobotRelative)
 			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
 		speeds = ChassisSpeeds.discretize(speeds, 0.03);

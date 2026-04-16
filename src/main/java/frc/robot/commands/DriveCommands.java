@@ -19,7 +19,6 @@ import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.Vision.FieldPoseEstimator;
 
 public class DriveCommands {
 
@@ -82,7 +81,6 @@ public class DriveCommands {
 			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
 			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			SmartDashboard.putNumber("Drive/Rotation Stick", rotationStick);
 			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
 		}
 
@@ -257,7 +255,6 @@ public class DriveCommands {
 
 		@Override
 		public void execute() {
-			Pose2d pose = ((FieldPoseEstimator) Vision.getVision().getFieldPoseEstimator()).getPose(); // Drive.getPose().minus(m_initialPose);
 			double speedX, speedY, rotation;
 			{
 				double error = getError()[0];
