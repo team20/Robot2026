@@ -353,10 +353,10 @@ public class DriveCommands {
 		public void execute() {
 			Pose2d current = Drive.getPose();
 			m_currentSpeed = calculateNewSpeed(current);
-			double trueTarget = m_filter.calculate(determineTargetIndex(current));
-			int nextTarget = (int) Math.ceil(trueTarget);
+			double trueTarget = Math.min(m_filter.calculate(determineTargetIndex(current)), 0);
+			int nextTarget = (int) trueTarget + 1;
 			Pose2d target = m_poses[nextTarget - 1]
-					.interpolate(m_poses[nextTarget], (1 - kLookAhead) * trueTarget + kLookAhead * nextTarget);
+					.interpolate(m_poses[nextTarget], (kLookAhead - 1) * (nextTarget - trueTarget) + 1);
 			m_posePublisher.accept(target);
 			double errorX = current.getX() - target.getX();
 			double errorY = current.getY() - target.getY();
