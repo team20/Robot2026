@@ -102,12 +102,15 @@ public class Robot extends TimedRobot {
 				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser.addOption("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
 		m_autoChooser.addOption("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
+		m_autoChooser.addOption("Right Preload to Neutral to Outpost", m_autoComposer.getPreloadNeutralOutpostAuto());
+
 		m_autoChooser
 				.setDefaultOption(
 						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser
 				.setDefaultOption(
 						"Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
+
 		m_isInPit.addOption("Is in pit", true);
 		m_isInPit.setDefaultOption("Not in pit", false);
 	}
@@ -117,50 +120,6 @@ public class Robot extends TimedRobot {
 		// ***********************************************
 		// *************** DRIVER BINDINGS ***************
 		// ***********************************************
-
-		m_driverController.touchpad().whileTrue(
-				Commands.parallel(
-						IntakeCommands.getArmOutCombinedCommand(),
-						Commands.sequence(
-								m_autoComposer.shoot(),
-								HoodCommands.getHoodDownCommand(),
-								m_autoComposer.getSingleTrajectory("sweep_outpost").withTimeout(14),
-								m_autoComposer.shoot(),
-								m_autoComposer.getSingleTrajectory("sweep_outpost2").withTimeout(3),
-								m_autoComposer.shoot())));
-
-		/*
-		 * m_operatorController.touchpad().onTrue(
-		 * Commands.sequence(
-		 * new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3,
-		 * .3,
-		 * Tolerances.FINE_TRANSLATION),
-		 * new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-		 * Tolerances.FINE_TRANSLATION),
-		 * Commands.print("Before arm out"),
-		 * IntakeCommands.getArmOutCommand(),
-		 * Commands.print("After arm out"),
-		 * Commands.race(
-		 * new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
-		 * 0.3, .3,
-		 * Tolerances.COARSE),
-		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
-		 * m_driverController.touchpad().onTrue(
-		 * Commands.sequence(
-		 * new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3,
-		 * .3,
-		 * Tolerances.FINE_TRANSLATION),
-		 * new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
-		 * Tolerances.FINE_TRANSLATION),
-		 * Commands.print("Before arm out"),
-		 * IntakeCommands.getArmOutCommand(),
-		 * Commands.print("After arm out"),
-		 * Commands.race(
-		 * new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
-		 * 0.3, .3,
-		 * Tolerances.COARSE),
-		 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
-		 */
 
 		{ // Drive bindings
 			Drive.getDrive().setDefaultCommand(
@@ -216,6 +175,7 @@ public class Robot extends TimedRobot {
 		{ // Intake bindings
 			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
 			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
+
 			// IntakeWheels.getIntakeWheels().setDefaultCommand(
 			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
 			// m_operatorController.L1()));
@@ -224,27 +184,6 @@ public class Robot extends TimedRobot {
 		{ // Agitator bindings
 			m_operatorController.R1().whileTrue(
 					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
-
-			/*
-			 * m_operatorController.R1().whileTrue(
-			 * Commands.parallel(
-			 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
-			 * Commands.sequence(
-			 * Commands.parallel(
-			 * Commands.repeatingSequence(
-			 * new TransportCommands.RunAgitatorAtPower(
-			 * AgitatorConstants.kTeleopPower)
-			 * .withTimeout(1.5),
-			 * new TransportCommands.RunAgitatorAtPower(
-			 * -AgitatorConstants.kTeleopPower)
-			 * .withTimeout(.25)),
-			 * Commands.repeatingSequence(
-			 * IntakeCommands.getRunArmAtPowerCommand(-1).withTimeout(1.75 / 2.0),
-			 * IntakeCommands.getRunArmAtPowerCommand(1)
-			 * .withTimeout(1.75 / 2.0))))))
-			 * .onFalse(IntakeCommands.getArmOutCombinedCommand());
-			 */
-
 			m_operatorController.povLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 		}
@@ -260,7 +199,6 @@ public class Robot extends TimedRobot {
 			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			// Auto aim
-
 			m_operatorController.axisLessThan(3, 0.025)
 					.and(
 							m_operatorController.axisLessThan(4, 0.025)
@@ -423,6 +361,7 @@ public class Robot extends TimedRobot {
 			bindTestControls();
 		}
 
+		// Schedule hub shift LEDs based on match time
 		m_scheduler.schedule(
 				Commands.sequence(
 						new WaitCommand(7),

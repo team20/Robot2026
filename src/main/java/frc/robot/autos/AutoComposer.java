@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
+import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.commands.AimCommands;
 import frc.robot.commands.AimCommands.AdjustAim;
 import frc.robot.commands.AngularPositionCommands;
@@ -33,13 +34,6 @@ public class AutoComposer {
 
 	public AutoComposer(TimedRobot robot) {
 		m_robot = robot;
-	}
-
-	public Command shoot() {
-		return Commands.sequence(
-				new RepeatCommand(new AimCommands.HubAimCommand(
-						Vision.getVision().getFieldPoseEstimator())).withTimeout(1.5),
-				TransportCommands.getTimedShoot(5));
 	}
 
 	public static Command getChildTrajectory(Trajectory<?> trajectory) {
@@ -86,7 +80,31 @@ public class AutoComposer {
 		} catch (NoSuchElementException e) {
 			return Commands.print(e.toString());
 		}
+	}
 
+	public Command autoAimShoot() {
+		return Commands.sequence(
+				new RepeatCommand(new AimCommands.HubAimCommand(
+						Vision.getVision().getFieldPoseEstimator())).withTimeout(1.5),
+				TransportCommands.getTimedShoot(5));
+	}
+
+	public Command getJamPreventativeShoot() {
+		return Commands.parallel(
+				new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
+				Commands.sequence(
+						Commands.parallel(
+								Commands.repeatingSequence(
+										new TransportCommands.RunAgitatorAtPower(
+												AgitatorConstants.kTeleopPower)
+														.withTimeout(1.5),
+										new TransportCommands.RunAgitatorAtPower(
+												-AgitatorConstants.kTeleopPower)
+														.withTimeout(.25)),
+								Commands.repeatingSequence(
+										IntakeCommands.getRunArmAtPowerCommand(-1).withTimeout(1.75 / 2.0),
+										IntakeCommands.getRunArmAtPowerCommand(1)
+												.withTimeout(1.75 / 2.0)))));
 	}
 
 	public Command getShootCommand(double turretAngle, double distance, double shootTime) {
@@ -96,6 +114,18 @@ public class AutoComposer {
 				// TurretCommands.getSettleAngleCommand(),
 				AimCommands.getSettleAimCommand(),
 				TransportCommands.getTimedShoot(shootTime)).withName("Shoot command");
+	}
+
+	public Command getPreloadNeutralOutpostAuto() {
+		return Commands.parallel(
+				IntakeCommands.getArmOutCombinedCommand(),
+				Commands.sequence(
+						autoAimShoot(),
+						HoodCommands.getHoodDownCommand(),
+						getSingleTrajectory("sweep_outpost").withTimeout(14),
+						autoAimShoot(),
+						getSingleTrajectory("sweep_outpost2").withTimeout(3),
+						autoAimShoot()));
 	}
 
 	public Command getLeftOneShootAuto() {
