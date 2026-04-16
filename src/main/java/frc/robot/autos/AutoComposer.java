@@ -43,6 +43,7 @@ public class AutoComposer {
 		return Commands.parallel(
 				Commands.repeatingSequence(new AimCommands.HubLookCommand()),
 				Commands.sequence(
+						new DriveCommands.ResetOdometry(start),
 						new DriveCommands.NinjaStar(start, false),
 						Commands.sequence(
 								jelly.stream().map(DriveCommands.YOLONinjaStar::new).toArray(Command[]::new)),
@@ -85,8 +86,14 @@ public class AutoComposer {
 	public Command autoAimShoot() {
 		return Commands.sequence(
 				new RepeatCommand(new AimCommands.HubAimCommand(
-						Vision.getVision().getFieldPoseEstimator())).withTimeout(1.5),
-				TransportCommands.getTimedShoot(5));
+						Vision.getVision().getMidpointEstimator())).withTimeout(2.5), // 1.5
+				TransportCommands.getTimedShoot(10)); // 5
+	}
+
+	public Command getCenterAuto() {
+		return Commands.sequence(
+				new DriveCommands.DrivePowerAndTime(0.2, 0, 0, 1),
+				autoAimShoot());
 	}
 
 	public Command getJamPreventativeShoot() {

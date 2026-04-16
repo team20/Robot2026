@@ -104,9 +104,11 @@ public class Robot extends TimedRobot {
 		m_autoChooser.addOption("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
 		m_autoChooser.addOption("Right Preload to Neutral to Outpost", m_autoComposer.getPreloadNeutralOutpostAuto());
 
+		m_autoChooser.addOption("Auto Aim Shoot Preload", m_autoComposer.autoAimShoot());
 		m_autoChooser
 				.setDefaultOption(
 						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser.addOption("Center Auto", m_autoComposer.getCenterAuto());
 		m_autoChooser
 				.setDefaultOption(
 						"Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
