@@ -405,9 +405,7 @@ public class Robot extends TimedRobot {
 		m_scheduler.run();
 		SmartDashboard.putData("Real Auto Chooser", m_autoChooser);
 		SmartDashboard.putData("Pit Selector 2000", m_isInPit);
-		if (Constants.kLogging) {
-			SmartDashboard.putData(m_scheduler);
-		}
+		SmartDashboard.putData(m_scheduler);
 	}
 
 	@Override

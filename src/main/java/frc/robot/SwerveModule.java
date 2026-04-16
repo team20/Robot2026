@@ -169,13 +169,7 @@ public class SwerveModule {
 		SmartDashboard.putNumber(
 				String.format("Swerve Supply Currents (A)/%d", m_index),
 				m_driveMotor.getSupplyCurrent().getValueAsDouble());
-		SmartDashboard.putNumber(
-				String.format("Swerve Torque Currents (A)/%d", m_index),
-				m_driveMotor.getTorqueCurrent().getValueAsDouble());
 		SmartDashboard.putNumber(String.format("Swerve Angles (deg)/%d", m_index), getModuleAngle());
-		SmartDashboard.putNumber(
-				String.format("Swerve Velocities (m\\s)/%d", m_index),
-				m_driveMotor.getVelocity().getValueAsDouble() * DriveConstants.kMetersPerMotorRotation);
 		updateSim();
 		return state;
 	}

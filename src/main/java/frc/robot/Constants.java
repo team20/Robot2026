@@ -13,7 +13,6 @@ import edu.wpi.first.math.util.Units;
 
 public class Constants {
 	public static final boolean kCompBot = true;
-	public static final boolean kLogging = true;
 
 	public static final class Subsystems {
 		public static final class VisionConstants {
