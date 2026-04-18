@@ -9,7 +9,10 @@ import java.util.Optional;
 import choreo.Choreo;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -83,15 +86,31 @@ public class AutoComposer {
 		}
 	}
 
+	public Command getSingleTrajectory(String filename, boolean flip) {
+		try {
+			Trajectory<?> trajectory = Choreo.loadTrajectory(filename).orElseThrow();
+			if (flip) {
+				trajectory = trajectory.flipped();
+			}
+			return getChildTrajectory(trajectory);
+		} catch (NoSuchElementException e) {
+			return Commands.print(e.toString());
+		}
+	}
+
 	public Command autoAimShoot() {
 		return Commands.sequence(
 				new RepeatCommand(new AimCommands.HubAimCommand(
-						Vision.getVision().getMidpointEstimator())).withTimeout(2.5), // 1.5
+						Vision.getVision().getFieldPoseEstimator())).withTimeout(2.5), // 1.5
 				TransportCommands.getTimedShoot(10)); // 5
 	}
 
 	public Command getCenterAuto() {
 		return Commands.sequence(
+				new DriveCommands.ResetOdometry(switch (DriverStation.getAlliance().orElse(Alliance.Red)) {
+					case Blue -> new Pose2d(3.5, 4, Rotation2d.kZero);
+					case Red -> new Pose2d(13.05, 4, Rotation2d.kZero);
+				}),
 				new DriveCommands.DrivePowerAndTime(0.2, 0, 0, 1),
 				autoAimShoot());
 	}
@@ -123,16 +142,49 @@ public class AutoComposer {
 				TransportCommands.getTimedShoot(shootTime)).withName("Shoot command");
 	}
 
-	public Command getPreloadNeutralOutpostAuto() {
+	public Command getRedPreloadNeutralOutpostAuto() {
+		return Commands.sequence(
+				new DriveCommands.ResetOdometry(new Pose2d(12, 8, Rotation2d.kZero)),
+				Commands.parallel(
+						IntakeCommands.getArmOutCombinedCommand(),
+						Commands.sequence(
+								autoAimShoot(),
+								HoodCommands.getHoodDownCommand(),
+								getSingleTrajectory("sweep_outpost").withTimeout(14),
+								autoAimShoot(),
+								getSingleTrajectory("sweep_outpost2").withTimeout(3),
+								autoAimShoot())));
+	}
+
+	public Command getBluePreloadNeutralOutpostAuto() {
 		return Commands.parallel(
 				IntakeCommands.getArmOutCombinedCommand(),
 				Commands.sequence(
 						autoAimShoot(),
 						HoodCommands.getHoodDownCommand(),
-						getSingleTrajectory("sweep_outpost").withTimeout(14),
+						getSingleTrajectory("sweep_outpost", true).withTimeout(14),
 						autoAimShoot(),
-						getSingleTrajectory("sweep_outpost2").withTimeout(3),
+						getSingleTrajectory("sweep_outpost2", true).withTimeout(3),
 						autoAimShoot()));
+	}
+
+	// TODO: WIP
+	public Command getBlueRightTrenchAuto() {
+		return Commands.sequence(
+				new DriveCommands.ResetOdometry(new Pose2d(4.411479949951172, 0.7018098831176758, Rotation2d.kZero)),
+				new DriveCommands.YOLONinjaStar(new Pose2d(7.042630672454834, 0.7018098831176758, Rotation2d.kZero),
+						0.5, 0.1),
+				new DriveCommands.YOLONinjaStar(new Pose2d(9.478880882263184, 7.211470127105713, Rotation2d.kZero), 1.0,
+						0.1),
+				new DriveCommands.YOLONinjaStar(new Pose2d(9.478880882263184, 7.211470127105713, Rotation2d.kZero), 1.0,
+						0.1));
+	}
+
+	public Command getYOLOTestCommand() {
+		return Commands.sequence(
+				new DriveCommands.ResetOdometry(new Pose2d(14.878, 4.307, Rotation2d.k180deg)),
+				new DriveCommands.YOLONinjaStar(new Pose2d(14.877610206604004, 4.307459831237793, Rotation2d.k180deg),
+						0.1, 0.1));
 	}
 
 	public Command getLeftOneShootAuto() {
@@ -183,7 +235,7 @@ public class AutoComposer {
 				// getShootCommand(36, 11.6, 6),
 				HoodCommands.getHoodDownCommand(),
 				new DriveCommands.VisionDriveDistance(Units.feetToMeters(10.25), 0, 0),
-				// IntakeCommands.getArmOutCombinedCommand(),
+				IntakeCommands.getArmOutCombinedCommand(),
 				new AimCommands.HubAimCommand(Vision.getVision().getFieldPoseEstimator()),
 				AimCommands.getSettleAimCommand(),
 				new ParallelRaceGroup(

@@ -2,11 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -55,7 +51,7 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distanceDerivative;
-		private Map<Integer, Long> m_blacklist = new HashMap<>();
+		// private Map<Integer, Long> m_blacklist = new HashMap<>();
 
 		private boolean m_hasTargets = false;
 
@@ -67,25 +63,27 @@ public class Vision extends SubsystemBase {
 				.publish();
 
 		public void update(List<PhotonTrackedTarget> targets) {
-			Set<Integer> m_blacklistRemove = new HashSet<>();
-			for (Map.Entry<Integer, Long> tag : m_blacklist.entrySet()) {
-				if (RobotController.getFPGATime() - tag.getValue().longValue() > 1e6) {
-					m_blacklistRemove.add(tag.getKey());
-				}
-			}
-			for (int tag : m_blacklistRemove) {
-				m_blacklist.remove(tag);
-			}
-			for (PhotonTrackedTarget tag : targets) {
-				if (tag.getPoseAmbiguity() > 0.2) {
-					m_blacklist.put(tag.getFiducialId(), RobotController.getFPGATime());
-				}
-			}
+			/*
+			 * Set<Integer> m_blacklistRemove = new HashSet<>();
+			 * for (Map.Entry<Integer, Long> tag : m_blacklist.entrySet()) {
+			 * if (RobotController.getFPGATime() - tag.getValue().longValue() > 1e6) {
+			 * m_blacklistRemove.add(tag.getKey());
+			 * }
+			 * }
+			 * for (int tag : m_blacklistRemove) {
+			 * m_blacklist.remove(tag);
+			 * }
+			 * for (PhotonTrackedTarget tag : targets) {
+			 * if (tag.getPoseAmbiguity() > 0.2) {
+			 * m_blacklist.put(tag.getFiducialId(), RobotController.getFPGATime());
+			 * }
+			 * }
+			 */
 			m_hasTargets = false;
 			// Use vision-based pose if April Tags are present
 			PoseUtils.estimateCamPoseStdDev(
 					targets.stream().filter(
-							t -> !m_blacklist.containsKey(t.getFiducialId()))
+							t -> true /* !m_blacklist.containsKey(t.getFiducialId()) */)
 							.toList())
 					.ifPresentOrElse(pose -> {
 						m_hasTargets = true;

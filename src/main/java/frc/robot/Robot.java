@@ -96,23 +96,19 @@ public class Robot extends TimedRobot {
 		m_autoChooser.addOption("Left One Shoot Auto", m_autoComposer.getLeftOneShootAuto());
 		m_autoChooser.addOption("Right One Shoot Auto", m_autoComposer.getRightOneShootAuto());
 		m_autoChooser.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
-		m_autoChooser
-				.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
-		m_autoChooser
-				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
+		m_autoChooser.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser.addOption("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
 		m_autoChooser.addOption("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
-		m_autoChooser.addOption("Right Preload to Neutral to Outpost", m_autoComposer.getPreloadNeutralOutpostAuto());
-
+		m_autoChooser
+				.addOption("Right Preload to Neutral to Outpost", m_autoComposer.getRedPreloadNeutralOutpostAuto());
 		m_autoChooser.addOption("Auto Aim Shoot Preload", m_autoComposer.autoAimShoot());
-		m_autoChooser
-				.setDefaultOption(
-						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser.addOption("Center Auto", m_autoComposer.getCenterAuto());
-		m_autoChooser
-				.setDefaultOption(
-						"Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
-
+		m_autoChooser.addOption("Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
+		m_autoChooser.addOption("Practice Playground Tower", m_autoComposer.getSingleTrajectory("TestingPathA"));
+		m_autoChooser.addOption("YOLO Test Command", m_autoComposer.getYOLOTestCommand());
+		m_autoChooser.setDefaultOption("Default auto", m_autoComposer.getCenterAuto());
 		m_isInPit.addOption("Is in pit", true);
 		m_isInPit.setDefaultOption("Not in pit", false);
 	}
@@ -348,6 +344,14 @@ public class Robot extends TimedRobot {
 		m_scheduler.cancelAll();
 		Command kommander = m_autoChooser.getSelected();
 		System.out.println(kommander.getName());
+		/*
+		 * if (Vision.getVision().getFieldPoseEstimator().hasTargets()) {
+		 * Drive.resetOdometry(Drive.getPose());
+		 * } else {
+		 * // Drive.resetOdometry(new Pose2d(4.0216803550720215, 0.6238499879837036,
+		 * Rotation2d.k180deg));
+		 * }
+		 */
 		m_scheduler.schedule(kommander);
 	}
 

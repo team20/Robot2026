@@ -30,7 +30,7 @@ public class Constants {
 			public static final boolean kMotorInvert = false; // Positive power must increase the angle
 			public static final boolean kEncoderInvert = true;
 			public static final int kTurretPort = 50;
-			public static final double kMaxDutyCycle = .09; // extra limit for test safety
+			public static final double kMaxDutyCycle = .15; // extra limit for test safety
 			public static final double kMinPower = 0.04;
 			public static final double kMaxPower = kMaxDutyCycle;
 			public static final double kMaxErr = 40; // 25
@@ -109,7 +109,7 @@ public class Constants {
 		}
 
 		public static final class AgitatorConstants {
-			public static final double kTeleopPower = .75;
+			public static final double kTeleopPower = .9; // .75;
 			public static final int kAgitatorPort = 57;
 			public static final int kAgitatorSmartCurrentLimit = 40;
 			public static final int kAgitatorSecondaryCurrentLimit = 50;

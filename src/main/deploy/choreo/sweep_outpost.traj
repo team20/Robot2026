@@ -21,7 +21,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"12.586589813232422 m", "val":12.586589813232422}, "y":{"exp":"7.400604248046875 m", "val":7.400604248046875}, "heading":{"exp":"trench.heading", "val":0.0}, "intervals":18, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"12.586589813232422 m", "val":12.586589813232422}, "y":{"exp":"7.400604248046875 m", "val":7.400604248046875}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":18, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"10.365081787109375 m", "val":10.365081787109377}, "y":{"exp":"7.410889148712158 m", "val":7.410889148712158}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"9.123700141906738 m", "val":9.123700141906738}, "y":{"exp":"7.142320156097412 m", "val":7.142320156097412}, "heading":{"exp":"trench.heading", "val":0.0}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"9.161765098571777 m", "val":9.161765098571776}, "y":{"exp":"7.1537699699401855 m", "val":7.1537699699401855}, "heading":{"exp":"-1.8281210627226832 rad", "val":-1.8281210627226832}, "intervals":18, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
@@ -29,7 +29,8 @@
     {"x":{"exp":"9.172049522399902 m", "val":9.172049522399902}, "y":{"exp":"4.757421493530273 m", "val":4.757421493530273}, "heading":{"exp":"-2.0701424578571688 rad", "val":-2.0701424578571688}, "intervals":30, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"9.511446952819824 m", "val":9.511446952819824}, "y":{"exp":"7.122915744781494 m", "val":7.122915744781494}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"11.342133522033691 m", "val":11.342133522033691}, "y":{"exp":"7.421173572540283 m", "val":7.421173572540283}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"12.586589813232422 m", "val":12.586589813232422}, "y":{"exp":"7.400604248046875 m", "val":7.400604248046875}, "heading":{"exp":"trench.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"12.586589813232422 m", "val":12.586589813232422}, "y":{"exp":"7.400604248046875 m", "val":7.400604248046875}, "heading":{"exp":"trench.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"4.0216803550720215 m", "val":4.0216803550720215}, "y":{"exp":"0.6238499879837036 m", "val":0.6238499879837036}, "heading":{"exp":"3.141592653589793 rad", "val":3.141592653589793}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},

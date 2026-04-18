@@ -451,8 +451,8 @@ public class DriveCommands {
 		@Override
 		public void execute() {
 			// Transform2d error = m_pose.minus(Drive.getPose());
-			double errorX = Drive.getPose().getX() - m_pose.getX();
-			double errorY = Drive.getPose().getY() - m_pose.getY();
+			double errorX = m_pose.getX() - Drive.getPose().getX();
+			double errorY = m_pose.getY() - Drive.getPose().getY();
 			double errorHypot = Math.hypot(errorX, errorY);
 			double speedX = m_translationSpeed * errorX / errorHypot;
 			double speedY = m_translationSpeed * errorY / errorHypot;
@@ -463,7 +463,7 @@ public class DriveCommands {
 			SmartDashboard.putNumber("YOLONinjaStar/Y Error", errorY);
 			SmartDashboard.putNumber("YOLONinjaStar/θ Error", errorTheta);
 			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, 0);
-			Drive.drive(speedX, speedY, speedTheta, false);
+			Drive.drive(speedY, speedX, speedTheta, false);
 		}
 
 		// Returns true when the command should end.
