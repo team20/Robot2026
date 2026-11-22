@@ -272,11 +272,13 @@ public class Robot extends TimedRobot {
 							m_operatorController.getHID().axisLessThan(Gamepad.Axis.RIGHT_TRIGGER.value, 0.025)
 									.and(m_operatorController.back()))
 					.whileTrue(
-							new RepeatCommand(
-									Commands.parallel(
-											new USBSerialSubsystem.SetLightAutoAimStatus(),
-											new AimCommands.HubAimCommand(
-													Vision.getVision().getFieldPoseEstimator()))));
+							Commands.parallel(
+									// Lights: one long-running command, sends only when the lock status changes
+									USBSerialSubsystem.get().showAimStatus(
+											Vision.getVision().getFieldPoseEstimator()::hasTargets),
+									// Aiming: still a compat command that sets the target once, so repeat it every loop
+									new RepeatCommand(new AimCommands.HubAimCommand(
+											Vision.getVision().getFieldPoseEstimator()))));
 
 			// Manual distance adjustment
 			absolute = false;

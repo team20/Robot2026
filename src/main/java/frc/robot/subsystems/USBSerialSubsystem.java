@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 import org.wpilib.command3.Mechanism;
 import org.wpilib.hardware.bus.SerialPort;
@@ -69,28 +70,36 @@ public class USBSerialSubsystem implements Mechanism {
 		STATE_COUNT
 	}
 
-	public static class SetLightAutoAimStatus extends Command {
-
-		public SetLightAutoAimStatus() {
-			addRequirements(USBSerialSubsystem.get(), Vision.getVision());
-		}
-
-		// Called every time the scheduler runs while the command is scheduled.
-		@Override
-		public void initialize() {
-			if (!USBSerialSubsystem.s_SerialSubsystem.m_isHubShift.get()) {
-				USBSerialSubsystem.s_SerialSubsystem.sendData(
-						new byte[] { (byte) (Vision.getVision().getFieldPoseEstimator().hasTargets()
-								? LightPattern.VISION_AIM_LOCKED
-								: LightPattern.VISION_AIM_NOT_LOCKED).ordinal() });
+	/**
+	 * Shows whether auto-aim sees the hub: the "locked" or "not locked" lights, sent again only when
+	 * that changes. Hub-shift lights take priority; once they end, the current status is sent again.
+	 * Runs until canceled (for example when the auto-aim button is released).
+	 *
+	 * <p>Replaces SetLightAutoAimStatus, which was restarted every loop by a RepeatCommand and so
+	 * re-sent the same byte 50 times a second.
+	 *
+	 * @param seesHub whether vision currently sees the hub, e.g.
+	 *        {@code Vision.getVision().getFieldPoseEstimator()::hasTargets}
+	 * @return the command; it requires only the lights (it reads vision, it doesn't control it)
+	 */
+	public org.wpilib.command3.Command showAimStatus(BooleanSupplier seesHub) {
+		return run(coroutine -> {
+			LightPattern shown = null;
+			while (true) {
+				if (m_isHubShift.get()) {
+					shown = null; // hub-shift lights are showing; send the aim status again when they end
+				} else {
+					LightPattern wanted = seesHub.getAsBoolean()
+							? LightPattern.VISION_AIM_LOCKED
+							: LightPattern.VISION_AIM_NOT_LOCKED;
+					if (wanted != shown) {
+						sendData(new byte[] { (byte) wanted.ordinal() });
+						shown = wanted;
+					}
+				}
+				coroutine.yield();
 			}
-		}
-
-		// Returns true when the command should end.
-		@Override
-		public boolean isFinished() {
-			return true;
-		}
+		}).named("Show Aim Status");
 	}
 
 	public void setLightPattern(LightPattern pattern) {
