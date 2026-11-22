@@ -149,6 +149,10 @@ public class Constants {
 
 	public static final class DriveConstants {
 		public static final double kDeadzone = 0.05;
+		// Driver feel (tune with the drivers): the drive stick's push (0 to 1, in any direction) is raised to
+		// this power before it's sent to the drive. 1 = linear, 2 = squared (WPILib's default for its drive
+		// classes): finer control at low speed, full speed at full push.
+		public static final double kTranslationInputExponent = 2.0;
 		// CAN IDs (updated)
 		public static final int kFrontRightDrivePort = 10;
 		public static final int kFrontRightSteerPort = 11;

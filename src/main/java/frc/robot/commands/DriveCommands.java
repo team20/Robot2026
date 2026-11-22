@@ -10,6 +10,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.linalg.Vector;
+import org.wpilib.math.numbers.N2;
 import org.wpilib.system.Timer;
 import org.wpilib.telemetry.Telemetry;
 import frc.robot.commands.compat.Command;
@@ -75,13 +79,35 @@ public class DriveCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			double forwardStick = MathUtil.applyDeadband(m_forwardSpeed.getAsDouble(), kDeadzone);
-			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI;
-			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
-			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
+			Translation2d translation = shapeTranslation(m_forwardSpeed.getAsDouble(), m_strafeSpeed.getAsDouble());
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
+			Telemetry.log("Drive/Translation Input", translation.getNorm());
 			Telemetry.log("Drive/Rotation Stick", rotationStick);
-			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
+			Drive.drive(translation.getX(), translation.getY(), rotationStick, m_isRobotRelative.getAsBoolean());
+		}
+
+		/**
+		 * Turns the drive stick into drive power, treating the stick as one arrow (how far it's pushed, and
+		 * which way) instead of two separate axes. The deadband and response curve change only how far it's
+		 * pushed, so the robot always goes exactly the way the stick points, and a full push is full power in
+		 * every direction, diagonals included.
+		 *
+		 * <p>Uses WPILib's vector versions of {@code applyDeadband} and {@code copyDirectionPow}.
+		 *
+		 * @param forward the forward stick value, -1 to 1 (positive = forward, +X)
+		 * @param strafe the strafe stick value, -1 to 1 (positive = left, +Y)
+		 * @return the forward (X) and strafe (Y) power, at most 1 long in total
+		 */
+		public static Translation2d shapeTranslation(double forward, double strafe) {
+			Vector<N2> stick = VecBuilder.fill(forward, strafe);
+			// Some gamepads report up to (1, 1) in the corners, which is 1.41 long. Limit the push to 1
+			// (WPILib's deadband doesn't), so diagonals are never faster than straight lines.
+			if (stick.norm() > 1) {
+				stick = stick.unit();
+			}
+			stick = MathUtil.applyDeadband(stick, kDeadzone); // round deadband, no jump at its edge
+			stick = MathUtil.copyDirectionPow(stick, kTranslationInputExponent); // response curve
+			return new Translation2d(stick);
 		}
 
 		// Called once the command ends or is interrupted.
