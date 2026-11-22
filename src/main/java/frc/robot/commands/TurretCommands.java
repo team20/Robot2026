@@ -2,8 +2,8 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.math.geometry.Pose2d;
+import frc.robot.commands.compat.Command;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.USBSerialSubsystem;

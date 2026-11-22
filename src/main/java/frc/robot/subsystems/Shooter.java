@@ -1,21 +1,23 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.*;
+import frc.robot.Constants.CANConstants;
+
+import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
 	private static Shooter s_theShooter;
 
-	private final TalonFX m_motor = new TalonFX(ShooterConstants.kFlywheelPort);
+	private final TalonFX m_motor = new TalonFX(ShooterConstants.kFlywheelPort, CANConstants.kMechanismBus);
 	private final VelocityVoltage m_request = new VelocityVoltage(0);
 	private double m_setpointRPM;
 
@@ -48,7 +50,7 @@ public class Shooter extends SubsystemBase {
 	}
 
 	public static void setPower(double power) {
-		s_theShooter.m_motor.set(power);
+		s_theShooter.m_motor.setThrottle(power);
 	}
 
 	public static void setVoltage(double voltage) {
@@ -80,7 +82,7 @@ public class Shooter extends SubsystemBase {
 	@Override
 	public void periodic() {
 		if (Constants.kLogging) {
-			SmartDashboard.putNumber("Shooter/RPM", getRPM());
+			Telemetry.log("Shooter/RPM", getRPM());
 		}
 	}
 }

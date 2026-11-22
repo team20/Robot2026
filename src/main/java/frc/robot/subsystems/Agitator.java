@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import frc.robot.Constants.CANConstants;
+
 import static frc.robot.Constants.*;
 
 import com.revrobotics.PersistMode;
@@ -8,8 +10,8 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.SubsystemBase;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 
 /**
@@ -26,7 +28,7 @@ public class Agitator extends SubsystemBase {
 	 * subsystem exists.
 	 */
 	public Agitator() {
-		m_agitator = new SparkFlex(AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
+		m_agitator = new SparkFlex(CANConstants.kMechanismPort, AgitatorConstants.kAgitatorPort, MotorType.kBrushless);
 		SparkMaxConfig config = new SparkMaxConfig();
 		config.inverted(AgitatorConstants.kAgitatorInvert);
 		config.smartCurrentLimit(AgitatorConstants.kAgitatorSmartCurrentLimit);
@@ -55,21 +57,21 @@ public class Agitator extends SubsystemBase {
 	 * @param speed The speed to set, between -1.0 and 1.0.
 	 */
 	public static void setPower(double speed) {
-		s_theAgitator.m_agitator.set(speed);
+		s_theAgitator.m_agitator.setThrottle(speed);
 	}
 
 	/**
 	 * Stops the transport motor by setting its speed to zero.
 	 */
 	public static void stop() {
-		s_theAgitator.m_agitator.set(0);
+		s_theAgitator.m_agitator.setThrottle(0);
 	}
 
 	@Override
 	public void periodic() {
 		if (kLogging) {
-			SmartDashboard.putNumber("Agitator/Current", s_theAgitator.m_agitator.getOutputCurrent());
-			SmartDashboard.putNumber("Agitator/Voltage", s_theAgitator.m_agitator.getAppliedOutput());
+			Telemetry.log("Agitator/Current", s_theAgitator.m_agitator.getOutputCurrent().get());
+			Telemetry.log("Agitator/Voltage", s_theAgitator.m_agitator.getAppliedOutput().get());
 		}
 	}
 }

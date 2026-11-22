@@ -11,38 +11,38 @@ import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.studica.frc.AHRS;
-import com.studica.frc.AHRS.NavXComType;
 
-import edu.wpi.first.hal.SimDouble;
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.Units;
-import edu.wpi.first.util.CircularBuffer;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import org.wpilib.hardware.imu.OnboardIMU;
+import org.wpilib.hardware.imu.OnboardIMU.MountOrientation;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
+import org.wpilib.math.filter.LinearFilter;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.geometry.Twist2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.kinematics.SwerveDriveKinematics;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.units.Units;
+import org.wpilib.util.container.CircularBuffer;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.framework.RobotBase;
+import org.wpilib.framework.TimedRobot;
+import org.wpilib.system.Timer;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.simulation.OnboardIMUSim;
+import frc.robot.commands.compat.Command;
+import frc.robot.commands.compat.CommandScheduler;
+import frc.robot.commands.compat.SubsystemBase;
+import org.wpilib.command3.sysid.SysIdRoutine;
+import org.wpilib.util.Pair;
 import frc.robot.Aim;
 import frc.robot.Constants;
 import frc.robot.Constants.Subsystems.VisionConstants;
@@ -63,30 +63,16 @@ public class Drive extends SubsystemBase {
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
 			kFrontLeftLocation, kFrontRightLocation, kBackLeftLocation, kBackRightLocation);
 	private final SwerveDrivePoseEstimator m_odometry;
-	private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
-	private final SimDouble m_gyroSim;
+	// SystemCore onboard IMU. TODO: mounting is TBD; update MountOrientation to match the robot.
+	private final OnboardIMU m_gyro = new OnboardIMU(MountOrientation.PORTRAIT);
+	// Software heading offset (replaces the navX setAngleAdjustment)
+	private Rotation2d m_headingOffset = Rotation2d.ZERO;
+	// Simulated raw yaw in radians, integrated from chassis omega
+	private double m_simYaw = 0;
 	private final SysIdRoutine m_sysidRoutine;
 	private final CircularBuffer<Pair<SwerveModulePosition[], Double>> m_modulePositions = new CircularBuffer<>(2);
 	private final Timer periodicTimer = new Timer();
 
-	private final StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Pose", Pose2d.struct).publish();
-	private final StructPublisher<Pose2d> m_aimPosePublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Aim Pose", Pose2d.struct).publish();
-	private final StructPublisher<Pose2d> m_aimPoseCompensatedPublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Aim Pose Compensated", Pose2d.struct).publish();
-	private final StructPublisher<Translation2d> m_velocityPublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Velocity", Translation2d.struct).publish();
-	private final StructPublisher<Translation2d> m_filteredVelocityPublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Filtered Velocity", Translation2d.struct).publish();
-	private final StructPublisher<ChassisSpeeds> m_currentChassisSpeedsPublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("/SmartDashboard/Chassis Speeds", ChassisSpeeds.struct).publish();
-	private final StructArrayPublisher<SwerveModuleState> m_targetModuleStatePublisher = NetworkTableInstance
-			.getDefault().getStructArrayTopic("/SmartDashboard/Target Swerve Modules States", SwerveModuleState.struct)
-			.publish();
-	private final StructArrayPublisher<SwerveModuleState> m_currentModuleStatePublisher = NetworkTableInstance
-			.getDefault().getStructArrayTopic("/SmartDashboard/Current Swerve Modules States", SwerveModuleState.struct)
-			.publish();
 
 	private Translation2d m_velocity;
 	// Average velocity over 6 values to reduce input noise
@@ -109,12 +95,13 @@ public class Drive extends SubsystemBase {
 		// Adjust ramp rate, step voltage, and timeout to make sure robot doesn't
 		// collide with anything
 		m_sysidRoutine = new SysIdRoutine(
-				new SysIdRoutine.Config(Units.Volts.of(2.5).div(Units.Seconds.of(1)), null, Units.Seconds.of(3)),
-				new SysIdRoutine.Mechanism(volt -> doModuleX(
+				new SysIdRoutine.Config(Units.Volts.of(2.5).div(Units.Seconds.of(1)), SysIdRoutine.Config.DEFAULT_STEP_VOLTAGE,
+						Units.Seconds.of(3), null),
+				new SysIdRoutine.SysIdMechanism(volt -> doModuleX(
 						module -> module
-								.setModuleState(new SwerveModuleState(volt.magnitude(), new Rotation2d(Math.PI / 2))),
-						SwerveModuleState[]::new), null, this));
-		m_gyro.zeroYaw();
+								.setModuleState(new SwerveModuleVelocity(volt.magnitude(), new Rotation2d(Math.PI / 2))),
+						SwerveModuleVelocity[]::new), null, this));
+		m_gyro.resetYaw();
 		resetEncoders();
 		// Wait 100 milliseconds to let all the encoders reset
 		try {
@@ -122,12 +109,7 @@ public class Drive extends SubsystemBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		m_odometry = new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), Pose2d.kZero);
-		if (RobotBase.isSimulation()) {
-			m_gyroSim = new SimDeviceSim("navX-Sensor", m_gyro.getPort()).getDouble("Yaw");
-		} else {
-			m_gyroSim = null;
-		}
+		m_odometry = new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), Pose2d.ZERO);
 
 		periodicTimer.start();
 	}
@@ -142,7 +124,7 @@ public class Drive extends SubsystemBase {
 	 * @return The heading
 	 */
 	public static Rotation2d getHeading() {
-		return s_theDrive.m_gyro.getRotation2d();// .rotateBy(Rotation2d.k180deg); // Flipped due to auto start
+		return s_theDrive.m_gyro.getRotation2d().plus(s_theDrive.m_headingOffset);// .rotateBy(Rotation2d.k180deg); // Flipped due to auto start
 		// .rotateBy((AutoConstants.isBackwardsAtStart) ? Rotation2d.k180deg :
 		// Rotation2d.kZero);
 	}
@@ -184,19 +166,19 @@ public class Drive extends SubsystemBase {
 	 * @param isFieldRelative Whether or not the chassis speeds is field relative.
 	 * @return The module states, in order of FL, FR, BL, BR
 	 */
-	private static SwerveModuleState[] calculateModuleStates(ChassisSpeeds speeds, boolean isRobotRelative) {
+	private static SwerveModuleVelocity[] calculateModuleStates(ChassisVelocities speeds, boolean isRobotRelative) {
 		if (Constants.kLogging) {
-			SmartDashboard.putNumber("Drive/Heading", getHeading().getDegrees());
-			SmartDashboard.putBoolean("Drive/Robot Relative", isRobotRelative);
+			Telemetry.log("Drive/Heading", getHeading().getDegrees());
+			Telemetry.log("Drive/Robot Relative", isRobotRelative);
 		}
 		if (!isRobotRelative)
-			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading());
-		speeds = ChassisSpeeds.discretize(speeds, 0.03);
-		SwerveModuleState[] states = s_theDrive.m_kinematics.toSwerveModuleStates(speeds);
-		SwerveDriveKinematics.desaturateWheelSpeeds(states, 1);
+			speeds = speeds.toRobotRelative(getHeading());
+		speeds = speeds.discretize(0.03);
+		SwerveModuleVelocity[] states = SwerveDriveKinematics.desaturateWheelVelocities(
+				s_theDrive.m_kinematics.toSwerveModuleVelocities(speeds), 1);
 		Double[] moduleAngles = doModuleX(SwerveModule::getModuleAngle, Double[]::new);
 		for (int i = 0; i < states.length; i++) // Optimize target module states
-			states[i].optimize(Rotation2d.fromDegrees(moduleAngles[i]));
+			states[i] = states[i].optimize(Rotation2d.fromDegrees(moduleAngles[i]));
 		return states;
 	}
 
@@ -205,13 +187,13 @@ public class Drive extends SubsystemBase {
 	 * 
 	 * @param speeds The chassis speeds.
 	 */
-	private static void setModuleStates(SwerveModuleState[] states) {
-		s_theDrive.m_targetModuleStatePublisher.set(states);
-		doModuleX(module -> module.setModuleState(states[module.getIndex()]), SwerveModuleState[]::new);
+	private static void setModuleStates(SwerveModuleVelocity[] states) {
+		Telemetry.log("Target Swerve Modules States", states, SwerveModuleVelocity.struct);
+		doModuleX(module -> module.setModuleState(states[module.getIndex()]), SwerveModuleVelocity[]::new);
 	}
 
 	public static void stop() {
-		setModuleStates(calculateModuleStates(new ChassisSpeeds(), false));
+		setModuleStates(calculateModuleStates(new ChassisVelocities(), false));
 	}
 
 	public static void setCoastMode(NeutralModeValue mode) {
@@ -228,23 +210,21 @@ public class Drive extends SubsystemBase {
 		double timestamp = periodicTimer.get();
 
 		// Get and publish each swerve module's state
-		SwerveModuleState[] states = doModuleX(SwerveModule::getModuleState, SwerveModuleState[]::new);
-		m_currentModuleStatePublisher.set(states);
+		SwerveModuleVelocity[] states = doModuleX(SwerveModule::getModuleState, SwerveModuleVelocity[]::new);
+		Telemetry.log("Current Swerve Modules States", states, SwerveModuleVelocity.struct);
 
 		// Find and publish chassis speeds (in terms of voltage, 0.0 to 12.0)
-		var speeds = m_kinematics.toChassisSpeeds(states);
-		m_currentChassisSpeedsPublisher.set(speeds);
+		var speeds = m_kinematics.toChassisVelocities(states);
+		Telemetry.log("Chassis Speeds", speeds, ChassisVelocities.struct);
 
 		// Simulate the gyro
 		if (RobotBase.isSimulation())// TODO: Use SysId to get feedforward model for rotation
-			m_gyroSim.set(
-					-Math.toDegrees(speeds.omegaRadiansPerSecond * TimedRobot.kDefaultPeriod)
-							+ getHeading().getDegrees());
+			OnboardIMUSim.setYaw(m_simYaw += speeds.omega * TimedRobot.DEFAULT_PERIOD);
 
 		// Update current module positions & odometry pose
 		// m_moduleStates stores last (current) and second to last module positions
 		m_modulePositions.addFirst(new Pair<SwerveModulePosition[], Double>(getModulePositions(), timestamp));
-		m_posePublisher.set(m_odometry.update(getHeading(), m_modulePositions.getFirst().getFirst()));
+		Telemetry.log("Pose", m_odometry.update(getHeading(), m_modulePositions.getFirst().getFirst()), Pose2d.struct);
 
 		// Calculate difference between last and second to last module states
 		// Find x and y velocity by taking the derivative / calculating slope
@@ -259,9 +239,9 @@ public class Drive extends SubsystemBase {
 				m_velocityYFilter.calculate(m_velocity.getY()));
 
 		// Publish velocities and pose angle
-		m_velocityPublisher.set(m_velocity);
-		m_filteredVelocityPublisher.set(m_filteredVelocity);
-		SmartDashboard.putNumber("Odometry Pose Angle", getPose().getRotation().getDegrees());
+		Telemetry.log("Velocity", m_velocity, Translation2d.struct);
+		Telemetry.log("Filtered Velocity", m_filteredVelocity, Translation2d.struct);
+		Telemetry.log("Odometry Pose Angle", getPose().getRotation().getDegrees());
 	}
 
 	/**
@@ -271,24 +251,24 @@ public class Drive extends SubsystemBase {
 	 */
 	public static Pose2d getAimTarget() {
 		// Get alliance and robot pose
-		Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+		Alliance alliance = MatchState.getAlliance().orElse(Alliance.BLUE);
 		Pose2d pose = getPose();
 
 		// If robot is in neutral zone, just pass anywhere
 		// within alliance zone colinear to hub
 		if (pose.getX() > VisionConstants.kBlueNeutralZoneStart && pose.getX() < VisionConstants.kRedNeutralZoneStart) {
 			Pose2d target = new Pose2d(switch (alliance) {
-				case Blue -> 1;
-				case Red -> 13.5;
+				case BLUE -> 1;
+				case RED -> 13.5;
 			}, pose.getY(), getHeading());
-			s_theDrive.m_aimPosePublisher.accept(target);
+			Telemetry.log("Aim Pose", target, Pose2d.struct);
 			return target;
 		}
 
 		// Define exact hub position
 		Pose2d hub = switch (alliance) {
-			case Blue -> VisionConstants.kBlueHub;
-			case Red -> VisionConstants.kRedHub;
+			case BLUE -> VisionConstants.kBlueHub;
+			case RED -> VisionConstants.kRedHub;
 		};
 
 		// Get bot pose orientation and world-oriented velocity (not robot relative)
@@ -301,25 +281,25 @@ public class Drive extends SubsystemBase {
 		Translation2d difference = hub.minus(pose).getTranslation();
 		double distance = difference.getNorm();
 		// Find airtime using distance to target (in feet)
-		double time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
+		double time = Aim.getShotAirtime(org.wpilib.math.util.Units.metersToFeet(distance));
 		Translation2d offset = rotatedVelocity.times(-time);
 		Pose2d aimTarget = new Pose2d(hub.getX() + offset.getX(),
-				hub.getY() + offset.getY(), Rotation2d.kZero);
+				hub.getY() + offset.getY(), Rotation2d.ZERO);
 
 		// Iterate multiple times (5) to account for changing airtime
 		// (as aim target moves to compensate, airtime increases)
 		for (int i = 0; i < 5; i++) {
 			difference = aimTarget.minus(pose).getTranslation();
 			distance = difference.getNorm();
-			time = Aim.getShotAirtime(edu.wpi.first.math.util.Units.metersToFeet(distance));
+			time = Aim.getShotAirtime(org.wpilib.math.util.Units.metersToFeet(distance));
 			offset = rotatedVelocity.times(-time);
 			// Slightly increment offset with each iteration
-			aimTarget = new Pose2d(hub.getX() + offset.getX(), hub.getY() + offset.getY(), Rotation2d.kZero);
+			aimTarget = new Pose2d(hub.getX() + offset.getX(), hub.getY() + offset.getY(), Rotation2d.ZERO);
 		}
 
 		// Publish raw & compensated targets and return compensated target
-		s_theDrive.m_aimPosePublisher.accept(hub);
-		s_theDrive.m_aimPoseCompensatedPublisher.accept(aimTarget);
+		Telemetry.log("Aim Pose", hub, Pose2d.struct);
+		Telemetry.log("Aim Pose Compensated", aimTarget, Pose2d.struct);
 		return aimTarget;
 	}
 
@@ -344,7 +324,7 @@ public class Drive extends SubsystemBase {
 	 */
 	public static void drive(double forwardSpeed, double strafeSpeed, double rotation, boolean isRobotRelative) {
 		setModuleStates(
-				calculateModuleStates(new ChassisSpeeds(forwardSpeed, strafeSpeed, rotation), isRobotRelative));
+				calculateModuleStates(new ChassisVelocities(forwardSpeed, strafeSpeed, rotation), isRobotRelative));
 	}
 
 	/**
@@ -353,8 +333,8 @@ public class Drive extends SubsystemBase {
 	 * @return A command to reset the gyro heading.
 	 */
 	public static void resetHeading() {
-		s_theDrive.m_gyro.zeroYaw();
-		s_theDrive.m_gyro.setAngleAdjustment(180.0);
+		s_theDrive.m_gyro.resetYaw();
+		s_theDrive.m_headingOffset = Rotation2d.fromDegrees(180.0);
 	}
 
 	public static void resetOdometry(Pose2d pose) {
@@ -367,7 +347,7 @@ public class Drive extends SubsystemBase {
 	 * @param direction The direction to run the test in.
 	 * @return The command.
 	 */
-	public static Command sysidQuasistatic(SysIdRoutine.Direction direction) {
+	public static org.wpilib.command3.Command sysidQuasistatic(SysIdRoutine.Direction direction) {
 		return s_theDrive.m_sysidRoutine.quasistatic(direction);
 	}
 
@@ -377,7 +357,7 @@ public class Drive extends SubsystemBase {
 	 * @param direction The direction to run the test in.
 	 * @return The command.
 	 */
-	public static Command sysidDynamic(SysIdRoutine.Direction direction) {
+	public static org.wpilib.command3.Command sysidDynamic(SysIdRoutine.Direction direction) {
 		return s_theDrive.m_sysidRoutine.dynamic(direction);
 	}
 }

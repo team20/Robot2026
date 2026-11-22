@@ -4,17 +4,21 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import static org.wpilib.units.Units.Seconds;
+
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.framework.TimedRobot;
+import org.wpilib.tunable.Selectable;
+import org.wpilib.tunable.Tunables;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.Command;
+import frc.robot.commands.compat.CommandScheduler;
+import frc.robot.commands.compat.Commands;
+import frc.robot.commands.compat.RepeatCommand;
+import frc.robot.commands.compat.WaitCommand;
+import org.wpilib.command3.button.CommandGamepad;
+import org.wpilib.driverstation.Gamepad;
 import frc.robot.Constants.Subsystems.AgitatorConstants;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.autos.AutoComposer;
@@ -45,13 +49,13 @@ public class Robot extends TimedRobot {
 	private CommandScheduler m_scheduler = CommandScheduler.getInstance();
 
 	public static final boolean compControls = true;
-	private final CommandPS5Controller m_driverController = new CommandPS5Controller(
+	private final CommandGamepad m_driverController = new CommandGamepad(
 			Constants.ControllerConstants.kDriverControllerPort);
-	private final CommandPS5Controller m_operatorController = new CommandPS5Controller(
+	private final CommandGamepad m_operatorController = new CommandGamepad(
 			Constants.ControllerConstants.kOperatorControllerPort);
 	private final AutoComposer m_autoComposer;
-	private final SendableChooser<Command> m_autoChooser;
-	private final SendableChooser<Boolean> m_isInPit = new SendableChooser<>();
+	private final Selectable<Command> m_autoChooser;
+	private final Selectable<Boolean> m_isInPit = new Selectable<>();
 
 	{ // Here are the individual subsystems
 		new Drive();
@@ -80,8 +84,10 @@ public class Robot extends TimedRobot {
 
 	public Robot() {
 		m_autoComposer = new AutoComposer(this);
-		m_autoChooser = new SendableChooser<>();
+		m_autoChooser = new Selectable<>();
 		bindAutoOptions();
+		Tunables.publish("Real Auto Chooser", m_autoChooser);
+		Tunables.publish("Pit Selector 2000", m_isInPit);
 	}
 
 	public static Command ledCommand(USBSerialSubsystem.LightPattern pattern, Command cmd) {
@@ -92,24 +98,24 @@ public class Robot extends TimedRobot {
 	}
 
 	private void bindAutoOptions() {
-		m_autoChooser.addOption("No Auto", new WaitCommand(2));
-		m_autoChooser.addOption("Left One Shoot Auto", m_autoComposer.getLeftOneShootAuto());
-		m_autoChooser.addOption("Right One Shoot Auto", m_autoComposer.getRightOneShootAuto());
-		m_autoChooser.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
+		m_autoChooser.add("No Auto", new WaitCommand(2));
+		m_autoChooser.add("Left One Shoot Auto", m_autoComposer.getLeftOneShootAuto());
+		m_autoChooser.add("Right One Shoot Auto", m_autoComposer.getRightOneShootAuto());
+		m_autoChooser.add("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
 		m_autoChooser
-				.addOption("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
+				.add("Right Two Shoot Auto", m_autoComposer.getRightTwoShootAuto());
 		m_autoChooser
-				.addOption("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
-		m_autoChooser.addOption("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
-		m_autoChooser.addOption("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
+				.add("Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
+		m_autoChooser.add("MANUAL Right Shoot Auto", m_autoComposer.getManualRightShootAuto());
+		m_autoChooser.add("Right Two Shoot Auto With Vision", m_autoComposer.getRightTwoShootAutoWithVision());
 		m_autoChooser
-				.setDefaultOption(
+				.addDefault(
 						"Right Two Shoot Auto Front of Bump", m_autoComposer.getRightTwoShootAutoBump());
 		m_autoChooser
-				.setDefaultOption(
+				.addDefault(
 						"Velocity 1 Test Command", m_autoComposer.getVelocity1Testcommand());
-		m_isInPit.addOption("Is in pit", true);
-		m_isInPit.setDefaultOption("Not in pit", false);
+		m_isInPit.add("Is in pit", true);
+		m_isInPit.addDefault("Not in pit", false);
 	}
 
 	private void bindCompControls() {
@@ -166,40 +172,40 @@ public class Robot extends TimedRobot {
 			Drive.getDrive().setDefaultCommand(
 					new DriveCommands.JoystickDrive(
 							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-							() -> m_driverController.getL2Axis() - m_driverController.getR2Axis(),
+							() -> m_driverController.getLeftTrigger() - m_driverController.getRightTrigger(),
 							() -> false)); // TODO: fix robot/field-centric toggle
-			m_driverController.options().debounce(0.1).onTrue(new DriveCommands.ResetHeading());
+			m_driverController.start().debounce(Seconds.of(0.1)).onTrue(new DriveCommands.ResetHeading());
 		}
 
 		{ // Hood bindings
-			m_driverController.triangle().whileTrue(
+			m_driverController.faceUp().whileTrue(
 					new AngularPositionCommands.RunAtPower(Hood.getHood(),
 							.2, /* POWER */
 							0)); /* TIME */
-			m_driverController.cross().whileTrue(
+			m_driverController.faceDown().whileTrue(
 					HoodCommands.getHoodDownCommand()
 							// Overrides all conflicting commands
-							.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
+							.withInterruptBehavior(Command.InterruptionBehavior.CANCEL_INCOMING));
 		}
 
 		{ // Intake bindings
-			m_driverController.R1().debounce(0.1).onTrue( // Deploys arm & spins wheels
+			m_driverController.rightBumper().debounce(Seconds.of(0.1)).onTrue( // Deploys arm & spins wheels
 					IntakeCommands.getArmOutCombinedCommand());
-			m_driverController.L1().debounce(0.1).onTrue( // Retracts arm & stops wheels
+			m_driverController.leftBumper().debounce(Seconds.of(0.1)).onTrue( // Retracts arm & stops wheels
 					IntakeCommands.getArmInCombinedCommand());
 
 			// Manually drive intake up & down
-			m_driverController.povRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
-			m_driverController.povLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
+			m_driverController.dpadRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
+			m_driverController.dpadLeft().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
 		}
 
 		{ // Climber bindings
-			// m_driverController.create().debounce(.1).onTrue(ClimberCommands.getResetCommand());
-			// m_driverController.povUp().debounce(.1).onTrue(ClimberCommands.getClimbCommand());
-			// m_driverController.povDown().debounce(.1).onTrue(ClimberCommands.getRetractCommand());
+			// m_driverController.back().debounce(Seconds.of(.1)).onTrue(ClimberCommands.getResetCommand());
+			// m_driverController.dpadUp().debounce(Seconds.of(.1)).onTrue(ClimberCommands.getClimbCommand());
+			// m_driverController.dpadDown().debounce(Seconds.of(.1)).onTrue(ClimberCommands.getRetractCommand());
 
-			m_driverController.povUp().whileTrue(ClimberCommands.getRunAtPowerCommand(.75));
-			m_driverController.povDown().whileTrue(ClimberCommands.getRunAtPowerCommand(-.75));
+			m_driverController.dpadUp().whileTrue(ClimberCommands.getRunAtPowerCommand(.75));
+			m_driverController.dpadDown().whileTrue(ClimberCommands.getRunAtPowerCommand(-.75));
 		}
 
 		// *************************************************
@@ -209,24 +215,24 @@ public class Robot extends TimedRobot {
 		{ // Turret bindings
 			Turret.getTurret().setDefaultCommand(
 					new TurretCommands.GradualAim(0.1, 0.45, 0.025,
-							m_operatorController::getL2Axis,
-							m_operatorController::getR2Axis));
+							m_operatorController::getLeftTrigger,
+							m_operatorController::getRightTrigger));
 		}
 
 		{ // Intake bindings
-			m_operatorController.options().debounce(0.1).onTrue(IntakeCommands.getEncoderResetCommand());
-			m_operatorController.L1().debounce(.1).onTrue(new IntakeCommands.StopIntakeWheels());
+			m_operatorController.start().debounce(Seconds.of(0.1)).onTrue(IntakeCommands.getEncoderResetCommand());
+			m_operatorController.leftBumper().debounce(Seconds.of(.1)).onTrue(new IntakeCommands.StopIntakeWheels());
 			// IntakeWheels.getIntakeWheels().setDefaultCommand(
 			// new IntakeCommands.Teletake(IntakeConstants.kWheelPower,
-			// m_operatorController.L1()));
+			// m_operatorController.leftBumper()));
 		}
 
 		{ // Agitator bindings
-			m_operatorController.R1().whileTrue(
+			m_operatorController.rightBumper().whileTrue(
 					new TransportCommands.RunAgitatorAtPower(AgitatorConstants.kTeleopPower));
 
 			/*
-			 * m_operatorController.R1().whileTrue(
+			 * m_operatorController.rightBumper().whileTrue(
 			 * Commands.parallel(
 			 * new IntakeCommands.Spintake(IntakeConstants.kWheelPower),
 			 * Commands.sequence(
@@ -245,37 +251,39 @@ public class Robot extends TimedRobot {
 			 * .onFalse(IntakeCommands.getArmOutCombinedCommand());
 			 */
 
-			m_operatorController.povLeft()
+			m_operatorController.dpadLeft()
 					.whileTrue(new TransportCommands.RunAgitatorAtPower(-AgitatorConstants.kTeleopPower));
 		}
 
 		{ // Shooting bindings
 			// Stop flywheel
-			m_operatorController.square().onTrue(new ShooterCommands.Stop());
+			m_operatorController.faceLeft().onTrue(new ShooterCommands.Stop());
 			boolean absolute = true;
 
 			// Presets
-			m_operatorController.triangle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
-			m_operatorController.circle().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
-			m_operatorController.cross().debounce(.1).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
+			m_operatorController.faceUp().debounce(Seconds.of(.1)).onTrue(new AimCommands.AdjustAim(absolute, 4.5, this));
+			m_operatorController.faceRight().debounce(Seconds.of(.1)).onTrue(new AimCommands.AdjustAim(absolute, 11.7, this));
+			m_operatorController.faceDown().debounce(Seconds.of(.1)).onTrue(new AimCommands.AdjustAim(absolute, 18, this));
 
 			// Auto aim
 
-			m_operatorController.axisLessThan(3, 0.025)
+			m_operatorController.getHID().axisLessThan(Gamepad.Axis.LEFT_TRIGGER.value, 0.025)
 					.and(
-							m_operatorController.axisLessThan(4, 0.025)
-									.and(m_operatorController.create()))
+							m_operatorController.getHID().axisLessThan(Gamepad.Axis.RIGHT_TRIGGER.value, 0.025)
+									.and(m_operatorController.back()))
 					.whileTrue(
-							new RepeatCommand(
-									Commands.parallel(
-											new USBSerialSubsystem.SetLightAutoAimStatus(),
-											new AimCommands.HubAimCommand(
-													Vision.getVision().getFieldPoseEstimator()))));
+							Commands.parallel(
+									// Lights: one long-running command, sends only when the lock status changes
+									USBSerialSubsystem.get().showAimStatus(
+											Vision.getVision().getFieldPoseEstimator()::hasTargets),
+									// Aiming: still a compat command that sets the target once, so repeat it every loop
+									new RepeatCommand(new AimCommands.HubAimCommand(
+											Vision.getVision().getFieldPoseEstimator()))));
 
 			// Manual distance adjustment
 			absolute = false;
-			m_operatorController.povUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
-			m_operatorController.povDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
+			m_operatorController.dpadUp().whileTrue(new AimCommands.AdjustAim(absolute, 5, this)); // 5 ft/s increasing
+			m_operatorController.dpadDown().whileTrue(new AimCommands.AdjustAim(absolute, -5, this));
 		}
 	}
 
@@ -285,13 +293,13 @@ public class Robot extends TimedRobot {
 			Drive.getDrive().setDefaultCommand(
 					new DriveCommands.JoystickDrive(
 							() -> -m_driverController.getLeftY(), () -> -m_driverController.getLeftX(),
-							() -> m_driverController.getR2Axis() - m_driverController.getL2Axis(),
-							m_driverController.getHID()::getCreateButton));
+							() -> m_driverController.getRightTrigger() - m_driverController.getLeftTrigger(),
+							m_driverController.getGamepad()::getBackButton));
 		}
 
-		m_driverController.create().onTrue(Commands.runOnce(() -> {
+		m_driverController.back().onTrue(Commands.runOnce(() -> {
 			Pose2d pose1 = Vision.getVision().getFieldPoseEstimator().getPose();
-			Pose2d pose2 = new Pose2d(pose1.getTranslation(), Rotation2d.kZero);
+			Pose2d pose2 = new Pose2d(pose1.getTranslation(), Rotation2d.ZERO);
 			m_scheduler.schedule(new DriveCommands.ResetOdometry(pose2));
 		}));
 
@@ -309,26 +317,26 @@ public class Robot extends TimedRobot {
 		 */
 		m_driverController.touchpad().onTrue(
 				Commands.sequence(
-						new DriveCommands.VisionDrivePose(new Pose2d(12.15, 0.83, Rotation2d.kZero),
+						new DriveCommands.VisionDrivePose(new Pose2d(12.15, 0.83, Rotation2d.ZERO),
 								Tolerances.FINE_TRANSLATION),
-						new DriveCommands.VisionDrivePose(new Pose2d(10.1, 0.75, Rotation2d.kZero),
+						new DriveCommands.VisionDrivePose(new Pose2d(10.1, 0.75, Rotation2d.ZERO),
 								Tolerances.FINE_TRANSLATION),
 						IntakeCommands.getArmOutCommand(),
 						Commands.race(
-								new DriveCommands.VisionDrivePose(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg),
+								new DriveCommands.VisionDrivePose(new Pose2d(8.64, 1.54, Rotation2d.CCW_90DEG),
 										Tolerances.COARSE),
 								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
 		m_operatorController.touchpad().onTrue(
 				Commands.sequence(
-						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.kZero), .3, .3,
+						new DriveCommands.NinjaStar(new Pose2d(12.15, 0.83, Rotation2d.ZERO), .3, .3,
 								Tolerances.FINE_TRANSLATION, true),
-						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.kZero), .3, .3,
+						new DriveCommands.NinjaStar(new Pose2d(10.1, 0.75, Rotation2d.ZERO), .3, .3,
 								Tolerances.FINE_TRANSLATION, true),
 						Commands.print("Before arm out"),
 						IntakeCommands.getArmOutCommand(),
 						Commands.print("After arm out"),
 						Commands.race(
-								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.kCCW_90deg), 0.3, .3,
+								new DriveCommands.NinjaStar(new Pose2d(8.64, 1.54, Rotation2d.CCW_90DEG), 0.3, .3,
 										Tolerances.COARSE, true),
 								new IntakeCommands.Spintake(IntakeConstants.kWheelPower))));
 		/*
@@ -339,10 +347,10 @@ public class Robot extends TimedRobot {
 		// m_driverController.touchpad().onTrue(m_autoComposer.getVelocityTestCommand());
 		// m_operatorController.touchpad().onTrue(m_autoComposer.getVelocityTestCommandReverse());
 
-		m_driverController.cross().whileTrue(
+		m_driverController.faceDown().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
 						0.75 /* POWER */));
-		m_operatorController.L2().whileTrue(
+		m_operatorController.leftTrigger().whileTrue(
 				new TransportCommands.RunAgitatorAtPower(
 						-0.75)); // POWER
 
@@ -351,43 +359,43 @@ public class Robot extends TimedRobot {
 		 * new TurretCommands.RunToAngleHardwareSignal(m_operatorController::getLeftX,
 		 * m_operatorController::getLeftY));
 		 */
-		m_operatorController.L1().whileTrue(
+		m_operatorController.leftBumper().whileTrue(
 				new AngularPositionCommands.RunAtPower(Turret.getTurret(),
 						.3, /* POWER */
 						0)); /* TIME */
-		m_operatorController.R1().whileTrue(
+		m_operatorController.rightBumper().whileTrue(
 				new AngularPositionCommands.RunAtPower(Turret.getTurret(),
 						-.3, /* POWER */
 						0)); /* TIME */
 
-		m_operatorController.triangle().debounce(0.1).onTrue(
-				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.povRight(),
-						m_operatorController.povLeft()));
+		m_operatorController.faceUp().debounce(Seconds.of(0.1)).onTrue(
+				new ShooterCommands.RunAtDPadRPM(this, m_operatorController.dpadRight(),
+						m_operatorController.dpadLeft()));
 
 		/*
-		 * m_operatorController.triangle().debounce(0.1).toggleOnTrue(
+		 * m_operatorController.faceUp().debounce(Seconds.of(0.1)).toggleOnTrue(
 		 * new ShooterCommands.RunAtDynamicRPM(1000));
 		 */
 
-		m_operatorController.povDown().whileTrue(
+		m_operatorController.dpadDown().whileTrue(
 				new AngularPositionCommands.RunAtPower(Hood.getHood(),
 						-.2, /* POWER */
 						0)); /* TIME */
-		m_operatorController.povUp().whileTrue(
+		m_operatorController.dpadUp().whileTrue(
 				new AngularPositionCommands.RunAtPower(Hood.getHood(),
 						.2, /* POWER */
 						0)); /* TIME */
 
 		{ // climber test bindings
-			m_driverController.triangle().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
-			m_driverController.circle().whileTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
-			m_driverController.options().debounce(.1).onTrue(ClimberCommands.getResetCommand());
+			m_driverController.faceUp().whileTrue(ClimberCommands.getRunAtPowerCommand(.6));
+			m_driverController.faceRight().whileTrue(ClimberCommands.getRunAtPowerCommand(-0.6));
+			m_driverController.start().debounce(Seconds.of(.1)).onTrue(ClimberCommands.getResetCommand());
 		}
 
 		{ // intake test bindings
-			m_operatorController.circle().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
-			m_operatorController.cross().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
-			m_operatorController.square().debounce(0.1).toggleOnTrue(
+			m_operatorController.faceRight().whileTrue(IntakeCommands.getRunArmAtPowerCommand(-0.2));
+			m_operatorController.faceDown().whileTrue(IntakeCommands.getRunArmAtPowerCommand(0.2));
+			m_operatorController.faceLeft().debounce(Seconds.of(0.1)).toggleOnTrue(
 					new IntakeCommands.Spintake(
 							IntakeConstants.kWheelPower)); /* POWER */
 		}
@@ -397,10 +405,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotPeriodic() {
 		m_scheduler.run();
-		SmartDashboard.putData("Real Auto Chooser", m_autoChooser);
-		SmartDashboard.putData("Pit Selector 2000", m_isInPit);
 		if (Constants.kLogging) {
-			SmartDashboard.putData(m_scheduler);
+			Telemetry.log("Scheduler", m_scheduler);
 		}
 	}
 
@@ -449,7 +455,7 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void testInit() {
+	public void utilityInit() {
 		initSubsystems();
 		m_scheduler.cancelAll();
 		m_scheduler.schedule(Commands.sequence(ClampedP.testCommand()));

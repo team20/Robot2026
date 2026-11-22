@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,24 +12,23 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.math.linalg.MatBuilder;
+import org.wpilib.math.util.Nat;
+import org.wpilib.math.filter.LinearFilter;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.util.Units;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.LinearVelocity;
+import frc.robot.Constants.CANConstants;
+import org.wpilib.hardware.power.PowerDistribution;
+import org.wpilib.hardware.power.PowerDistribution.ModuleType;
+import org.wpilib.system.Timer;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.SubsystemBase;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.VisionConstants;
 import frc.robot.PoseUtils;
@@ -39,7 +38,7 @@ public class Vision extends SubsystemBase {
 	private final PhotonCamera m_camera;
 	private final FieldPoseEstimator m_hubEstimator;
 	private final MidpointEstimator m_midpointEstimator;
-	private final PowerDistribution m_pdh = new PowerDistribution(62, ModuleType.kRev);
+	private final PowerDistribution m_pdh = new PowerDistribution(CANConstants.kMechanismPort, 62, ModuleType.REV);
 
 	public interface AngleDistanceEstimator {
 		public double getAngle();
@@ -56,21 +55,15 @@ public class Vision extends SubsystemBase {
 		private LinearFilter m_angleFilter = LinearFilter.movingAverage(5);
 		private double m_angleDerivative;
 		private double m_distanceDerivative;
-		private Map<Integer, Long> m_blacklist = new HashMap<>();
+		private Map<Integer, Double> m_blacklist = new HashMap<>();
 
 		private boolean m_hasTargets = false;
 
-		private final StructPublisher<Pose2d> m_estimatedPoseTopic = NetworkTableInstance.getDefault()
-				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Camera Pose", Pose2d.struct)
-				.publish();
-		private final StructPublisher<Pose2d> m_estimatedBotPoseTopic = NetworkTableInstance.getDefault()
-				.getStructTopic("SmartDashboard/Vision/FieldPose/Estimated Robot Pose", Pose2d.struct)
-				.publish();
 
 		public void update(List<PhotonTrackedTarget> targets) {
 			Set<Integer> m_blacklistRemove = new HashSet<>();
-			for (Map.Entry<Integer, Long> tag : m_blacklist.entrySet()) {
-				if (RobotController.getFPGATime() - tag.getValue().longValue() > 1e6) {
+			for (Map.Entry<Integer, Double> tag : m_blacklist.entrySet()) {
+				if (Timer.getTimestamp() - tag.getValue() > 1.0) {
 					m_blacklistRemove.add(tag.getKey());
 				}
 			}
@@ -79,7 +72,7 @@ public class Vision extends SubsystemBase {
 			}
 			for (PhotonTrackedTarget tag : targets) {
 				if (tag.getPoseAmbiguity() > 0.2) {
-					m_blacklist.put(tag.getFiducialId(), RobotController.getFPGATime());
+					m_blacklist.put(tag.getFiducialId(), Timer.getTimestamp());
 				}
 			}
 			m_hasTargets = false;
@@ -96,41 +89,41 @@ public class Vision extends SubsystemBase {
 						// turn camera pose into bot pose
 						Rotation2d angle = Rotation2d.fromDegrees(Turret.getTurret().getRobotRelativeAngle());
 						Transform2d transform1 = new Transform2d(
-								new Pose2d(Units.inchesToMeters(8.25), 0, Rotation2d.kZero), new Pose2d(0, 0, angle));
+								new Pose2d(Units.inchesToMeters(8.25), 0, Rotation2d.ZERO), new Pose2d(0, 0, angle));
 						Transform2d transform2 = new Transform2d(
-								new Pose2d(0, 0, Rotation2d.kZero),
-								new Pose2d(Units.inchesToMeters(5), 0, Rotation2d.kZero));
+								new Pose2d(0, 0, Rotation2d.ZERO),
+								new Pose2d(Units.inchesToMeters(5), 0, Rotation2d.ZERO));
 						m_botPose = m_pose.transformBy(transform1).transformBy(transform2);
 
 						// Update pose with vision
 						Drive.getEstimator().addVisionMeasurement(
-								m_botPose, RobotController.getFPGATime() * 1e-6,
+								m_botPose, Timer.getTimestamp(),
 								MatBuilder.fill(
 										Nat.N3(), Nat.N1(), 2 * pose.xStdDev() + 1, 2 * pose.yStdDev() + 1,
 										2 * pose.thetaStdDev() + 1));
 
 						/*
 						 * Drive.getEstimator().addVisionMeasurement(
-						 * m_botPose, RobotController.getFPGATime() * 1e-6,
+						 * m_botPose, Timer.getTimestamp(),
 						 * MatBuilder
 						 * .fill(Nat.N3(), Nat.N1(), pose.xStdDev(), pose.yStdDev(),
 						 * pose.thetaStdDev()));
 						 */
 
 						// Publish vision pose and values
-						m_estimatedPoseTopic.accept(pose.pose());
-						SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
-						SmartDashboard.putNumber("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
-						SmartDashboard.putNumber(
+						Telemetry.log("Vision/FieldPose/Estimated Camera Pose", pose.pose(), Pose2d.struct);
+						Telemetry.log("Vision/FieldPose/Estimate Pose Deviation/x", pose.xStdDev());
+						Telemetry.log("Vision/FieldPose/Estimate Pose Deviation/y", pose.yStdDev());
+						Telemetry.log(
 								"Vision/FieldPose/Estimate Pose Deviation/theta",
 								pose.thetaStdDev());
 					}, () -> { // Use odometry pose if tags not present
 						m_botPose = Drive.getPose();
-						m_estimatedBotPoseTopic.accept(m_botPose);
+						Telemetry.log("Vision/FieldPose/Estimated Robot Pose", m_botPose, Pose2d.struct);
 					});
 
-			SmartDashboard
-					.putNumber(
+				Telemetry	
+					.log(
 							"Robot Relative Angle from Turret",
 							Turret.getTurret().getRobotRelativeAngle());
 
@@ -138,7 +131,7 @@ public class Vision extends SubsystemBase {
 			// Filter values to reduce noise
 			Translation2d difference = Drive.getAimTarget()
 					.minus(m_botPose).getTranslation(); // pose.pose()).getTranslation();
-			m_angleFilter.calculate(-difference.getAngle().getDegrees());
+			m_angleFilter.calculate(-difference.getAngle().map(Rotation2d::getDegrees).orElse(-m_angle));
 			m_angleDerivative = (m_angleFilter.lastValue() - m_angle) / 0.02;
 			m_angle = m_angleFilter.lastValue();
 			m_distanceFilter.calculate(difference.getNorm());
@@ -146,13 +139,13 @@ public class Vision extends SubsystemBase {
 			m_distance = m_distanceFilter.lastValue();
 
 			// Publish values
-			SmartDashboard.putNumber(
+			Telemetry.log(
 					"Vision/FieldPose/Estimated Pose Angle",
 					m_botPose.getRotation().getDegrees());
 
-			SmartDashboard.putNumber("Vision/FieldPose/Angle To Hub", m_angle);
-			SmartDashboard.putNumber("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
-			SmartDashboard.putNumber(
+			Telemetry.log("Vision/FieldPose/Angle To Hub", m_angle);
+			Telemetry.log("Vision/FieldPose/Distance To Hub", Units.metersToFeet(m_distance));
+			Telemetry.log(
 					"Vision/FieldPose/Estimated Airtime", Aim.getShotAirtime(Units.metersToFeet(m_distance)));
 
 		}
@@ -195,7 +188,7 @@ public class Vision extends SubsystemBase {
 				if (!VisionConstants.kTrackableTags.contains(target.fiducialId))
 					continue;
 				double distance = target.getBestCameraToTarget().getX();
-				SmartDashboard.putNumber("Tag Dist/" + target.getFiducialId(), distance);
+				Telemetry.log("Tag Dist/" + target.getFiducialId(), distance);
 				if (minAngle == 0 && maxAngle == 0 && minDistance == 0 && maxDistance == 0) {
 					minAngle = maxAngle = target.yaw;
 					minDistance = maxDistance = distance;
@@ -210,9 +203,9 @@ public class Vision extends SubsystemBase {
 			m_midpointDistance = (minDistance + maxDistance) / 2 + Units.inchesToMeters(23.5);
 			m_midpointAngle = (minAngle + maxAngle) / 2;
 
-			SmartDashboard.putNumber("Vision/Midpoint/Angle to Hub", m_midpointAngle);
+			Telemetry.log("Vision/Midpoint/Angle to Hub", m_midpointAngle);
 
-			SmartDashboard.putNumber("Vision/Midpoint/Distance to Hub", Units.metersToFeet(m_midpointDistance));
+			Telemetry.log("Vision/Midpoint/Distance to Hub", Units.metersToFeet(m_midpointDistance));
 		}
 
 		public double getAngle() {
@@ -250,8 +243,8 @@ public class Vision extends SubsystemBase {
 		List<PhotonTrackedTarget> targets = latest.getTargets();
 		m_hubEstimator.update(targets);
 		m_midpointEstimator.updateMidpoint(targets);
-		SmartDashboard.putNumber("Angle Derivative", m_hubEstimator.getAngleDerivative().in(DegreesPerSecond));
-		SmartDashboard.putNumber("Distance Derivative", m_hubEstimator.getDistanceDerivative().in(FeetPerSecond));
+		Telemetry.log("Angle Derivative", m_hubEstimator.getAngleDerivative().in(DegreesPerSecond));
+		Telemetry.log("Distance Derivative", m_hubEstimator.getDistanceDerivative().in(FeetPerSecond));
 	}
 
 	public MidpointEstimator getMidpointEstimator() {

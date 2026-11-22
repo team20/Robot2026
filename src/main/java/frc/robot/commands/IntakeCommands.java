@@ -1,8 +1,10 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import static org.wpilib.units.Units.Seconds;
+
+import frc.robot.commands.compat.Command;
+import frc.robot.commands.compat.Commands;
+import org.wpilib.command3.Trigger;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.IntakeExtraArm;
@@ -21,7 +23,7 @@ public class IntakeCommands {
 		public Teletake(double speed, Trigger trigger) {
 			setName("Teleop intake");
 			m_speed = speed;
-			trigger.debounce(.05).onTrue(Commands.runOnce(() -> m_on ^= true));
+			trigger.debounce(Seconds.of(.05)).onTrue(Commands.runOnce(() -> m_on ^= true));
 			addRequirements(IntakeWheels.getIntakeWheels());
 		}
 

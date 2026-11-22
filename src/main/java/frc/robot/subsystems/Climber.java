@@ -12,7 +12,8 @@ public class Climber extends PositionControlSubsystem {
 	public static Climber s_theClimber;
 
 	public Climber() {
-		super(ClimberConstants.kClimberPort, false, 1.0); // TODO change max power
+		// Conversion factor handled in PositionControlSubsystem (REVLib 2027 removed it from the config)
+		super(ClimberConstants.kClimberPort, false, 1.0, ClimberConstants.kGearRatio); // TODO change max power
 
 		SparkMaxConfig config = new SparkMaxConfig();
 
@@ -20,8 +21,8 @@ public class Climber extends PositionControlSubsystem {
 		config.secondaryCurrentLimit(ClimberConstants.kSecondaryCurrentLimit);
 		config.idleMode(IdleMode.kBrake);
 		config.inverted(ClimberConstants.kInvert);
-		config.encoder.positionConversionFactor(ClimberConstants.kGearRatio);
-		config.closedLoop.pid(IntakeConstants.kP, 0, 0);
+		// The SPARK now sees error in motor rotations; scale kP so behavior matches the 2026 tuning
+		config.closedLoop.pid(IntakeConstants.kP * ClimberConstants.kGearRatio, 0, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 		config.closedLoop.positionWrappingEnabled(false);
 

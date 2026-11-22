@@ -1,12 +1,12 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.framework.TimedRobot;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.Command;
+import frc.robot.commands.compat.SequentialCommandGroup;
 import frc.robot.Aim;
 import frc.robot.Constants.Subsystems.ShooterConstants;
 import frc.robot.subsystems.Drive;
@@ -40,7 +40,7 @@ public class AimCommands {
 
 			{ // Hood and shooter adjustment
 				double distance = m_estimator.getDistance().in(Feet);
-				SmartDashboard.putNumber("Vision/AIM DISTANCE", distance);
+				Telemetry.log("Vision/AIM DISTANCE", distance);
 				s_airtime = Aim.getShotAirtime(distance); // Update airtime based on new distance
 				Hood.getHood().moveToPosition(Aim.getHoodAngle(distance));
 				Shooter.setRPM(Aim.getShooterVelocity(distance));
@@ -177,7 +177,7 @@ public class AimCommands {
 				s_distance += m_distance * m_robot.getPeriod();
 			}
 
-			SmartDashboard.putNumber("Aim Distance", s_distance);
+			Telemetry.log("Aim Distance", s_distance);
 			// ShooterState state = m_aim.getShooterState(s_distance, 0);
 
 			Hood.getHood().moveToPosition(Aim.getHoodAngle(s_distance));

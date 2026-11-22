@@ -1,6 +1,6 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.commands.compat.Command;
 import frc.robot.Constants.Subsystems.ClimberConstants;
 import frc.robot.subsystems.Climber;
 

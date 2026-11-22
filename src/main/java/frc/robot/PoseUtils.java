@@ -7,12 +7,16 @@ import java.util.function.IntToDoubleFunction;
 
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import org.wpilib.fields.Field;
+import org.wpilib.fields.Fields;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.driverstation.Alliance;
 import frc.robot.Constants.Subsystems.VisionConstants;
 
 public class PoseUtils {
@@ -22,7 +26,7 @@ public class PoseUtils {
 	public record AimResult(double setpoint, double feedforward) {
 	}
 
-	private static AprilTagFieldLayout s_layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+	private static Field s_layout = Field.loadField(Fields.FRC_2026_REBUILT_WELDED);
 
 	/**
 	 * Estimate the pose of the robot, including the standard deviations for each
@@ -152,9 +156,9 @@ public class PoseUtils {
 	 * @return the {@code Pose2d} of the current hub
 	 */
 	public static Pose2d getHub() {
-		return switch (DriverStation.getAlliance().orElse(Alliance.Red)) {
-			case Blue -> VisionConstants.kBlueHub;
-			case Red -> VisionConstants.kRedHub;
+		return switch (MatchState.getAlliance().orElse(Alliance.RED)) {
+			case BLUE -> VisionConstants.kBlueHub;
+			case RED -> VisionConstants.kRedHub;
 		};
 	}
 }

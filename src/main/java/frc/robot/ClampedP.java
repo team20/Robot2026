@@ -1,7 +1,7 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.compat.Command;
+import frc.robot.commands.compat.Commands;
 
 public class ClampedP {
 	public record ClampedPConstants(double minPower, double maxPower, double maxErr, double tolerance) {

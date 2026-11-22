@@ -1,6 +1,6 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.RobotController;
+import org.wpilib.system.RobotController;
 
 public class ABBA {
 	public static double preventBrownout(double power) {

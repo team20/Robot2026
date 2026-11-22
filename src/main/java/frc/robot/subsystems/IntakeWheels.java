@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import frc.robot.Constants.CANConstants;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -7,8 +9,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.SubsystemBase;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 
 public class IntakeWheels extends SubsystemBase {
@@ -19,7 +21,7 @@ public class IntakeWheels extends SubsystemBase {
 	// Set up motor & initialize other subsystem aspects
 	public IntakeWheels() {
 		// Instantiate motor & motor configurations
-		m_intakeWheels = new SparkMax(IntakeConstants.kIntakeWheelsPort, MotorType.kBrushless);
+		m_intakeWheels = new SparkMax(CANConstants.kMechanismPort, IntakeConstants.kIntakeWheelsPort, MotorType.kBrushless);
 		m_wheelConfig = new SparkMaxConfig();
 
 		// TODO: Check configuration of motors
@@ -47,7 +49,7 @@ public class IntakeWheels extends SubsystemBase {
 	 * @param speed
 	 */
 	public static void setWheelPower(double power) {
-		s_theIntake.m_intakeWheels.set(power);
+		s_theIntake.m_intakeWheels.setThrottle(power);
 	}
 
 	public static void stopWheel() {
@@ -56,8 +58,8 @@ public class IntakeWheels extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		SmartDashboard.putNumber("Wheels/Velocity", s_theIntake.m_intakeWheels.getEncoder().getVelocity());
-		SmartDashboard.putNumber("Wheels/Voltage", s_theIntake.m_intakeWheels.getBusVoltage());
-		SmartDashboard.putNumber("Wheels/Current", s_theIntake.m_intakeWheels.getOutputCurrent());
+		Telemetry.log("Wheels/Velocity", s_theIntake.m_intakeWheels.getEncoder().getVelocity().get());
+		Telemetry.log("Wheels/Voltage", s_theIntake.m_intakeWheels.getBusVoltage().get());
+		Telemetry.log("Wheels/Current", s_theIntake.m_intakeWheels.getOutputCurrent().get());
 	}
 }

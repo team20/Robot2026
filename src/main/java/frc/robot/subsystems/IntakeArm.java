@@ -19,7 +19,10 @@ public class IntakeArm extends PositionControlSubsystem {
 		config.secondaryCurrentLimit(IntakeConstants.kArmSecondaryCurrentLimit);
 		config.idleMode(IdleMode.kBrake);
 		config.inverted(IntakeConstants.kArmInvert);
-		config.absoluteEncoder.positionConversionFactor(IntakeConstants.kArmConversionFactor);
+		// REVLib 2027 removed positionConversionFactor. The 2026 call here set it on the absolute
+		// encoder, but this arm uses the primary encoder for both feedback and getMotorRotations(),
+		// so it had no effect and was dropped. TODO: confirm the absolute encoder isn't meant to be
+		// the feedback sensor (kArmConversionFactor is now unused).
 		config.closedLoop.pid(IntakeConstants.kP, 0, 0);
 		config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 		config.closedLoop.positionWrappingEnabled(false);

@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.telemetry.Telemetry;
 import frc.robot.ClampedP.ClampedPConstants;
 import frc.robot.Constants.Subsystems.TurretConstants;
 
@@ -72,10 +72,10 @@ public class Turret extends AngularPositionSubsystem {
 		}
 
 		// Publish values
-		SmartDashboard.putNumber("TurnToWorldAngle/worldAngle", angle);
-		SmartDashboard.putNumber("TurnToWorldAngle/botAngle", botAngle);
-		SmartDashboard.putNumber("TurnToWorldAngle/botTicks", botTicks);
-		SmartDashboard.putNumber("TurnToWorldAngle/botTicksCentered", botTicksCentered);
+		Telemetry.log("TurnToWorldAngle/worldAngle", angle);
+		Telemetry.log("TurnToWorldAngle/botAngle", botAngle);
+		Telemetry.log("TurnToWorldAngle/botTicks", botTicks);
+		Telemetry.log("TurnToWorldAngle/botTicksCentered", botTicksCentered);
 
 		// Return needed turret position
 		return botTicksCentered;

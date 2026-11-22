@@ -7,14 +7,16 @@ import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.linalg.Vector;
+import org.wpilib.math.numbers.N2;
+import org.wpilib.system.Timer;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.Command;
 import frc.robot.AngleUtility;
 import frc.robot.ClampedP;
 import frc.robot.subsystems.Drive;
@@ -55,7 +57,7 @@ public class DriveCommands {
 	 *        go to the left (+Y direction).
 	 * @param rotation Rotation supplier. Positive values make
 	 *        the robot rotate left (CCW direction).
-	 * @return a {@code ChassisSpeeds} instance to drive the robot with joystick
+	 * @return a {@code ChassisVelocities} instance to drive the robot with joystick
 	 *         input
 	 */
 	public static class JoystickDrive extends Command {
@@ -77,13 +79,35 @@ public class DriveCommands {
 		// Called every time the scheduler runs while the command is scheduled.
 		@Override
 		public void execute() {
-			double forwardStick = MathUtil.applyDeadband(m_forwardSpeed.getAsDouble(), kDeadzone);
-			double forwardSpeed = 2 * Math.asin(forwardStick) / Math.PI;
-			double strafeStick = MathUtil.applyDeadband(m_strafeSpeed.getAsDouble(), kDeadzone);
-			double strafeSpeed = 2 * Math.asin(strafeStick) / Math.PI;
+			Translation2d translation = shapeTranslation(m_forwardSpeed.getAsDouble(), m_strafeSpeed.getAsDouble());
 			double rotationStick = MathUtil.applyDeadband(m_rotation.getAsDouble(), kDeadzone);
-			SmartDashboard.putNumber("Drive/Rotation Stick", rotationStick);
-			Drive.drive(forwardSpeed, strafeSpeed, rotationStick, m_isRobotRelative.getAsBoolean());
+			Telemetry.log("Drive/Translation Input", translation.getNorm());
+			Telemetry.log("Drive/Rotation Stick", rotationStick);
+			Drive.drive(translation.getX(), translation.getY(), rotationStick, m_isRobotRelative.getAsBoolean());
+		}
+
+		/**
+		 * Turns the drive stick into drive power, treating the stick as one arrow (how far it's pushed, and
+		 * which way) instead of two separate axes. The deadband and response curve change only how far it's
+		 * pushed, so the robot always goes exactly the way the stick points, and a full push is full power in
+		 * every direction, diagonals included.
+		 *
+		 * <p>Uses WPILib's vector versions of {@code applyDeadband} and {@code copyDirectionPow}.
+		 *
+		 * @param forward the forward stick value, -1 to 1 (positive = forward, +X)
+		 * @param strafe the strafe stick value, -1 to 1 (positive = left, +Y)
+		 * @return the forward (X) and strafe (Y) power, at most 1 long in total
+		 */
+		public static Translation2d shapeTranslation(double forward, double strafe) {
+			Vector<N2> stick = VecBuilder.fill(forward, strafe);
+			// Some gamepads report up to (1, 1) in the corners, which is 1.41 long. Limit the push to 1
+			// (WPILib's deadband doesn't), so diagonals are never faster than straight lines.
+			if (stick.norm() > 1) {
+				stick = stick.unit();
+			}
+			stick = MathUtil.applyDeadband(stick, kDeadzone); // round deadband, no jump at its edge
+			stick = MathUtil.copyDirectionPow(stick, kTranslationInputExponent); // response curve
+			return new Translation2d(stick);
 		}
 
 		// Called once the command ends or is interrupted.
@@ -192,9 +216,9 @@ public class DriveCommands {
 				rotation = ClampedP.clampedP(errorTheta, minPower, maxPower, maxErr, m_tolerance.getRotation());
 			}
 
-			SmartDashboard.putNumber("Drive Command/X Error", getError()[0]);
-			SmartDashboard.putNumber("Drive Command/Y Error", getError()[1]);
-			SmartDashboard.putNumber("Drive Command/Theta Error", getError()[2]);
+			Telemetry.log("Drive Command/X Error", getError()[0]);
+			Telemetry.log("Drive Command/Y Error", getError()[1]);
+			Telemetry.log("Drive Command/Theta Error", getError()[2]);
 
 			// rotation = .03;
 			Drive.drive(speedX, speedY, rotation, false);
@@ -284,9 +308,9 @@ public class DriveCommands {
 				rotation = ClampedP.clampedP(errorTheta, minPower, maxPower, maxErr, m_thetaTolerance);
 			}
 
-			SmartDashboard.putNumber("Drive Command/X Error", getError()[0]);
-			SmartDashboard.putNumber("Drive Command/Y Error", getError()[1]);
-			SmartDashboard.putNumber("Drive Command/Theta Error", getError()[2]);
+			Telemetry.log("Drive Command/X Error", getError()[0]);
+			Telemetry.log("Drive Command/Y Error", getError()[1]);
+			Telemetry.log("Drive Command/Theta Error", getError()[2]);
 
 			// rotation = .03;
 			Drive.drive(speedX, speedY, rotation, false);
@@ -353,8 +377,6 @@ public class DriveCommands {
 		private final double m_rotationSpeed;
 		private final Tolerances m_tolerance;
 		private final boolean m_stop;
-		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
-				.getStructTopic("/SmartDashboard/Desired Pose", Pose2d.struct).publish();
 
 		public NinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, Tolerances tolerance,
 				boolean stop) {
@@ -377,7 +399,7 @@ public class DriveCommands {
 
 		@Override
 		public void initialize() {
-			m_posePublisher.accept(m_pose);
+			Telemetry.log("Desired Pose", m_pose, Pose2d.struct);
 		}
 
 		@Override
@@ -388,9 +410,9 @@ public class DriveCommands {
 			// double errorHypot = Math.hypot()
 			// double errorTheta =
 			double errorTheta = Drive.getPose().getRotation().getDegrees() - m_pose.getRotation().getDegrees();
-			SmartDashboard.putNumber("NinjaStar/X Error", errorX);
-			SmartDashboard.putNumber("NinjaStar/Y Error", errorY);
-			SmartDashboard.putNumber("NinjaStar/θ Error", errorTheta);
+			Telemetry.log("NinjaStar/X Error", errorX);
+			Telemetry.log("NinjaStar/Y Error", errorY);
+			Telemetry.log("NinjaStar/θ Error", errorTheta);
 			double speedX = ClampedP.clampedP(errorX, 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
 			double speedY = ClampedP.clampedP(errorY, 0.05, m_translationSpeed, 1, m_tolerance.getTranslation());
 			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, m_tolerance.getRotation());
@@ -426,8 +448,6 @@ public class DriveCommands {
 		private final double m_translationSpeed;
 		private final double m_rotationSpeed;
 		private final Tolerances m_tolerance;
-		private final static StructPublisher<Pose2d> m_posePublisher = NetworkTableInstance.getDefault()
-				.getStructTopic("/SmartDashboard/Desired Pose YOLO", Pose2d.struct).publish();
 
 		public YOLONinjaStar(Pose2d pose, double translationSpeed, double rotationSpeed, Tolerances tolerance) {
 			m_pose = pose;
@@ -448,7 +468,7 @@ public class DriveCommands {
 
 		@Override
 		public void initialize() {
-			m_posePublisher.accept(m_pose);
+			Telemetry.log("Desired Pose YOLO", m_pose, Pose2d.struct);
 		}
 
 		@Override
@@ -459,12 +479,12 @@ public class DriveCommands {
 			double errorHypot = Math.hypot(errorX, errorY);
 			double speedX = m_translationSpeed * errorX / errorHypot;
 			double speedY = m_translationSpeed * errorY / errorHypot;
-			SmartDashboard.putNumber("YOLONinjaStar/X Speed", speedX);
-			SmartDashboard.putNumber("YOLONinjaStar/Y Speed", speedY);
+			Telemetry.log("YOLONinjaStar/X Speed", speedX);
+			Telemetry.log("YOLONinjaStar/Y Speed", speedY);
 			double errorTheta = Drive.getPose().getRotation().getDegrees() - m_pose.getRotation().getDegrees();
-			SmartDashboard.putNumber("YOLONinjaStar/X Error", errorX);
-			SmartDashboard.putNumber("YOLONinjaStar/Y Error", errorY);
-			SmartDashboard.putNumber("YOLONinjaStar/θ Error", errorTheta);
+			Telemetry.log("YOLONinjaStar/X Error", errorX);
+			Telemetry.log("YOLONinjaStar/Y Error", errorY);
+			Telemetry.log("YOLONinjaStar/θ Error", errorTheta);
 			double speedTheta = ClampedP.clampedP(errorTheta, 0.01, m_rotationSpeed, 45, 0);
 			Drive.drive(speedX, speedY, speedTheta, false);
 		}

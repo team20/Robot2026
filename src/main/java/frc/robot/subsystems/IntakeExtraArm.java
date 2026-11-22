@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import frc.robot.Constants.CANConstants;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -7,8 +9,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.telemetry.Telemetry;
+import frc.robot.commands.compat.SubsystemBase;
 import frc.robot.Constants.Subsystems.IntakeConstants;
 
 public class IntakeExtraArm extends SubsystemBase {
@@ -19,7 +21,7 @@ public class IntakeExtraArm extends SubsystemBase {
 	// Set up motor & initialize other subsystem aspects
 	public IntakeExtraArm() {
 		// Instantiate motor & motor configurations
-		m_intakeExtraArm = new SparkMax(IntakeConstants.kIntakeExtraArmPort, MotorType.kBrushless);
+		m_intakeExtraArm = new SparkMax(CANConstants.kMechanismPort, IntakeConstants.kIntakeExtraArmPort, MotorType.kBrushless);
 		m_armConfig = new SparkMaxConfig();
 
 		// TODO: Check configuration of motors
@@ -47,7 +49,7 @@ public class IntakeExtraArm extends SubsystemBase {
 	 * @param speed
 	 */
 	public static void setMotorPower(double power) {
-		s_theExtraIntakeArm.m_intakeExtraArm.set(power);
+		s_theExtraIntakeArm.m_intakeExtraArm.setThrottle(power);
 	}
 
 	public static void stopMotor() {
@@ -55,15 +57,15 @@ public class IntakeExtraArm extends SubsystemBase {
 	}
 
 	public static double getPosition() {
-		return s_theExtraIntakeArm.m_intakeExtraArm.getEncoder().getPosition();
+		return s_theExtraIntakeArm.m_intakeExtraArm.getEncoder().getPosition().get();
 	}
 
 	@Override
 	public void periodic() {
-		SmartDashboard.putNumber(
-				"Intake Extra Arm/Velocity", s_theExtraIntakeArm.m_intakeExtraArm.getEncoder().getVelocity());
-		SmartDashboard.putNumber("Intake Extra Arm/Voltage", s_theExtraIntakeArm.m_intakeExtraArm.getBusVoltage());
-		SmartDashboard.putNumber("Intake Extra Arm/Current", s_theExtraIntakeArm.m_intakeExtraArm.getOutputCurrent());
-		SmartDashboard.putNumber("Intake Extra Arm/Position", getPosition());
+		Telemetry.log(
+				"Intake Extra Arm/Velocity", s_theExtraIntakeArm.m_intakeExtraArm.getEncoder().getVelocity().get());
+		Telemetry.log("Intake Extra Arm/Voltage", s_theExtraIntakeArm.m_intakeExtraArm.getBusVoltage().get());
+		Telemetry.log("Intake Extra Arm/Current", s_theExtraIntakeArm.m_intakeExtraArm.getOutputCurrent().get());
+		Telemetry.log("Intake Extra Arm/Position", getPosition());
 	}
 }

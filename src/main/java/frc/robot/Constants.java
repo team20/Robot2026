@@ -2,26 +2,39 @@ package frc.robot;
 
 import java.util.Set;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.util.Units;
 
 public class Constants {
 	public static final boolean kCompBot = true;
 	public static final boolean kLogging = true;
+
+	public static final class CANConstants {
+		// TODO: confirm bus assignments against the final SystemCore wiring
+		/** CAN port for the swerve drive (TalonFX / CANcoder). */
+		public static final CANPort kDrivePort = CANPort.CAN_S0;
+		/** CAN port for mechanisms (SPARKs, PDH, shooter). */
+		public static final CANPort kMechanismPort = CANPort.CAN_S0;
+		/** Phoenix 6 CANBus objects for the ports above. */
+		public static final CANBus kDriveBus = new CANBus(kDrivePort);
+		public static final CANBus kMechanismBus = new CANBus(kMechanismPort);
+	}
 
 	public static final class Subsystems {
 		public static final class VisionConstants {
 
 			// 3 red, 3 blue
 			public static final Set<Integer> kTrackableTags = Set.of(10, 2, 11, 9, 8, 5, 18, 21, 24, 25, 26, 27);
-			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.kZero);
-			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.kZero);
+			public static final Pose2d kBlueHub = new Pose2d(4.63, 4.04, Rotation2d.ZERO);
+			public static final Pose2d kRedHub = new Pose2d(11.92, 4.04, Rotation2d.ZERO);
 
 			public static final double kRedNeutralZoneStart = 11.1;
 			public static final double kBlueNeutralZoneStart = 5.2;
@@ -136,6 +149,10 @@ public class Constants {
 
 	public static final class DriveConstants {
 		public static final double kDeadzone = 0.05;
+		// Driver feel (tune with the drivers): the drive stick's push (0 to 1, in any direction) is raised to
+		// this power before it's sent to the drive. 1 = linear, 2 = squared (WPILib's default for its drive
+		// classes): finer control at low speed, full speed at full push.
+		public static final double kTranslationInputExponent = 2.0;
 		// CAN IDs (updated)
 		public static final int kFrontRightDrivePort = 10;
 		public static final int kFrontRightSteerPort = 11;
